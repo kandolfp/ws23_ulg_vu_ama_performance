@@ -13,4 +13,4 @@ To add a new subpage, create a new `md` file and save it at the appropriate plac
 
 Have a look at the documentation of [Franklin.jl](https://franklinjl.org) for more information (use the search box to easily find what you are looking for). Additionally you may consult the [demos](https://franklinjl.org/demos/) page.
 # Publishing
-After pushing the published website will automatically be built and deployed at [noxthot.github.io/ss22_julia_workshop](https://kandolfp.github.io/ws23_ulg_vu_ama_performance/) (this might need a couple of minutes).
+After pushing the published website will automatically be built and deployed at [kandolfp.github.io/ws23_ulg_vu_ama_performance](https://kandolfp.github.io/ws23_ulg_vu_ama_performance/) (this might need a couple of minutes).
