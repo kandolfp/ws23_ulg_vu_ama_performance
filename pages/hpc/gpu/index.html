@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>Parallel Computing - GPU computing</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link ">Start</a>
+        <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link active">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link ">Single Instruction Multiple Data</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link active">GPU computing</a>
+          </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="gpu_computing_in_julia"><a href="#gpu_computing_in_julia" class="header-anchor">GPU computing in Julia</a></h1>
+<p><div class="franklin-toc"><ol><li><a href="#introduction">Introduction </a></li><li><a href="#implicit_parallelism_programming">Implicit parallelism programming</a></li><li><a href="#pi_example_on_the_gpu"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example on the GPU</a><ol><li><a href="#multiple_streaming_multiprocessors">Multiple Streaming Multiprocessors</a></li><li><a href="#multiple_operations_per_thread">Multiple operations per thread</a></li><li><a href="#additional_notes">Additional notes</a></li></ol></li></ol></div> </p>
+<p>Graphic Processing Units, or GPUs for short, were originally designed to manipulate images in a frame buffer. Their inherent parallelism makes them more efficient for some tasks than CPUs.  Basically, everything that is related to SIMD operations but not limited to them.   Using GPUs for general purpose computing &#40;GPGPU&#41; became a thing in the 21st century.  NVIDIA was the first big vendor that started to support this kind of application for their GPUs and invested heavily in dedicated frameworks to aid general purpose computing and later also started to produce dedicated hardware for this purpose only.  Nowadays, GPUs are used for artificial intelligence, deep learning and a lot of HPC workloads - some still use them for gaming too.</p>
+<h2 id="introduction"><a href="#introduction" class="header-anchor">Introduction </a></h2>
+<p>In Julia, GPUs are supported by the  <a href="https://juliagpu.org/">JuliaGPU</a> project.  They support the three big vendor frameworks: </p>
+<ul>
+<li><p>NVIDIA with <a href="https://docs.nvidia.com/cuda/">CUDA</a> and <a href="https://cuda.juliagpu.org/stable/"><code>CUDA.jl</code></a></p>
+</li>
+<li><p>AMD with <a href="https://rocmdocs.amd.com/en/latest/">ROCm</a> and <a href="https://github.com/JuliaGPU/AMDGPU.jl"><code>AMDGPU.jl</code></a></p>
+</li>
+<li><p>Intel with <a href="https://www.intel.com/content/www/us/en/develop/documentation/oneapi-gpu-optimization-guide/top.html">oneAPI</a> and <a href="https://github.com/JuliaGPU/oneAPI.jl"><code>oneAPI.jl</code></a></p>
+</li>
+<li><p>Apple with Apple&#39;s M1 GPUs <a href="https://developer.apple.com/metal/">Metal</a> and <a href="https://github.com/JuliaGPU/Metal.jl"><code>Metal.jl</code></a> &#40;requires at least Julia 1.8&#41;</p>
+</li>
+</ul>
+<p>where <code>CUDA.jl</code> comes with the most features.  Nevertheless, in good Julia practice, the team behind JuliaGPU also included an abstraction layer, such that a lot of common functionality can be implemented without the need to specify a vendor and to do some generic GPU programming.</p>
+
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/hpc/GPUBackend.png" style="padding:0; " alt=" Compile strategy for JuliaGPU"/>
+<figcaption> Compile strategy for JuliaGPU Original source: <p style="font-size:11px"><a href=" https://www.youtube.com/watch?v=Hz9IMJuW5hU"> https://www.youtube.com/watch?v=Hz9IMJuW5hU</a></p></figcaption>
+</figure>
+
+<p>Nevertheless, for the rest of the section, we will focus on <code>CUDA.jl</code> as the card at hand is CUDA compatible. </p>
+<p>We install the package with <code>Pkg.add&#40;&quot;CUDA&quot;&#41;; using CUDA</code> and execute the test right away, to see if the GPU is working with Julia:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">using</span> CUDA
+</span>
+<span class=hljs-metap>(@v1.7) pkg&gt;</span> test CUDA
+┌ Info: System information:
+│ CUDA toolkit 11.7, artifact installation
+│ NVIDIA driver 510.73.5, for CUDA 11.6
+│ CUDA driver 11.6
+│ 
+│ Libraries: 
+│ - CUBLAS: 11.10.1
+│ - CURAND: 10.2.10
+│ - CUFFT: 10.7.2
+│ - CUSOLVER: 11.3.5
+│ - CUSPARSE: 11.7.3
+│ - CUPTI: 17.0.0
+│ - NVML: 11.0.0+510.73.5
+│ - CUDNN: 8.30.2 (for CUDA 11.5.0)
+│ - CUTENSOR: 1.4.0 (for CUDA 11.5.0)
+│ 
+│ Toolchain:
+│ - Julia: 1.7.3
+│ - LLVM: 12.0.1
+│ - PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4, 6.5, 7.0
+│ - Device capability support: sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75, sm_80
+│ 
+│ 1 device:
+└   0: NVIDIA GeForce RTX 3070 Laptop GPU (sm_86, 7.787 GiB / 8.000 GiB available)
+Test Summary: |  Pass  Broken  Total
+  Overall     | 17002       5  17007
+    SUCCESS
+     Testing CUDA tests passed</code></pre>
+<p>The full output is in the example block to preserve a bit of readability.</p>
+<button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  </p>
+<pre><code class="julia-repl hljs"><span class=hljs-metap>(@v1.7) pkg&gt;</span> test CUDA
+┌ Info: System information:
+│ CUDA toolkit 11.7, artifact installation
+│ NVIDIA driver 510.73.5, for CUDA 11.6
+│ CUDA driver 11.6
+│ 
+│ Libraries: 
+│ - CUBLAS: 11.10.1
+│ - CURAND: 10.2.10
+│ - CUFFT: 10.7.2
+│ - CUSOLVER: 11.3.5
+│ - CUSPARSE: 11.7.3
+│ - CUPTI: 17.0.0
+│ - NVML: 11.0.0+510.73.5
+│ - CUDNN: 8.30.2 (for CUDA 11.5.0)
+│ - CUTENSOR: 1.4.0 (for CUDA 11.5.0)
+│ 
+│ Toolchain:
+│ - Julia: 1.7.3
+│ - LLVM: 12.0.1
+│ - PTX ISA support: 3.2, 4.0, 4.1, 4.2, 4.3, 5.0, 6.0, 6.1, 6.3, 6.4, 6.5, 7.0
+│ - Device capability support: sm_35, sm_37, sm_50, sm_52, sm_53, sm_60, sm_61, sm_62, sm_70, sm_72, sm_75, sm_80
+│ 
+│ 1 device:
+└   0: NVIDIA GeForce RTX 3070 Laptop GPU (sm_86, 7.787 GiB / 8.000 GiB available)
+[ Info: Testing using 1 device(s): 0. NVIDIA GeForce RTX 3070 Laptop GPU (UUID bfdb6f60-dbcf-1a82-ca79-1c8b947c3f35)
+                                                  |          | ---------------- GPU ---------------- | ---------------- CPU ---------------- |
+Test                                     (Worker) | Time (s) | GC (s) | GC % | Alloc (MB) | RSS (MB) | GC (s) | GC % | Alloc (MB) | RSS (MB) |
+Test                                     (Worker) | Time (s) | GC (s) | GC % | Alloc (MB) | RSS (MB) | GC (s) | GC % | Alloc (MB) | RSS (MB) |
+initialization                                (2) |     5.64 |   0.00 |  0.0 |       0.00 |   165.00 |   0.08 |  1.4 |     512.27 |   843.59 |
+gpuarrays/indexing scalar                     (2) |    25.43 |   0.00 |  0.0 |       0.01 |   181.00 |   1.20 |  4.7 |    4688.43 |   843.59 |
+gpuarrays/reductions/reducedim!               (2) |    90.88 |   0.00 |  0.0 |       1.03 |   183.00 |   8.52 |  9.4 |   22482.18 |  1163.61 |
+gpuarrays/linalg                              (2) |    54.46 |   0.00 |  0.0 |      11.59 |   551.00 |   3.43 |  6.3 |   10524.64 |  2332.89 |
+gpuarrays/math/power                          (2) |    35.13 |   0.00 |  0.0 |       0.01 |   551.00 |   3.23 |  9.2 |    8032.86 |  2492.46 |
+gpuarrays/linalg/mul!/vector-matrix           (2) |    55.05 |   0.00 |  0.0 |       0.02 |   551.00 |   3.45 |  6.3 |   11596.70 |  2833.54 |
+gpuarrays/indexing multidimensional           (2) |    37.84 |   0.00 |  0.0 |       1.21 |   183.00 |   2.40 |  6.4 |    7920.18 |  2833.54 |
+gpuarrays/interface                           (2) |     4.45 |   0.00 |  0.0 |       0.00 |   181.00 |   0.31 |  6.9 |     858.64 |  2833.54 |
+gpuarrays/reductions/any all count            (2) |    16.45 |   0.00 |  0.0 |       0.00 |   181.00 |   1.46 |  8.9 |    4293.68 |  2833.54 |
+gpuarrays/reductions/minimum maximum extrema  (2) |   140.12 |   0.01 |  0.0 |       1.41 |   185.00 |  10.18 |  7.3 |   31924.33 |  2954.52 |
+gpuarrays/uniformscaling                      (2) |     8.35 |   0.00 |  0.0 |       0.01 |   181.00 |   0.41 |  4.9 |    1288.85 |  2954.52 |
+gpuarrays/linalg/mul!/matrix-matrix           (2) |   107.47 |   0.01 |  0.0 |       0.12 |   553.00 |   6.31 |  5.9 |   19136.07 |  4212.98 |
+gpuarrays/math/intrinsics                     (2) |     3.74 |   0.00 |  0.0 |       0.00 |   181.00 |   0.19 |  5.0 |     711.11 |  4212.98 |
+gpuarrays/linalg/norm                         (2) |   268.94 |   0.01 |  0.0 |       0.02 |   257.00 |  21.18 |  7.9 |   52430.53 |  5626.27 |
+gpuarrays/statistics                          (2) |    77.79 |   0.00 |  0.0 |       1.51 |   551.00 |   4.21 |  5.4 |   13876.69 |  6655.55 |
+gpuarrays/reductions/mapreduce                (2) |   203.11 |   0.01 |  0.0 |       1.81 |   185.00 |  11.73 |  5.8 |   37609.42 |  6729.29 |
+gpuarrays/constructors                        (2) |    19.20 |   0.00 |  0.0 |       0.08 |   181.00 |   0.68 |  3.5 |    2569.40 |  6729.29 |
+gpuarrays/random                              (2) |    28.17 |   0.00 |  0.0 |       0.03 |   181.00 |   1.52 |  5.4 |    4786.98 |  6729.29 |
+gpuarrays/base                                (2) |    26.12 |   0.00 |  0.0 |       8.82 |   181.00 |   1.37 |  5.2 |    4506.52 |  6816.72 |
+gpuarrays/reductions/== isequal               (2) |    98.03 |   0.01 |  0.0 |       1.07 |   183.00 |  10.38 | 10.6 |   16597.95 |  7809.12 |
+gpuarrays/broadcasting                        (2) |   362.62 |   0.01 |  0.0 |       2.00 |   185.00 |  42.96 | 11.8 |   53772.92 |  8699.58 |
+gpuarrays/reductions/mapreducedim!            (2) |    56.83 |   0.00 |  0.0 |       1.54 |   183.00 |   6.86 | 12.1 |    7394.71 |  8699.58 |
+gpuarrays/reductions/reduce                   (2) |    19.58 |   0.00 |  0.0 |       1.21 |   183.00 |   0.44 |  2.3 |    2226.51 |  8699.58 |
+gpuarrays/reductions/sum prod                 (2) |   279.16 |   0.01 |  0.0 |       3.24 |   185.00 |  34.08 | 12.2 |   40919.47 | 10091.04 |
+apiutils                                      (2) |     0.11 |   0.00 |  0.0 |       0.00 |   165.00 |   0.00 |  0.0 |       0.81 | 10091.04 |
+array                                         (2) |   153.18 |   0.01 |  0.0 |    1266.37 |  1341.00 |  36.18 | 23.6 |   19461.83 | 10680.45 |
+broadcast                                     (2) |    22.37 |   0.00 |  0.0 |       0.00 |  1333.00 |   3.60 | 16.1 |    2901.68 | 10680.45 |
+codegen                                       (2) |    10.09 |   0.00 |  0.0 |       0.00 |  1393.00 |   1.39 | 13.7 |    1456.06 | 10680.45 |
+cublas                                        (2) |    83.06 |   0.02 |  0.0 |      14.55 |  1717.00 |   9.41 | 11.3 |   12030.98 | 11289.79 |
+cudadrv                                       (2) |     6.99 |   0.00 |  0.0 |       0.00 |  1335.00 |   0.28 |  4.1 |     791.80 | 11308.88 |
+cufft                                         (2) |    24.73 |   0.00 |  0.0 |     233.38 |  1437.00 |   2.91 | 11.8 |    2843.60 | 11314.30 |
+curand                                        (2) |     0.17 |   0.00 |  0.0 |       0.00 |  1327.00 |   0.09 | 50.0 |       3.75 | 11314.30 |
+cusparse                                      (2) |    49.55 |   0.02 |  0.0 |      10.81 |  1491.00 |   2.72 |  5.5 |    5858.52 | 11459.28 |
+examples                                      (2) |    85.06 |   0.00 |  0.0 |       0.00 |  1317.00 |   0.00 |  0.0 |      45.06 | 11459.28 |
+exceptions                                    (2) |    53.14 |   0.00 |  0.0 |       0.00 |  1317.00 |   0.00 |  0.0 |       1.57 | 11459.28 |
+execution                                        (2) |    94.27 |   0.00 |  0.0 |       0.49 |  1401.00 |  21.67 | 23.0 |   11410.60 | 11459.28 |
+iterator                                      (2) |     2.11 |   0.00 |  0.0 |       1.93 |  1317.00 |   0.00 |  0.0 |     360.93 | 11459.28 |
+linalg                                        (2) |    38.90 |   0.00 |  0.0 |       9.03 |  1405.00 |   8.86 | 22.8 |    5066.35 | 11459.28 |
+nvml                                          (2) |     0.51 |   0.00 |  0.0 |       0.00 |  1317.00 |   0.00 |  0.0 |      28.69 | 11459.28 |
+nvtx                                          (2) |     0.23 |   0.00 |  0.0 |       0.00 |  1317.00 |   0.00 |  0.0 |      34.94 | 11459.28 |
+pointer                                       (2) |     0.25 |   0.00 |  0.0 |       0.00 |  1317.00 |   0.00 |  0.0 |      11.54 | 11459.28 |
+pool                                          (2) |     4.44 |   0.00 |  0.0 |       0.00 |   165.00 |   2.79 | 62.9 |     244.88 | 11459.28 |
+random                                        (2) |    31.17 |   0.00 |  0.0 |     256.58 |   445.00 |   6.35 | 20.4 |    3519.72 | 11459.28 |
+sorting                                       (2) |   227.27 |   0.01 |  0.0 |     543.84 |  1777.00 |  50.72 | 22.3 |   28578.54 | 13741.85 |
+texture                                       (2) |    54.81 |   0.00 |  0.0 |       0.09 |   443.00 |   8.27 | 15.1 |    7309.86 | 13741.85 |
+threading                                     (2) |     2.94 |   0.00 |  0.0 |      10.94 |   811.00 |   0.45 | 15.5 |     299.54 | 13741.85 |
+utils                                         (2) |     0.80 |   0.00 |  0.0 |       0.00 |   421.00 |   0.00 |  0.0 |      76.69 | 13741.85 |
+cudnn/activation                              (2) |     1.83 |   0.00 |  0.0 |       0.00 |   545.00 |   0.14 |  7.4 |     186.83 | 13741.85 |
+cudnn/convolution                             (2) |     0.07 |   0.00 |  0.0 |       0.00 |   421.00 |   0.00 |  0.0 |       6.14 | 13741.85 |
+cudnn/dropout                                 (2) |     1.37 |   0.00 |  0.0 |       1.43 |   549.00 |   0.22 | 16.1 |      88.64 | 13741.85 |
+cudnn/inplace                                 (2) |     0.85 |   0.00 |  0.0 |       0.01 |   549.00 |   0.19 | 22.4 |      50.14 | 13741.85 |
+cudnn/multiheadattn                           (2) |    12.14 |   0.00 |  0.0 |       0.15 |   927.00 |   1.91 | 15.7 |    1592.27 | 13741.85 |
+cudnn/normalization                           (2) |    15.76 |   0.00 |  0.0 |       0.08 |   589.00 |   1.66 | 10.6 |    1682.89 | 13766.65 |
+cudnn/optensor                                (2) |     1.24 |   0.00 |  0.0 |       0.00 |   545.00 |   0.13 | 10.7 |     136.46 | 13766.79 |
+cudnn/pooling                                 (2) |     4.49 |   0.00 |  0.0 |       0.06 |   545.00 |   0.17 |  3.8 |     666.79 | 13766.79 |
+cudnn/reduce                                  (2) |     1.42 |   0.00 |  0.0 |       0.02 |   545.00 |   0.14 | 10.0 |     207.65 | 13766.79 |
+cudnn/rnn                                     (2) |     6.24 |   0.00 |  0.1 |     898.13 |  1567.00 |   0.22 |  3.4 |     649.49 | 13865.52 |
+cudnn/softmax                                 (2) |     0.98 |   0.00 |  0.0 |       0.01 |  1185.00 |   0.12 | 12.5 |      73.36 | 13865.70 |
+cudnn/tensor                                  (2) |     1.99 |   0.00 |  0.0 |       0.00 |   175.00 |   1.65 | 83.0 |      25.64 | 13865.70 |
+cusolver/dense                                (2) |   136.80 |   0.04 |  0.0 |    1467.10 |   617.00 |  29.02 | 21.2 |   15502.48 | 14179.64 |
+cusolver/multigpu                             (2) |     7.68 |   0.00 |  0.0 |     545.89 |   979.00 |   0.19 |  2.5 |     991.26 | 14179.64 |
+cusolver/sparse                               (2) |     5.29 |   0.00 |  0.0 |       0.18 |   721.00 |   0.37 |  6.9 |     420.74 | 14179.64 |
+cusparse/broadcast                            (2) |    75.65 |   0.00 |  0.0 |       0.02 |   617.00 |  14.20 | 18.8 |    8232.49 | 14371.40 |
+cusparse/conversions                          (2) |     8.84 |   0.00 |  0.0 |       0.02 |   615.00 |   0.50 |  5.7 |    1089.83 | 14371.40 |
+cusparse/device                               (2) |     0.32 |   0.00 |  0.0 |       0.01 |   615.00 |   0.11 | 34.3 |       3.66 | 14371.40 |
+cusparse/generic                              (2) |     1.85 |   0.00 |  0.0 |       0.05 |   615.00 |   0.11 |  5.9 |     182.92 | 14371.40 |
+cusparse/interfaces                           (2) |    34.24 |   0.01 |  0.0 |       0.97 |   615.00 |   3.63 | 10.6 |    3770.70 | 14371.40 |
+cusparse/linalg                               (2) |     4.44 |   0.00 |  0.0 |       0.01 |   615.00 |   0.10 |  2.2 |     560.27 | 14371.40 |
+cutensor/base                                 (2) |     0.11 |   0.00 |  0.0 |       0.05 |   517.00 |   0.00 |  0.0 |      14.68 | 14371.40 |
+cutensor/contractions                         (2) |    22.99 |   0.01 |  0.0 |   10626.41 |  1911.00 |   1.12 |  4.9 |    3072.22 | 14597.90 |
+cutensor/elementwise_binary                   (2) |    21.48 |   0.00 |  0.0 |       6.11 |  1427.00 |   0.78 |  3.6 |    2347.49 | 14597.90 |
+cutensor/elementwise_trinary                  (2) |    26.38 |   0.00 |  0.0 |       2.71 |  1427.00 |   0.98 |  3.7 |    3145.61 | 14597.90 |
+cutensor/permutations                         (2) |     2.94 |   0.00 |  0.0 |       1.36 |  1427.00 |   0.12 |  3.9 |     312.68 | 14597.90 |
+cutensor/reductions                           (2) |    22.97 |   0.00 |  0.0 |      36.36 |  1427.00 |   0.42 |  1.8 |    2181.72 | 15127.08 |
+device/array                                  (2) |     8.47 |   0.00 |  0.0 |       0.00 |  1333.00 |   0.33 |  3.9 |    1149.69 | 15127.08 |
+device/intrinsics                             (2) |    56.15 |   0.00 |  0.0 |       0.00 |  2015.00 |  10.61 | 18.9 |    7190.85 | 15161.48 |
+device/ldg                                    (2) |    10.23 |   0.00 |  0.0 |       0.00 |  1333.00 |   0.33 |  3.3 |    1598.80 | 15161.48 |
+device/random                                 (2) |    70.45 |   0.00 |  0.0 |       0.17 |  1335.00 |  13.64 | 19.4 |    7687.06 | 15161.48 |
+device/intrinsics/atomics                     (2) |   122.21 |   0.00 |  0.0 |       0.00 |  1335.00 |  24.14 | 19.7 |   13241.89 | 15169.65 |
+device/intrinsics/math                        (2) |    87.89 |   0.00 |  0.0 |       0.00 |  1363.00 |  15.47 | 17.6 |    8747.68 | 15202.04 |
+device/intrinsics/memory                      (2) |    33.16 |   0.00 |  0.0 |       0.02 |  1333.00 |   6.44 | 19.4 |    4266.41 | 15202.04 |
+device/intrinsics/output                      (2) |    38.30 |   0.00 |  0.0 |       0.00 |  1333.00 |   8.02 | 20.9 |    4777.54 | 15202.04 |
+device/intrinsics/wmma                        (2) |   132.81 |   0.01 |  0.0 |       0.63 |  1337.00 |  28.43 | 21.4 |   15981.42 | 15469.16 |
+Testing finished in 1 hour, 10 minutes, 21 seconds, 161 milliseconds
+
+Test Summary: |  Pass  Broken  Total
+  Overall     | 17002       5  17007
+    SUCCESS
+     Testing CUDA tests passed</code></pre>
+<p></div>
+<p>The output of the test already provides us with a lot of information about the card and the supported CUDA library versions.  Note that <code>CUDA.jl</code> will look up the NVIDIA driver &#40;the only requirement&#41; and download the best CUDA version on its own. Therefore, it is not necessarily the same version as installed on the system. </p>
+<p>Right away, we are able to use the high level functionality of the <code>CUDA.jl</code> package with the <em>implicit parallelism programming</em> model.</p>
+<h2 id="implicit_parallelism_programming"><a href="#implicit_parallelism_programming" class="header-anchor">Implicit parallelism programming</a></h2>
+<p>Let us look at some examples:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> a = CuArray([<span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>, <span class="hljs-number">4.0</span>])
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> a .+= <span class="hljs-number">1</span>
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+ 2.0
+ 3.0
+ 4.0
+ 5.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> a .+= a
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+  4.0
+  6.0
+  8.0
+ 10.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> sum(a)
+</span>28.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> A = a * a&#x27;
+</span>4×4 CuArray{Float64, 2, CUDA.Mem.DeviceBuffer}:
+ 16.0  24.0  32.0   40.0
+ 24.0  36.0  48.0   60.0
+ 32.0  48.0  64.0   80.0
+ 40.0  60.0  80.0  100.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> d = CUDA.rand(length(a))
+</span>4-element CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}:
+ 0.2327924
+ 0.06764824
+ 0.7085522
+ 0.97067034
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">using</span> LinearAlgebra
+</span>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> mul!(d, A, d)
+</span>ERROR: ArgumentError: output matrix must not be aliased with input matrix
+Stacktrace:
+ [1] gemm_dispatch!(C::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}, A::CuArray{Float64, 2, CUDA.Mem.DeviceBuffer}, B::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}, alpha::Bool, beta::Bool)
+   @ CUDA.CUBLAS ~/.julia/packages/CUDA/tTK8Y/lib/cublas/linalg.jl:269
+ [2] gemv_dispatch!(Y::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}, A::CuArray{Float64, 2, CUDA.Mem.DeviceBuffer}, B::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}, alpha::Bool, beta::Bool)
+   @ CUDA.CUBLAS ~/.julia/packages/CUDA/tTK8Y/lib/cublas/linalg.jl:181
+ [3] mul!
+   @ ~/.julia/packages/CUDA/tTK8Y/lib/cublas/linalg.jl:188 [inlined]
+ [4] mul!(C::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer}, A::CuArray{Float64, 2, CUDA.Mem.DeviceBuffer}, B::CuArray{Float32, 1, CUDA.Mem.DeviceBuffer})
+   @ LinearAlgebra /opt/julia-1.7.3/share/julia/stdlib/v1.7/LinearAlgebra/src/matmul.jl:275
+ [5] top-level scope
+   @ REPL[23]:1
+ [6] top-level scope
+   @ ~/.julia/packages/CUDA/tTK8Y/src/initialization.jl:52
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> d = CUDA.rand(<span class="hljs-built_in">Float64</span>, length(a))
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+ 0.6985405365128223
+ 0.1389900111808831
+ 0.41880569903314474
+ 0.47366941788943956
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> mul!(d, A, d)
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+  46.86096793718457
+  70.29145190577685
+  93.72193587436914
+ 117.15241984296142
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> qr(d)
+</span>CUDA.CUSOLVER.CuQR{Float64, CuArray{Float64, 2, CUDA.Mem.DeviceBuffer}} with factors Q and R:
+[┌ Warning: Performing scalar indexing on task Task (runnable) @0x00007f27b8a15150.
+│ Invocation of CuQRPackedQ getindex resulted in scalar indexing of a GPU array.
+│ This is typically caused by calling an iterating implementation of a method.
+│ Such implementations *do not* execute on the GPU, but very slowly on the CPU,
+│ and therefore are only permitted from the REPL for prototyping purposes.
+│ If you did intend to index this array, annotate the caller with @allowscalar.
+└ @ GPUArraysCore ~/.julia/packages/GPUArraysCore/rSIl2/src/GPUArraysCore.jl:81
+-0.2721655269759087 -0.40824829046386296 -0.5443310539518174 -0.6804138174397716; -0.40824829046386296 0.8689897948556636 -0.17468027352578192 -0.21835034190722735; -0.5443310539518174 -0.1746802735257819 0.7670929686322908 -0.29113378920963645; -0.6804138174397716 -0.21835034190722735 -0.2911337892096365 0.6360827634879545]
+[-172.17819044853752;;]
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> broadcast(a) <span class="hljs-keyword">do</span> x sin(x) <span class="hljs-keyword">end</span>
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+ -0.7568024953079282
+ -0.27941549819892586
+  0.9893582466233818
+ -0.5440211108893699
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> reduce(+, a)
+</span>28.0
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> accumulate(+, a)
+</span>4-element CuArray{Float64, 1, CUDA.Mem.DeviceBuffer}:
+  4.0
+ 10.0
+ 18.0
+ 28.0</code></pre>
+<p>With this functionality we can code up a lot of problems in scientific computing and port it to the GPU without knowing anything else than how to include <code>CUDA.jl</code> and define/allocate the appropriate data on the GPU.  It is worth noting, that this is also highly efficient, as the people behind <code>CUDA.jl</code> optimize the calls with the same features as Julia itself and they work extraordinary well. </p>
+<p>Of course we can not express everything in these terms.  Sometimes it is necessary to write a specific CUDA kernel function. Note, that kernel is the technical name given to a function that is executed on the GPU.</p>
+<h2 id="pi_example_on_the_gpu"><a href="#pi_example_on_the_gpu" class="header-anchor"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example on the GPU</a></h2>
+<p>The main idea is to use the most of the GPU by performing as many operations in parallel as possible, this also means we need to represent <code>M</code> as a vector again.  The GPU at hand supports a maximum of <code>1024</code> threads, so let us use all of them. </p>
+<p>There is also one additional thing to keep in mind, that is, a kernel can not return a value.  That means we need to give <code>M</code> as an input variable rather than an output variable and in order to stick to the Julia convention we define the kernel as:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel!(n::<span class="hljs-built_in">Int64</span>, M)
+    j =  threadIdx().x 
+    
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+            <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+<span class="hljs-keyword">end</span></code></pre>
+<p>This looks very similar to our function <a href="../multithreading/#actually_distribute_the_work"><code>in_unit_circle_threaded3</code></a>.  Instead of <code>threadid&#40;&#41;</code> as we had it in multithreading, this time the <em>id</em> is queried by <code>threadIdx&#40;&#41;.x</code>.  The <code>.x</code> is due to the fact that we could also have two or three dimensional arrays &#40;remember GPUs were designed to work with images&#41;.</p>
+<p>The kernel is now called with the <code>@cuda</code> macro and the number of threads given as an argument.  Note, that we also define <code>M</code> to have dimension <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>10</mn></msup><mo>=</mo><mn>1024</mn></mrow><annotation encoding="application/x-tex">2^{10} = 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1024</span></span></span></span> and of type <code>Int8</code>.</p>
+<p>We use <code>Int8</code> as on GPUs the data type has quite a high impact on the performance.  With integers this is not that important but if we are not working on a high level server grades GPU the <em>double</em> &#40;<code>Float64</code>&#41; performance will be significantly slower than <em>single</em> &#40;<code>Float32</code>&#41;.  Secondly, there is usually less storage on the GPU.</p>
+<p>The resulting <em>host</em> side function looks as follows:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_gpu(N::<span class="hljs-built_in">Int64</span>)
+    nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
+    len, _ = divrem(N, nthreads)
+    M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, nthreads)
+
+    <span class="hljs-meta">@cuda</span> threads = nthreads in_unit_circle_kernel!(len, M)
+
+    <span class="hljs-keyword">return</span> sum(M)
+<span class="hljs-keyword">end</span></code></pre>
+<p>and the performance:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu, N)
+</span>  6.65503269949852e-5
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu, N);
+</span>  1.740 s (157 allocations: 8.25 KiB)</code></pre>
+<p>We are already faster than the standard Julia implementation but this is not what we were hoping for.  The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that GPU is not utilized fully.</p>
+<pre><code class="bash hljs">+-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA GeForce ...  Off  | 00000000:01:00.0 Off |                  N/A |
+| N/A   38C    P5    15W /  N/A |    173MiB /  8192MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A      2232      G   /usr/lib/xorg/Xorg                  4MiB |
+|    0   N/A  N/A     46980      C   julia                             165MiB |
++-----------------------------------------------------------------------------+</code></pre>
+<p>It only provides a snapshot but we still see that the <code>Volatile GPU-Util</code> is low to insignificant.  What we did in the above example was to use the maximal number of threads &#40;<code>1024</code>&#41; support by the used GPU and performed our operations with them. This way we only occupied one <em>streaming multiprocessor</em> &#40;SM&#41; but the GPU has several SMs - this is similar to how a CPU has multiple cores.</p>
+<h3 id="multiple_streaming_multiprocessors"><a href="#multiple_streaming_multiprocessors" class="header-anchor">Multiple Streaming Multiprocessors</a></h3>
+<p>To get the full performance, we need to run our kernel not just with multiple threads, but also with multiple blocks. </p>
+<p>In this technical blog from NVIDIA <a href="https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/">CUDA Refresher: The CUDA Programming Model</a> we can read more about it.  The following figure illustrates it quite nicely: 
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/hpc/kernel-execution-on-gpu-1.png" style="padding:0; " alt=" Kernel execution on GPU."/>
+<figcaption> Kernel execution on GPU. Original source: <p style="font-size:11px"><a href=" https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/"> https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/</a></p></figcaption>
+</figure>
+</p>
+<p>If we use blocks, the computation of our index in <code>M</code> becomes a bit more tricky to compute and we also need to have more storage for <code>M</code>.</p>
+<p>Similar as with the <code>threadIdx&#40;&#41;.x</code> we have a <code>blockIdx&#40;&#41;.x</code> and a <code>blockDim&#40;&#41;.x</code> to perform this computation. </p>
+<div class="important">Julia starts with indexing by <code>1</code>. On the GPU this can become a bit confusing as CUDA in general does not.  In this case we need to correct the <code>blockIdx&#40;&#41;</code> by <code>1</code>.</div>
+<div class="important">As highlighted in the <a href="https://juliagpu.org/post/2022-01-28-cuda_3.5_3.8/#preserving_array_indices">blog</a>, <code>CUDA.jl</code> introduced optimized index types for CUDA to make sure that no storage is wasted.  Therefore, we use <code>0x1</code> instead of <code>1</code> in the kernels in this section, where needed.</div>
+<p>So we end up with the following code:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel2!(M)
+    j = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
+
+    <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+        <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+<span class="hljs-keyword">end</span>
+
+<span class="hljs-keyword">function</span> in_unit_circle_gpu2(N::<span class="hljs-built_in">Int64</span>)
+    nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
+    nblocks, _ = divrem(N, nthreads)
+    M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, N)
+
+    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks in_unit_circle_kernel2!(M)
+
+    <span class="hljs-keyword">return</span> sum(M)
+<span class="hljs-keyword">end</span></code></pre>
+<p>and the performance:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu2, N)
+</span>  1.79504328450264e-5
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu2, N);
+</span>  81.436 ms (156 allocations: 8.16 KiB)</code></pre>
+<p>Now each thread on the GPU is doing exactly one computation &#40;and therefore the loop inside the kernel is not needed and for performance reasons removed&#41;. This is still not the most efficient way to use the GPU and in addition it is rather wasteful on memory. </p>
+<h3 id="multiple_operations_per_thread"><a href="#multiple_operations_per_thread" class="header-anchor">Multiple operations per thread</a></h3>
+<p>So let us optimize the computation a bit further. Each of the threads should do <code>n</code> iterations. This means we need to define the number of blocks as </p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>n</mi><mi mathvariant="normal">blocks</mi><mo>⁡</mo></msub><mo>=</mo><mfrac><mi>N</mi><mrow><msub><mi>n</mi><mi mathvariant="normal">threads</mi><mo>⁡</mo></msub><mi>n</mi></mrow></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
+ n_{\operatorname{blocks}} = \frac{N}{n_{\operatorname{threads}} n}.
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mord mathrm mtight">blocks</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1963em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mord mathrm mtight">threads</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span>
+<p>The kernel is a combination of the two previous kernels:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel3!(n::<span class="hljs-built_in">Int64</span>, M)
+    j = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+            <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+<span class="hljs-keyword">end</span></code></pre>
+<p>The calling function needs to compute the values as defined above: </p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_gpu3(N::<span class="hljs-built_in">Int64</span>)
+    nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
+    n = <span class="hljs-number">2</span>^<span class="hljs-number">6</span>
+    
+    nblocks, _ = divrem(N, n * nthreads)
+    M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, nblocks * nthreads)
+    
+    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks in_unit_circle_kernel3!(n, M)
+
+    <span class="hljs-keyword">return</span> sum(M)
+<span class="hljs-keyword">end</span></code></pre>
+<p>and the performance is pretty good</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu2, N)
+</span>  5.6093680210977936e-5
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu2, N);
+</span>  45.194 ms (155 allocations: 8.14 KiB)</code></pre>
+<p>One thing we have to keep in mind, is that we have defined <code>M</code> of type <code>Int8</code> to save space and boost performance.  If <code>n</code> become larger than <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">2^7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">7</span></span></span></span></span></span></span></span></span></span></span> it might happen that the result is too large and can no longer be stored in an 8-Bit integer &#40;as a result an overflow would occur&#41;. </p>
+<h3 id="additional_notes"><a href="#additional_notes" class="header-anchor">Additional notes</a></h3>
+<p>Like with the rest of the topics in this section we skimmed the surface and did not make a deep dive &#40;like memory access, profiling to find slow parts in the code, multi GPU programming, multithreaded/distributed computing with GPUs and so forth&#41;.  Have a look at the excellent introduction on <a href="https://juliagpu.org/learn/">JuliaGPU</a> to see more about the topic and have a look at the YouTube Videos of Tim Besard for a start.  Here it was only possible to give a sound idea on what is happening and how great and easy we can achieve all of it with Julia.</p>
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 09, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
+    
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+  }
+</script>

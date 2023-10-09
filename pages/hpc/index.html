@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>Parallel Computing</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link ">Start</a>
+        <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link active">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link ">Single Instruction Multiple Data</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
+          </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="parallel_computing_with_julia"><a href="#parallel_computing_with_julia" class="header-anchor">Parallel computing with Julia</a></h1>
+<p>Since modern laptops and computers come with multiple cores, parallel computing is not just something for High Performance Computing systems. The general idea is to not only use a single computational thread &#40;linear programming&#41; but run concurring threads at the same time that solve the given task at hand in parallel. Julia by default supports different ways for active <a href="https://docs.julialang.org/en/v1/manual/parallel-computing/">parallel or concurring computing</a>. In this section we follow some of the examples given on <a href="https://github.com/JuliaAcademy/JuliaTutorials">Julia Academy - JuliaTutorials</a>.</p>
+<div class="important">Julia has an excellent section dedicated to general <a href="https://docs.julialang.org/en/v1/manual/performance-tips/">performance tips</a> that are a good read every couple of months.</div>
+<p>This part covers the following sections:</p>
+<ol>
+<li><p><a href="performance/">Measuring performance</a></p>
+</li>
+<li><p><a href="simd/">Singe Instruction Multiple Data</a></p>
+</li>
+<li><p><a href="pi/"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example</a></p>
+</li>
+<li><p><a href="multithreading/">Multithreading</a></p>
+</li>
+<li><p><a href="distributed/">Distributed computing</a></p>
+</li>
+<li><p><a href="gpu/">GPU computing</a></p>
+</li>
+</ol>
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 09, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
+    
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+  }
+</script>

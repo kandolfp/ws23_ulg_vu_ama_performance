@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>WS23 971007 VU Advanced Methods and its Applications - Julia</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link active">Start</a>
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link ">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link ">Single Instruction Multiple Data</a>
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
+          </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="preface"><a href="#preface" class="header-anchor">Preface</a></h1>
+<div class="important">THIS WORKSHOP IS STILL UNDER CONSTRUCTION AND ACTIVE DEVELOPMENT.</div>
+<h1 id="getting_started_with_julia"><a href="#getting_started_with_julia" class="header-anchor">Getting started with Julia</a></h1>
+<p>Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing. Visit <a href="https://julialang.org">julialang.org</a> for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language. It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R. Julia recently entered its teens and for this occasion a blog post was published with the title <a href="https://julialang.org/blog/2022/02/10years/">Why We Use Julia, 10 Years Later</a> as a follow up to the <a href="https://julialang.org/blog/2012/02/why-we-created-julia/">Why We Created Julia</a>. Both entries are a good read and give you an insight into the language and its creators.</p>
+<p>In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend <a href="https://noxthot.github.io/ss22_julia_workshop/">Scientific Coding with Julia</a></p>
+<h2 id="acknowledgment"><a href="#acknowledgment" class="header-anchor">Acknowledgment</a></h2>
+<p>This notes are based on the Julia Workshop designed the <a href="https://www.uibk.ac.at/dk-cim/index.html.en">Doctoral College Computational Interdisciplinary Modelling &#40;DK CIM&#41;</a> and especially the section about <a href="https://noxthot.github.io/ss22_julia_workshop/pages/hpc/">Parallel Computing</a>. </p>
+<h2 id="some_general_words_on_the_organization_of_this_workshop"><a href="#some_general_words_on_the_organization_of_this_workshop" class="header-anchor">Some general words on the organization of this workshop</a></h2>
+<p>For this workshop you do not need to be an Julia expert, not even a programming expert. We will introduce programming and Julia concepts along with examples. For this purpose you will find code blocks that you can copy if necessary &#40;top right corner <code>copy</code>&#41;. Furthermore, if we think something is very important we will highlight it with a box:</p>
+<div class="important">Pay extra attention to the content here.</div>
+<p>We also have various environments with different color coding that usually are collapsed to not hinder the reading process:</p>
+<ul>
+<li><p>Examples are green</p>
+</li>
+</ul>
+<button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  Examples are also quite nice because they make sure you have an idea what is happening. </div>
+<ul>
+<li><p>Exercises are blue</p>
+</li>
+</ul>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Exercises are here for you to work on, no worries not at home or in your off hours but with us in the workshop.</p>
+<p>This way it is more likely that everybody tries to do the exercises without first looking at the sample solution.&#41; </div>
+<p>That is about all we wanted to let you know, so let us get into it.</p>
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 09, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+  }
+</script>

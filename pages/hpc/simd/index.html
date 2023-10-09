@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>Parallel Computing - SIMD</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link ">Start</a>
+        <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link active">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link active">Single Instruction Multiple Data</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
+          </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="single-instruction_multiple_data"><a href="#single-instruction_multiple_data" class="header-anchor">Single-Instruction multiple data</a></h1>
+<p>Before we are going to specifically parallelize code we talk about an inbuilt mechanism called Single-instruction, multiple data or <a href="https://docs.julialang.org/en/v1/base/simd-types/">SIMD</a> for short. The main idea is that, <em>central processing units</em> &#40;CPUs&#41; or basically any <em>arithmetic logic unit</em> &#40;ALU&#41; can perform the same operation on multiple inputs in a single clock cycle. This was already used for BLAS and LAPACK packages, with the so called <em>unrolling</em>.</p>
+<p>Let us consider the following example</p>
+<div class="nonumber"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right" columnspacing=""><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>y</mi><mn>1</mn></msub><mo>→</mo><msub><mi>z</mi><mn>1</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo><msub><mi>y</mi><mn>2</mn></msub><mo>→</mo><msub><mi>z</mi><mn>2</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>3</mn></msub><mo>+</mo><msub><mi>y</mi><mn>3</mn></msub><mo>→</mo><msub><mi>z</mi><mn>3</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>4</mn></msub><mo>+</mo><msub><mi>y</mi><mn>4</mn></msub><mo>→</mo><msub><mi>z</mi><mn>4</mn></msub></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+x_1 + y_1 \to z_1\\
+x_2 + y_2 \to z_2\\
+x_3 + y_3 \to z_3\\
+x_4 + y_4 \to z_4
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:6em;vertical-align:-2.75em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.25em;"><span style="top:-5.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-0.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.75em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>which should look pretty familiar from the basic vector addition <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mi>x</mi><mo>+</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">z = x + y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span></span>. As mentioned, modern processors have <em>vector units</em> that can deal with this kind of operation at once, basically:</p>
+<div class="nonumber"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right" columnspacing=""><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow><mo fence="true">(</mo><mtable rowspacing="0.16em" columnalign="center" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>x</mi><mn>1</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>x</mi><mn>2</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>x</mi><mn>3</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>x</mi><mn>4</mn></msub></mstyle></mtd></mtr></mtable><mo fence="true">)</mo></mrow><mo>+</mo><mrow><mo fence="true">(</mo><mtable rowspacing="0.16em" columnalign="center" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>y</mi><mn>1</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>y</mi><mn>2</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>y</mi><mn>3</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>y</mi><mn>4</mn></msub></mstyle></mtd></mtr></mtable><mo fence="true">)</mo></mrow><mo>→</mo><mrow><mo fence="true">(</mo><mtable rowspacing="0.16em" columnalign="center" columnspacing="1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>z</mi><mn>1</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>z</mi><mn>2</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>z</mi><mn>3</mn></msub></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="false"><msub><mi>z</mi><mn>4</mn></msub></mstyle></mtd></mtr></mtable><mo fence="true">)</mo></mrow></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+\begin{pmatrix}
+x_1\\
+x_2\\
+x_3\\
+x_4
+\end{pmatrix}
++
+\begin{pmatrix}
+y_1\\
+y_2\\
+y_3\\
+y_4
+\end{pmatrix}
+\to
+\begin{pmatrix}
+z_1\\
+z_2\\
+z_3\\
+z_4
+\end{pmatrix}
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:5.1001em;vertical-align:-2.3em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.8em;"><span style="top:-4.8em;"><span class="pstrut" style="height:4.65em;"></span><span class="mord"><span class="minner"><span class="mopen"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎝</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M291 0 H417 V1216 H291z M291 0 H417 V1216 H291z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎛</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mtable"><span class="col-align-c"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-4.81em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.61em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.21em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span><span class="mclose"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎠</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M457 0 H583 V1216 H457z M457 0 H583 V1216 H457z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="minner"><span class="mopen"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎝</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M291 0 H417 V1216 H291z M291 0 H417 V1216 H291z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎛</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mtable"><span class="col-align-c"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-4.81em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.61em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.21em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span><span class="mclose"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎠</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M457 0 H583 V1216 H457z M457 0 H583 V1216 H457z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">→</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="minner"><span class="mopen"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎝</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M291 0 H417 V1216 H291z M291 0 H417 V1216 H291z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎛</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mtable"><span class="col-align-c"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-4.81em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.61em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.21em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.044em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span><span class="mclose"><span class="delimsizing mult"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.65em;"><span style="top:-1.711em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎠</span></span></span><span style="top:-2.858em;"><span class="pstrut" style="height:3.216em;"></span><span style="height:1.216em;width:0.875em;"><svg xmlns="http://www.w3.org/2000/svg" width='0.875em' height='1.216em' style='width:0.875em' viewBox='0 0 875 1216' preserveAspectRatio='xMinYMin'><path d='M457 0 H583 V1216 H457z M457 0 H583 V1216 H457z'/></svg></span></span><span style="top:-4.7111em;"><span class="pstrut" style="height:3.216em;"></span><span class="delimsizinginner delim-size4"><span>⎞</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.15em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.3em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
+<p>or visualized as: 
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/hpc/Single-Instruction-Single-Data-vs-Single-Instruction-Multiple-Data.ppm" style="padding:0; " alt=" Single instruction single data vs. single instruction multiple data."/>
+<figcaption> Single instruction single data vs. single instruction multiple data. Original source: <p style="font-size:11px"><a href=" https://www.researchgate.net/figure/Single-Instruction-Single-Data-vs-Single-Instruction-Multiple-Data_fig6_45145832"> https://www.researchgate.net/figure/Single-Instruction-Single-Data-vs-Single-Instruction-Multiple-Data_fig6_45145832</a></p></figcaption>
+</figure>
+</p>
+<p>Even if you do not see it right away, we can modify our sum over a vector, and learn how Julia is including the SIMD concept and why it is most of the time better to call library functions than programming them on your own. As we already know how to do benchmarking, let us try to figure out if our sum function is doing a good job.</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
+
+<span class="hljs-keyword">function</span> mysum(a)
+    result = zero(eltype(a))
+
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> eachindex(a)
+        <span class="hljs-meta">@inbounds</span> result += a[i]
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> result
+<span class="hljs-keyword">end</span>
+
+a = rand(<span class="hljs-number">100_000</span>)
+println(<span class="hljs-string">&quot;\nSimple sum:&quot;</span>)
+<span class="hljs-meta">@btime</span> mysum($a)
+println(<span class="hljs-string">&quot;\nBuilt-in sum:&quot;</span>)
+<span class="hljs-meta">@btime</span> sum($a)</code></pre>
+<p><pre><code class="plaintext hljs">
+Simple sum:
+  133.603 μs (0 allocations: 0 bytes)
+
+Built-in sum:
+  12.900 μs (0 allocations: 0 bytes)
+50075.994992462176</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
+<p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there. </p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> mysimdsum(a)
+    result = zero(eltype(a))
+
+    <span class="hljs-meta">@simd</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> eachindex(a)
+        <span class="hljs-meta">@inbounds</span> result += a[i]
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> result
+<span class="hljs-keyword">end</span>
+
+<span class="hljs-keyword">function</span> mysum2(V)
+    s = zero(eltype(V))
+
+    <span class="hljs-keyword">for</span> v <span class="hljs-keyword">in</span> V
+        s += v
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> s
+<span class="hljs-keyword">end</span>
+
+<span class="hljs-keyword">function</span> mysimdsum2(V)
+    s = zero(eltype(V))
+
+    <span class="hljs-meta">@simd</span> <span class="hljs-keyword">for</span> v <span class="hljs-keyword">in</span> V
+        s += v
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> s
+<span class="hljs-keyword">end</span>
+
+println(<span class="hljs-string">&quot;\nSimple mysum(a) = &quot;</span>, mysum(a))
+<span class="hljs-meta">@btime</span> mysum($a)
+println(<span class="hljs-string">&quot;\nBuilt-in sum(a) = &quot;</span>, sum(a))
+<span class="hljs-meta">@btime</span> sum($a)
+println(<span class="hljs-string">&quot;\nSimple mysimdsum = &quot;</span>, mysimdsum(a))
+<span class="hljs-meta">@btime</span> mysimdsum($a)
+println(<span class="hljs-string">&quot;\nSimple mysum2 = &quot;</span>, mysum2(a))
+<span class="hljs-meta">@btime</span> mysum2($a)
+println(<span class="hljs-string">&quot;\nSimple mysimdsum2 = &quot;</span>, mysimdsum2(a))
+<span class="hljs-meta">@btime</span> mysimdsum2($a)</code></pre>
+<p><pre><code class="plaintext hljs">
+Simple mysum(a) = 50075.99499246218
+  133.702 μs (0 allocations: 0 bytes)
+
+Built-in sum(a) = 50075.994992462176
+  13.200 μs (0 allocations: 0 bytes)
+
+Simple mysimdsum = 50075.994992462234
+  10.100 μs (0 allocations: 0 bytes)
+
+Simple mysum2 = 50075.99499246218
+  133.603 μs (0 allocations: 0 bytes)
+
+Simple mysimdsum2 = 50075.994992462234
+  10.100 μs (0 allocations: 0 bytes)
+50075.994992462234</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
+<p>This is due to the fact that the numerics involved are a bit tricky.  In short, when adding floating point numbers you lose accuracy when adding a large number to a small number.  This is exactly what is happening for our first example as we add all the numbers in one long sequence. </p>
+<p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
+<p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> InteractiveUtils
+
+<span class="hljs-meta">@code_llvm</span> mysum(a)
+printstyled(<span class="hljs-string">&quot;\n------Separator-------\n\n&quot;</span>; color = :red)
+<span class="hljs-meta">@code_llvm</span> mysimdsum(a)</code></pre>
+<pre><code class="plaintext hljs">;  @ none:2 within `mysum`
+define double @julia_mysum_2073({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+top:
+;  @ none:5 within `mysum`
+; ┌ @ abstractarray.jl:314 within `eachindex`
+; │┌ @ abstractarray.jl:133 within `axes1`
+; ││┌ @ abstractarray.jl:98 within `axes`
+; │││┌ @ array.jl:149 within `size`
+      %1 = bitcast {}* %0 to { i8*, i64, i16, i16, i32 }*
+      %2 = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
+      %3 = load i64, i64* %2, align 8
+; └└└└
+; ┌ @ range.jl:887 within `iterate`
+; │┌ @ range.jl:662 within `isempty`
+; ││┌ @ operators.jl:369 within `&gt;`
+; │││┌ @ int.jl:83 within `&lt;`
+      %.not.not = icmp eq i64 %3, 0
+; └└└└
+  br i1 %.not.not, label %L29, label %L13.preheader
+
+L13.preheader:                                    ; preds = %top
+  %4 = bitcast {}* %0 to double**
+  %5 = load double*, double** %4, align 8
+;  @ none:7 within `mysum`
+  br label %L13
+
+L13:                                              ; preds = %L13, %L13.preheader
+  %value_phi3 = phi i64 [ %10, %L13 ], [ 1, %L13.preheader ]
+  %value_phi5 = phi double [ %9, %L13 ], [ 0.000000e+00, %L13.preheader ]
+;  @ none:6 within `mysum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %6 = add nsw i64 %value_phi3, -1
+   %7 = getelementptr inbounds double, double* %5, i64 %6
+   %8 = load double, double* %7, align 8
+; └
+; ┌ @ float.jl:408 within `+`
+   %9 = fadd double %value_phi5, %8
+; └
+;  @ none:7 within `mysum`
+; ┌ @ range.jl:891 within `iterate`
+; │┌ @ promotion.jl:499 within `==`
+    %.not.not12 = icmp eq i64 %value_phi3, %3
+; │└
+   %10 = add nuw nsw i64 %value_phi3, 1
+; └
+  br i1 %.not.not12, label %L29, label %L13
+
+L29:                                              ; preds = %L13, %top
+  %value_phi9 = phi double [ 0.000000e+00, %top ], [ %9, %L13 ]
+;  @ none:9 within `mysum`
+  ret double %value_phi9
+}
+
+------Separator-------
+
+;  @ none:1 within `mysimdsum`
+define double @julia_mysimdsum_2082({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+top:
+;  @ none:4 within `mysimdsum`
+; ┌ @ simdloop.jl:69 within `macro expansion`
+; │┌ @ abstractarray.jl:314 within `eachindex`
+; ││┌ @ abstractarray.jl:133 within `axes1`
+; │││┌ @ abstractarray.jl:98 within `axes`
+; ││││┌ @ array.jl:149 within `size`
+       %1 = bitcast {}* %0 to { i8*, i64, i16, i16, i32 }*
+       %2 = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
+       %3 = load i64, i64* %2, align 8
+; │└└└└
+; │ @ simdloop.jl:72 within `macro expansion`
+; │┌ @ int.jl:83 within `&lt;`
+    %.not = icmp eq i64 %3, 0
+; │└
+   br i1 %.not, label %L30, label %L13.lr.ph
+
+L13.lr.ph:                                        ; preds = %top
+   %4 = bitcast {}* %0 to double**
+   %5 = load double*, double** %4, align 8
+; │ @ simdloop.jl:75 within `macro expansion`
+   %min.iters.check = icmp ult i64 %3, 16
+   br i1 %min.iters.check, label %scalar.ph, label %vector.ph
+
+vector.ph:                                        ; preds = %L13.lr.ph
+   %n.vec = and i64 %3, 9223372036854775792
+   br label %vector.body
+
+vector.body:                                      ; preds = %vector.body, %vector.ph
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
+    %vec.phi = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %14, %vector.body ]
+    %vec.phi9 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %15, %vector.body ]
+    %vec.phi10 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %16, %vector.body ]
+    %vec.phi11 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %17, %vector.body ]
+    %6 = getelementptr inbounds double, double* %5, i64 %index
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %7 = bitcast double* %6 to &lt;4 x double&gt;*
+    %wide.load = load &lt;4 x double&gt;, &lt;4 x double&gt;* %7, align 8
+    %8 = getelementptr inbounds double, double* %6, i64 4
+    %9 = bitcast double* %8 to &lt;4 x double&gt;*
+    %wide.load12 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %9, align 8
+    %10 = getelementptr inbounds double, double* %6, i64 8
+    %11 = bitcast double* %10 to &lt;4 x double&gt;*
+    %wide.load13 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %11, align 8
+    %12 = getelementptr inbounds double, double* %6, i64 12
+    %13 = bitcast double* %12 to &lt;4 x double&gt;*
+    %wide.load14 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %13, align 8
+; │└
+; │┌ @ float.jl:408 within `+`
+    %14 = fadd fast &lt;4 x double&gt; %vec.phi, %wide.load
+    %15 = fadd fast &lt;4 x double&gt; %vec.phi9, %wide.load12
+    %16 = fadd fast &lt;4 x double&gt; %vec.phi10, %wide.load13
+    %17 = fadd fast &lt;4 x double&gt; %vec.phi11, %wide.load14
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next = add nuw i64 %index, 16
+    %18 = icmp eq i64 %index.next, %n.vec
+    br i1 %18, label %middle.block, label %vector.body
+
+middle.block:                                     ; preds = %vector.body
+; │└
+; │ @ simdloop.jl:75 within `macro expansion`
+   %bin.rdx = fadd fast &lt;4 x double&gt; %15, %14
+   %bin.rdx15 = fadd fast &lt;4 x double&gt; %16, %bin.rdx
+   %bin.rdx16 = fadd fast &lt;4 x double&gt; %17, %bin.rdx15
+   %19 = call fast double @llvm.vector.reduce.fadd.v4f64(double -0.000000e+00, &lt;4 x double&gt; %bin.rdx16)
+   %cmp.n = icmp eq i64 %3, %n.vec
+   br i1 %cmp.n, label %L30, label %scalar.ph
+
+scalar.ph:                                        ; preds = %middle.block, %L13.lr.ph
+   %bc.resume.val = phi i64 [ %n.vec, %middle.block ], [ 0, %L13.lr.ph ]
+   %bc.merge.rdx = phi double [ %19, %middle.block ], [ 0.000000e+00, %L13.lr.ph ]
+   br label %L13
+
+L13:                                              ; preds = %L13, %scalar.ph
+   %value_phi18 = phi i64 [ %bc.resume.val, %scalar.ph ], [ %23, %L13 ]
+   %value_phi7 = phi double [ %bc.merge.rdx, %scalar.ph ], [ %22, %L13 ]
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %20 = getelementptr inbounds double, double* %5, i64 %value_phi18
+    %21 = load double, double* %20, align 8
+; │└
+; │┌ @ float.jl:408 within `+`
+    %22 = fadd fast double %value_phi7, %21
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %23 = add nuw nsw i64 %value_phi18, 1
+; │└
+; │ @ simdloop.jl:75 within `macro expansion`
+; │┌ @ int.jl:83 within `&lt;`
+    %exitcond.not = icmp eq i64 %23, %3
+; │└
+   br i1 %exitcond.not, label %L30, label %L13
+
+L30:                                              ; preds = %L13, %middle.block, %top
+   %value_phi2 = phi double [ 0.000000e+00, %top ], [ %19, %middle.block ], [ %22, %L13 ]
+; └
+;  @ none:8 within `mysimdsum`
+  ret double %value_phi2
+}
+</code></pre>
+<p>The <a href="https://llvm.org/">LLVM</a> project is the compiler toolchain technology that Julia uses for its <em>Just in Time</em> &#40;JIT&#41; compilation. Basically, it translates the Julia code into a machine language close to Assembler &#40;but quite readable, if you get used to it&#41; and this is compiled when needed. We could see JIT doing its magic in the beginning of the <a href="#how-to-measure-performance-in-julia">Benchmark</a> section, as the function <code>mysum</code> was compiled on its first run. Note: in general packages get precompiled before they are used to gain performance.</p>
+<h1 id="multiple_dispatch"><a href="#multiple_dispatch" class="header-anchor">Multiple dispatch</a></h1>
+<p>While on the subject of performance and the JIT compilation it is time to recall the <em>multiple dispatch</em> capabilities of Julia. </p>
+<p>Like most of the time, this concept is best explained by showing an example. In our, now already famous, sum example we never specified what type the argument has. As long as one was able to loop over it and add the entries it was fine. That does not mean Julia never cared. In fact, we can take a look what Julia does for different input types.</p>
+<p>For this we use another macro from the <code>InteractiveUtils</code> package, namely <code>@code_typed</code>. Again, we get some intermediate code that Julia produces for us. This time a bit more compact but most important, all the type information of the input argument attached to it. </p>
+<p>For an array of <code>Int64</code> we get:</p>
+<pre><code class="julia hljs"><span class="hljs-meta">@code_typed</span> optimize=<span class="hljs-literal">false</span> mysum([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>])</code></pre>
+<p><pre><code class="plaintext hljs">CodeInfo(
+1 ─ %1  = eltype(a)::Core.Const(Int64)
+│         (result = zero(%1))::Core.Const(0)
+│   %3  = eachindex(a)::Base.OneTo{Int64}
+│         (@_3 = Base.iterate(%3))::Union{Nothing, Tuple{Int64, Int64}}
+│   %5  = (@_3 === nothing)::Bool
+│   %6  = Base.not_int(%5)::Bool
+└──       goto #4 if not %6
+2 ┄ %8  = @_3::Tuple{Int64, Int64}
+│         (i = Core.getfield(%8, 1))::Int64
+│   %10 = Core.getfield(%8, 2)::Int64
+│         nothing::Core.Const(nothing)
+│   %12 = result::Int64
+│   %13 = Base.getindex(a, i)::Int64
+│   %14 = (%12 + %13)::Int64
+│         (result = %14)::Int64
+│         (val = %14)::Int64
+│         nothing::Core.Const(nothing)
+│         val::Int64
+│         (@_3 = Base.iterate(%3, %10))::Union{Nothing, Tuple{Int64, Int64}}
+│   %20 = (@_3 === nothing)::Bool
+│   %21 = Base.not_int(%20)::Bool
+└──       goto #4 if not %21
+3 ─       goto #2
+4 ┄       return result
+) =&gt; Int64</code></pre> and for <code>Float64</code>:</p>
+<pre><code class="julia hljs"><span class="hljs-meta">@code_typed</span> optimize=<span class="hljs-literal">false</span> mysum([<span class="hljs-number">1.0</span>, <span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>])</code></pre>
+<p><pre><code class="plaintext hljs">CodeInfo(
+1 ─ %1  = eltype(a)::Core.Const(Float64)
+│         (result = zero(%1))::Core.Const(0.0)
+│   %3  = eachindex(a)::Base.OneTo{Int64}
+│         (@_3 = Base.iterate(%3))::Union{Nothing, Tuple{Int64, Int64}}
+│   %5  = (@_3 === nothing)::Bool
+│   %6  = Base.not_int(%5)::Bool
+└──       goto #4 if not %6
+2 ┄ %8  = @_3::Tuple{Int64, Int64}
+│         (i = Core.getfield(%8, 1))::Int64
+│   %10 = Core.getfield(%8, 2)::Int64
+│         nothing::Core.Const(nothing)
+│   %12 = result::Float64
+│   %13 = Base.getindex(a, i)::Float64
+│   %14 = (%12 + %13)::Float64
+│         (result = %14)::Float64
+│         (val = %14)::Float64
+│         nothing::Core.Const(nothing)
+│         val::Float64
+│         (@_3 = Base.iterate(%3, %10))::Union{Nothing, Tuple{Int64, Int64}}
+│   %20 = (@_3 === nothing)::Bool
+│   %21 = Base.not_int(%20)::Bool
+└──       goto #4 if not %21
+3 ─       goto #2
+4 ┄       return result
+) =&gt; Float64</code></pre> We can see, that in the first output everything is of type <code>Int64</code>, including the result. The second output has the same instructions but with <code>Float64</code> as type. </p>
+<p>As we might have already seen throughout this workshop we can define the same function name for different input arguments. This is very obvious for the basic math operators but it is true for every function. Let us have a look at the <code>&#43;</code> operator:</p>
+<pre><code class="julia hljs">methods(+)</code></pre>
+<pre><code class="plaintext hljs"># 208 methods for generic function &quot;+&quot; from Base:
+   [1] +(x::T, y::T) where T&lt;:Union{Int128, Int16, Int32, Int64, Int8, UInt128, UInt16, UInt32, UInt64, UInt8}
+     @ int.jl:87
+   [2] +(x::T, y::T) where T&lt;:Union{Float16, Float32, Float64}
+     @ float.jl:408
+   [3] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigInt)
+     @ Base.GMP gmp.jl:539
+   [4] +(c::Union{Int16, Int32, Int64, Int8}, x::BigInt)
+     @ Base.GMP gmp.jl:545
+   [5] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:407
+   [6] +(c::Union{Int16, Int32, Int64, Int8}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:415
+   [7] +(c::Union{Float16, Float32, Float64}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:423
+   [8] +(x::Union{Dates.CompoundPeriod, Dates.Period})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:342
+   [9] +(F::LinearAlgebra.Hessenberg, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:647
+  [10] +(r::AbstractRange{&lt;:Dates.TimeType}, x::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:65
+  [11] +(x::AbstractArray{&lt;:Dates.TimeType}, y::Union{Dates.CompoundPeriod, Dates.Period})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:6
+  [12] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:754
+  [13] +(x::LinearAlgebra.Tridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [14] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:162
+  [15] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:178
+  [16] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:198
+  [17] +(A::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:231
+  [18] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
+  [19] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
+  [20] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
+  [21] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
+  [22] +(x::P, y::P) where P&lt;:Dates.Period
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:75
+  [23] +(x::Dates.Period, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:331
+  [24] +(y::Dates.Period, x::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:333
+  [25] +(y::Dates.Period, x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:85
+  [26] +(x::Dates.Period, r::AbstractRange{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:64
+  [27] +(y::Union{Dates.CompoundPeriod, Dates.Period}, x::AbstractArray{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:14
+  [28] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:646
+  [29] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:648
+  [30] +(UL::LinearAlgebra.UnitUpperTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
+  [31] +(x::LinearAlgebra.UnitUpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [32] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+  [33] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/bidiag.jl:374
+  [34] +(x::LinearAlgebra.Bidiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [35] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+  [36] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+  [37] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+  [38] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+  [39] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:120
+  [40] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:188
+  [41] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:208
+  [42] +(A::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:241
+  [43] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:647
+  [44] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:649
+  [45] +(UL::LinearAlgebra.UnitLowerTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
+  [46] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+  [47] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:642
+  [48] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:644
+  [49] +(x::LinearAlgebra.UpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [50] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+  [51] +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2065
+  [52] +(x::SparseArrays.AbstractSparseVector, y::SparseArrays.AbstractSparseVector)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsevector.jl:1516
+  [53] +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2068
+  [54] +(A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}, J::LinearAlgebra.UniformScaling{T}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4098
+  [55] +(r1::OrdinalRange, r2::OrdinalRange)
+     @ range.jl:1441
+  [56] +(x::T, y::Integer) where T&lt;:AbstractChar
+     @ char.jl:237
+  [57] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:207
+  [58] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:485
+  [59] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s970&quot;, V} where {var&quot;#s970&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s970&quot;}}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:487
+  [60] +(x::LinearAlgebra.SymTridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [61] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:150
+  [62] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:164
+  [63] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:218
+  [64] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:236
+  [65] +(y::AbstractFloat, x::Bool)
+     @ bool.jl:176
+  [66] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
+  [67] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:486
+  [68] +(S::LinearAlgebra.Symmetric, D::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:191
+  [69] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
+  [70] +(A::LinearAlgebra.Symmetric, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
+  [71] +(A::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:25
+  [72] +(A::LinearAlgebra.Symmetric{var&quot;#s971&quot;, S} where {var&quot;#s971&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s971&quot;})}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:484
+  [73] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:23
+  [74] +(x::Dates.Instant)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:4
+  [75] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
+  [76] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.SymTridiagonal{var&quot;#s969&quot;, V} where {var&quot;#s969&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s969&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:488
+  [77] +(H::LinearAlgebra.Hermitian, D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:197
+  [78] +(A::LinearAlgebra.Hermitian, J::LinearAlgebra.UniformScaling{&lt;:Complex})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:195
+  [79] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
+  [80] +(A::LinearAlgebra.Hermitian, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
+  [81] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:26
+  [82] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Symmetric{var&quot;#s972&quot;, S} where {var&quot;#s972&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s972&quot;})})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:483
+  [83] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:24
+  [84] +(A::LinearAlgebra.UpperHessenberg, B::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:104
+  [85] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [86] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [87] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [88] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [89] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [90] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [91] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [92] +(z::Complex, w::Complex)
+     @ complex.jl:291
+  [93] +(x::AbstractIrrational, y::AbstractIrrational)
+     @ irrationals.jl:161
+  [94] +(index1::CartesianIndex{N}, index2::CartesianIndex{N}) where N
+     @ Base.IteratorsMD multidimensional.jl:111
+  [95] +(A::BitArray, B::BitArray)
+     @ bitarray.jl:1184
+  [96] +(x::Ptr, y::Integer)
+     @ pointer.jl:167
+  [97] +(Da::LinearAlgebra.Diagonal, Db::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:184
+  [98] +(D::LinearAlgebra.Diagonal, S::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:188
+  [99] +(D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}}, H::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:194
+ [100] +(x::LinearAlgebra.Diagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [101] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:130
+ [102] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:140
+ [103] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:168
+ [104] +(A::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:246
+ [105] +(r1::LinRange{T}, r2::LinRange{T}) where T
+     @ range.jl:1448
+ [106] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:643
+ [107] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:645
+ [108] +(A::LinearAlgebra.AbstractTriangular, B::LinearAlgebra.AbstractTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:650
+ [109] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+ [110] +(J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:149
+ [111] +(J::LinearAlgebra.UniformScaling, x::Number)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:144
+ [112] +(J1::LinearAlgebra.UniformScaling, J2::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:150
+ [113] +(J::LinearAlgebra.UniformScaling, B::BitMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:152
+ [114] +(x::LinearAlgebra.UniformScaling, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [115] +(J::LinearAlgebra.UniformScaling, F::LinearAlgebra.Hessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:648
+ [116] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:250
+ [117] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:255
+ [118] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:260
+ [119] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:265
+ [120] +(J::LinearAlgebra.UniformScaling{T}, A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4100
+ [121] +(J::LinearAlgebra.UniformScaling, A::AbstractMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:153
+ [122] +(x::Base.TwicePrecision, y::Number)
+     @ twiceprecision.jl:290
+ [123] +(x::Base.TwicePrecision{T}, y::Base.TwicePrecision{T}) where T
+     @ twiceprecision.jl:296
+ [124] +(x::Base.TwicePrecision, y::Base.TwicePrecision)
+     @ twiceprecision.jl:301
+ [125] +(y::Dates.TimeType, x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:18
+ [126] +(A::Array, Bs::Array...)
+     @ arraymath.jl:12
+ [127] +(X::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, Y::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:62
+ [128] +(A::Array, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2069
+ [129] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:55
+ [130] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:10
+ [131] +(r1::StepRangeLen{T, R}, r2::StepRangeLen{T, R}) where {R&lt;:Base.TwicePrecision, T}
+     @ twiceprecision.jl:628
+ [132] +(r1::StepRangeLen{T, S}, r2::StepRangeLen{T, S}) where {T, S}
+     @ range.jl:1464
+ [133] +(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::Union{LinRange, OrdinalRange, StepRangeLen})
+     @ range.jl:1457
+ [134] +(A::AbstractArray, B::AbstractArray)
+     @ arraymath.jl:6
+ [135] +(x::Rational, y::Integer)
+     @ rational.jl:327
+ [136] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/versionweights.jl:22
+ [137] +(x::BigFloat, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.MPFR mpfr.jl:402
+ [138] +(x::BigFloat, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.MPFR mpfr.jl:410
+ [139] +(x::BigFloat, c::Union{Float16, Float32, Float64})
+     @ Base.MPFR mpfr.jl:418
+ [140] +(x::BigFloat, y::BigFloat)
+     @ Base.MPFR mpfr.jl:395
+ [141] +(x::BigFloat, c::BigInt)
+     @ Base.MPFR mpfr.jl:426
+ [142] +(a::BigFloat, b::BigFloat, c::BigFloat)
+     @ Base.MPFR mpfr.jl:567
+ [143] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat)
+     @ Base.MPFR mpfr.jl:573
+ [144] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat, e::BigFloat)
+     @ Base.MPFR mpfr.jl:580
+ [145] +(z::Complex{Bool}, x::Bool)
+     @ complex.jl:303
+ [146] +(z::Complex, x::Bool)
+     @ complex.jl:310
+ [147] +(z::Complex{Bool}, x::Real)
+     @ complex.jl:317
+ [148] +(z::Complex)
+     @ complex.jl:289
+ [149] +(z::Complex, x::Real)
+     @ complex.jl:329
+ [150] +(dt::Dates.Date, t::Dates.Time)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:19
+ [151] +(dt::Dates.Date, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:27
+ [152] +(dt::Dates.Date, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:54
+ [153] +(x::Dates.Date, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:73
+ [154] +(x::Dates.Date, y::Dates.Week)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:77
+ [155] +(x::Dates.Date, y::Dates.Day)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:79
+ [156] +(x::Bool)
+     @ bool.jl:163
+ [157] +(x::Integer, y::Ptr)
+     @ pointer.jl:169
+ [158] +(y::Integer, x::Rational)
+     @ rational.jl:334
+ [159] +(x::Integer, y::AbstractChar)
+     @ char.jl:247
+ [160] +(x::Bool, y::T) where T&lt;:AbstractFloat
+     @ bool.jl:173
+ [161] +(x::Bool, y::Bool)
+     @ bool.jl:166
+ [162] +(x::Bool, z::Complex{Bool})
+     @ complex.jl:302
+ [163] +(x::Real, z::Complex{Bool})
+     @ complex.jl:316
+ [164] +(x::Bool, z::Complex)
+     @ complex.jl:309
+ [165] +(x::Real, z::Complex)
+     @ complex.jl:328
+ [166] +(x::Dates.CompoundPeriod, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:332
+ [167] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:362
+ [168] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:334
+ [169] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:151
+ [170] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:214
+ [171] +(x::AbstractArray{&lt;:Number})
+     @ abstractarraymath.jl:220
+ [172] +(x::BigInt, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.GMP gmp.jl:538
+ [173] +(x::BigInt, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.GMP gmp.jl:544
+ [174] +(x::BigInt, y::BigInt)
+     @ Base.GMP gmp.jl:490
+ [175] +(a::BigInt, b::BigInt, c::BigInt)
+     @ Base.GMP gmp.jl:530
+ [176] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt)
+     @ Base.GMP gmp.jl:531
+ [177] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt, e::BigInt)
+     @ Base.GMP gmp.jl:532
+ [178] +(x::BigInt, y::BigInt, rest::BigInt...)
+     @ Base.GMP gmp.jl:666
+ [179] +(a::Integer, b::Integer)
+     @ int.jl:1038
+ [180] +(c::BigInt, x::BigFloat)
+     @ Base.MPFR mpfr.jl:431
+ [181] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
+     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
+ [182] +(x::Dates.Time, y::Dates.TimePeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:83
+ [183] +(t::Dates.Time, dt::Dates.Date)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:20
+ [184] +(x::Rational{BigInt}, y::Rational{BigInt})
+     @ Base.GMP.MPQ gmp.jl:1027
+ [185] +(x::Rational)
+     @ rational.jl:284
+ [186] +(x::Number, y::Base.TwicePrecision)
+     @ twiceprecision.jl:294
+ [187] +(::Number, ::Missing)
+     @ missing.jl:124
+ [188] +(x::Number, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:145
+ [189] +(x::Rational, y::Rational)
+     @ rational.jl:298
+ [190] +(x::Number)
+     @ operators.jl:515
+ [191] +(x::T, y::T) where T&lt;:Number
+     @ promotion.jl:485
+ [192] +(x::Number, y::Number)
+     @ promotion.jl:410
+ [193] +(::Missing)
+     @ missing.jl:101
+ [194] +(::Missing, ::Number)
+     @ missing.jl:123
+ [195] +(x::Missing, y::Dates.AbstractTime)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:89
+ [196] +(::Missing, ::Missing)
+     @ missing.jl:122
+ [197] +(level::Base.CoreLogging.LogLevel, inc::Integer)
+     @ Base.CoreLogging logging.jl:131
+ [198] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/fieldvalues.jl:43
+ [199] +(dt::Dates.DateTime, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:23
+ [200] +(dt::Dates.DateTime, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:47
+ [201] +(x::Dates.DateTime, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:75
+ [202] +(x::Dates.DateTime, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:81
+ [203] +(x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:8
+ [204] +(x::Dates.AbstractTime, y::Missing)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:88
+ [205] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:353
+ [206] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period, d::Dates.Period...)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:354
+ [207] +(x::Dates.TimeType, y::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:356
+ [208] +(a, b, c, xs...)
+     @ operators.jl:578</code></pre>
+<p>This shows us two things. First, we did not think anybody will print this workshop out or we would have gone for shorter outputs. Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best. As a result we can write optimized code for different types and in general this is one key stone in the excellent performance numbers of Julia. </p>
+<p>Before we continue to the other parallel computation concepts, we introduce an <a href="../pi/">example</a> that will help us along, same as the sum did for the beginning of this section. </p>
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 09, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
+    
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+  }
+</script>

@@ -1,0 +1,4 @@
+Sitemap: https://kandolfp.github.io/ws23_ulg_vu_ama_performance/sitemap.xml
+
+User-agent: *
+Disallow:
