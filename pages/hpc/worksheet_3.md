@@ -66,7 +66,7 @@ One possible GPU implementation looks like the following. Note that we abandon s
 using FastGaussQuadrature
 using LaTeXStrings
 using LinearAlgebra
-using Plots; gr()
+using Plots; plotly()
 using CUDA
 
 struct Settings{T<:AbstractFloat}
