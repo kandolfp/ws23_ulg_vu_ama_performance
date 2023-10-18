@@ -151,11 +151,11 @@ println(<span class="hljs-string">&quot;\nBuilt-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum($a)</code></pre>
 <p><pre><code class="plaintext hljs">
 Simple sum:
-  133.603 μs (0 allocations: 0 bytes)
+  91.200 μs (0 allocations: 0 bytes)
 
 Built-in sum:
-  12.900 μs (0 allocations: 0 bytes)
-50075.994992462176</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
+  25.500 μs (0 allocations: 0 bytes)
+49848.54901092133</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there. </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> mysimdsum(a)
     result = zero(eltype(a))
@@ -198,21 +198,21 @@ println(<span class="hljs-string">&quot;\nSimple mysum2 = &quot;</span>, mysum2(
 println(<span class="hljs-string">&quot;\nSimple mysimdsum2 = &quot;</span>, mysimdsum2(a))
 <span class="hljs-meta">@btime</span> mysimdsum2($a)</code></pre>
 <p><pre><code class="plaintext hljs">
-Simple mysum(a) = 50075.99499246218
-  133.702 μs (0 allocations: 0 bytes)
+Simple mysum(a) = 49848.54901092119
+  91.200 μs (0 allocations: 0 bytes)
 
-Built-in sum(a) = 50075.994992462176
-  13.200 μs (0 allocations: 0 bytes)
+Built-in sum(a) = 49848.54901092133
+  27.401 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum = 50075.994992462234
-  10.100 μs (0 allocations: 0 bytes)
+Simple mysimdsum = 49848.54901092136
+  27.700 μs (0 allocations: 0 bytes)
 
-Simple mysum2 = 50075.99499246218
-  133.603 μs (0 allocations: 0 bytes)
+Simple mysum2 = 49848.54901092119
+  94.000 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum2 = 50075.994992462234
-  10.100 μs (0 allocations: 0 bytes)
-50075.994992462234</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
+Simple mysimdsum2 = 49848.54901092136
+  27.800 μs (0 allocations: 0 bytes)
+49848.54901092136</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
 <p>This is due to the fact that the numerics involved are a bit tricky.  In short, when adding floating point numbers you lose accuracy when adding a large number to a small number.  This is exactly what is happening for our first example as we add all the numbers in one long sequence. </p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
@@ -867,7 +867,7 @@ L30:                                              ; preds = %L13, %middle.block,
 <p>This shows us two things. First, we did not think anybody will print this workshop out or we would have gone for shorter outputs. Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best. As a result we can write optimized code for different types and in general this is one key stone in the excellent performance numbers of Julia. </p>
 <p>Before we continue to the other parallel computation concepts, we introduce an <a href="../pi/">example</a> that will help us along, same as the sum did for the beginning of this section. </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 09, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 18, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
