@@ -8,9 +8,13 @@ THIS WORKSHOP IS STILL UNDER CONSTRUCTION AND ACTIVE DEVELOPMENT.
 @@
 # Getting started with Julia
 
-Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing. Visit [julialang.org](https://julialang.org) for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language. It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R. Julia recently entered its teens and for this occasion a blog post was published with the title [Why We Use Julia, 10 Years Later](https://julialang.org/blog/2022/02/10years/) as a follow up to the [Why We Created Julia](https://julialang.org/blog/2012/02/why-we-created-julia/). Both entries are a good read and give you an insight into the language and its creators.
+Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing. 
+Visit [julialang.org](https://julialang.org) for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language. 
+It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R.
+Julia recently entered its teens and for this occasion a blog post was published with the title [Why We Use Julia, 10 Years Later](https://julialang.org/blog/2022/02/10years/) as a follow up to the [Why We Created Julia](https://julialang.org/blog/2012/02/why-we-created-julia/). 
+Both entries are a good read and give you an insight into the language and its creators.
 
-In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend [Scientific Coding with Julia](https://noxthot.github.io/ss22_julia_workshop/)
+In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend [Scientific Coding with Julia](https://noxthot.github.io/ss22_julia_workshop/).
 
 ## Acknowledgment
 
