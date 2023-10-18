@@ -154,15 +154,15 @@
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Define a new function <code>in_unit_circle_task</code> with the <code>@async</code> and <code>@sync</code> macros. Split up <code>N</code> into 4 parts, same as for threads, and schedule the tasks in a loop. Define a vector of tasks to catch the results inside the loop.</p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_task(N::<span class="hljs-built_in">Int64</span>)
-    n = <span class="hljs-number">4</span>
+    n = nthreads()
     len, rem = divrem(N, n)
     t = <span class="hljs-built_in">Vector</span>{<span class="hljs-built_in">Task</span>}(<span class="hljs-literal">undef</span>, n)
     
-    <span class="hljs-meta">@sync</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+    <span class="hljs-meta">@sync</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
         t[i] = <span class="hljs-meta">@async</span> in_unit_circle(len)
     <span class="hljs-keyword">end</span>
     
-    M = sum(map((x) -&gt; fetch(t[x]), <span class="hljs-number">1</span>:<span class="hljs-number">4</span>))
+    M = sum(map((x) -&gt; fetch(t[x]), <span class="hljs-number">1</span>:n))
     
     <span class="hljs-keyword">return</span> M
 <span class="hljs-keyword">end</span></code></pre>
