@@ -84,7 +84,12 @@ julia> a
  4.0
  ```
 }
-
+@@important
+In Julia we have to be aware of the concept of [Task migration](https://docs.julialang.org/en/v1/manual/multi-threading/#man-task-migration).
+This means a task started with `@threads` might not always run on the **same** thread but can move threads if the the task yields.
+In particular this means we should no treat `threadid()` as a constant and should not use it as an index in e.g. arrays.
+By using the `:static` schedule option we can freeze the `threadid()`.
+@@
 Let us try to apply this concept to our $\pi$ example.
 
 ## Multithreaded $\pi$
@@ -175,7 +180,7 @@ Define a new function `in_unit_circle_threaded3` with the `@threads`, `M` as arr
 function in_unit_circle_threaded3(N::Int64)
     M = zeros(Int64, nthreads());
     
-    @threads for i in 1:N
+    @threads :static for i in 1:N
         if (rand()^2 + rand()^2) < 1
             @inbounds M[threadid()] += 1
         end
@@ -209,7 +214,7 @@ First step is to define a separate random number generator per thread:
 using Random
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
-@threads for i in 1:nthreads()
+@threads :static for i in 1:nthreads()
        ThreadRNG[threadid()] = Random.MersenneTwister()
 end
 ```
@@ -231,7 +236,7 @@ Extra points if you check if we do not loose any iterations due to the split.
 using Random
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
-@threads for i in 1:nthreads()
+@threads :static for i in 1:nthreads()
        ThreadRNG[threadid()] = Random.MersenneTwister()
 end
 
@@ -239,7 +244,7 @@ function in_unit_circle_threaded4(N::Int64)
     M = zeros(Int64, nthreads())
     len, rem = divrem(N, nthreads())
     
-    @threads for i in 1:nthreads()
+    @threads :static for i in 1:nthreads()
         rng = ThreadRNG[threadid()]
         m = 0
 
