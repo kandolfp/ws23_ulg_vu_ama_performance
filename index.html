@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
   
   
   <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
@@ -112,6 +115,43 @@
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Exercises are here for you to work on, no worries not at home or in your off hours but with us in the workshop.</p>
 <p>This way it is more likely that everybody tries to do the exercises without first looking at the sample solution.&#41; </div>
 <p>That is about all we wanted to let you know, so let us get into it.</p>
+<h2 id="setup"><a href="#setup" class="header-anchor">Setup</a></h2>
+<div class="important">We ask you to install Julia, Visual Studio Code &#40;optional&#41; and the Julia extension for Visual Studio Code &#40;optional&#41; <strong>before</strong> the lecture so we can start right away. If you have difficulties please let us know and we will update the contents of this page accordingly.</div>
+<div class="important">This lecture was prepared with Julia v1.9.3</div>
+<p>Follow the setup in this section to install everything that is required to get started.</p>
+<h3 id="julia"><a href="#julia" class="header-anchor">Julia</a></h3>
+<p>To install Julia on your system please download the latest stable binary from <a href="https://julialang.org/downloads/">Setup Download</a> and follow the instructions on <a href="https://julialang.org/downloads/platform/">Setup Julia</a> for the installation.</p>
+<p>Under the above link you will also find instructions on how to uninstall Julia, even though we are quite sure you will not want to do it ;&#41;.</p>
+<p>Alternatively you can also use <a href="https://github.com/JuliaLang/juliaup">juliaup</a> to install and use Julia. This handy little gadget allows for automatic updates as well as easy parallel installation of and switching between different Julia versions.</p>
+<h4 id="additional_information_for_linux"><a href="#additional_information_for_linux" class="header-anchor">Additional information for Linux:</a></h4>
+<p>Some distributions allow for Julia to be installed via the package manager or software center. Note that very often this is an old version so this method is not recommended.</p>
+<p>A very convenient way to manage your Julia installation is <a href="https://github.com/JuliaLang/juliaup">juliaup</a>. To install this tool, simply call the following command from your terminal:</p>
+<pre><code class="bash hljs">curl -fsSL https://install.julialang.org | sh</code></pre>
+<p>Once installed, simply reopen your terminal and call <code>juliaup add 1.9.3</code> to add the very version used for this course. In case you installed Julia just for this course, you could then set</p>
+<pre><code class="bash hljs">juliaup default 1.9.3</code></pre>
+<p>to pin your default version to <code>1.9.3</code> whenever you start <code>julia</code>. Alternatively you can launch this specific version by calling <code>julia &#43;1.9.3</code>.</p>
+<h3 id="visual_studio_code"><a href="#visual_studio_code" class="header-anchor">Visual Studio Code</a></h3>
+<p>Installing Visual Studio Code is optional since one can use any editor for programming in Julia but Visual Studio Code &#40;&#43;plugin&#41; is the most common &quot;Julia IDE&quot;. For example <a href="https://github.com/JuliaEditorSupport">JuliaEditorSupport</a> has plugins for some alternative editors.</p>
+<p>Follow the instructions on <a href="https://code.visualstudio.com/">https://code.visualstudio.com/</a> to install Visual Studio Code.</p>
+<p>Visual Studio Code, also commonly referred to as VS Code, is a fully-fledged interactive development environment &#40;IDE&#41;, complete with code highlighting, autocomplete, debugger, Git integration and much more. In order to make VS Code fully compatible with Julia we need to install the Julia extension.</p>
+<h3 id="installing_the_julia_extension_for_vs_code"><a href="#installing_the_julia_extension_for_vs_code" class="header-anchor">Installing the Julia extension for VS Code</a></h3>
+<p>Follow the instructions on <a href="https://www.julia-vscode.org/docs/dev/gettingstarted/#Installing-the-Julia-extension">VS Code Julia extension</a> to install and configure the extension. You can find the basic instructions from above here as well.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Please run the minimal working example from <a href="https://www.julia-vscode.org/docs/dev/gettingstarted/#Creating-Your-First-Julia-Hello-World-program">here</a> to see whether you have set up everything correctly. </div>
+<p>If you run into difficulties with VS Code in connection with Julia, the <a href="https://www.julia-vscode.org/docs/dev/">documentation</a> of the Julia extension is an excellent source for help.</p>
+<h2 id="julia_and_vs_code"><a href="#julia_and_vs_code" class="header-anchor">Julia and VS Code</a></h2>
+<p>There is no better resource than <a href="https://www.julia-vscode.org">https://www.julia-vscode.org</a> to explain how to program in Julia with VS Code. The website also provides an interactive view of some of the following concepts.</p>
+<ul>
+<li><p>On the left you have the navigational panel where you can switch between context of the viewer. Specifically you will need the <strong>Explorer</strong> and <strong>Julia</strong>.</p>
+</li>
+<li><p>Right next to it you get additional information with regards to the current context. For example you will see files, when you are in <strong>Explorer</strong> or you see your <em>Workspace</em>, <em>Documentation</em>, and <em>Plot Navigation</em> in the <strong>Julia</strong> context.</p>
+</li>
+<li><p>When opening a Julia file &#40;ending in <code>.jl</code>&#41; &#40;double click in the <strong>Explorer</strong> - single click only gives you a quick view and the file will not stay open if you click another file&#41; you have syntax highlighting and autocomplete right away.</p>
+</li>
+<li><p>To run a Julia program, click the small arrow on the top left or <code>Ctrl&#43;F5</code> if you prefer keyboard shortcuts. Both will run the code in the Julia REPL. You will see the output on the bottom.</p>
+</li>
+</ul>
+<p>With these short basics and <a href="https://www.julia-vscode.org">https://www.julia-vscode.org</a> you are good to go for the lecture. You can also find a list of <a href="https://www.julia-vscode.org/docs/dev/userguide/keybindings/">keybindings</a> once you are more familiar with the IDE and never want to get your hands off the keyboard.</p>
+<p>In VS Code you can always type <code>CTRL &#43; SHIFT &#43; P</code> to get access to the prompt and execute commands within VS Code.</p>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: October 18, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -121,6 +161,69 @@
     </div> <!-- end of class main-content-wrap -->
     </div> <!-- end of class page-wrap-->
     
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
     
   </body>
 </html>
