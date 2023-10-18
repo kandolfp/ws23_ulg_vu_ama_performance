@@ -87,7 +87,7 @@ julia> a
 @@important
 In Julia we have to be aware of the concept of [Task migration](https://docs.julialang.org/en/v1/manual/multi-threading/#man-task-migration).
 This means a task started with `@threads` might not always run on the **same** thread but can move threads if the the task yields.
-In particular this means we should no treat `threadid()` as a constant and should not use it as an index in e.g. arrays.
+In particular this means we should not treat `threadid()` as a constant and should not use it as an index in e.g. arrays.
 By using the `:static` schedule option we can freeze the `threadid()`.
 @@
 Let us try to apply this concept to our $\pi$ example.
