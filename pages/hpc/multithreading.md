@@ -215,7 +215,7 @@ using Random
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
 @threads :static for i in 1:nthreads()
-       ThreadRNG[threadid()] = Random.MersenneTwister()
+       ThreadRNG[threadid()] = Random.MersenneTwister(i)
 end
 ```
 What we do in the third line is define a [`const`](https://docs.julialang.org/en/v1/base/base/#const) variable. That is a global variable whose type will not change. In fact we define a Vector of size `nthreads()` and fill it with distinct [`Random.MersenneTwister`](https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister). This allows us to have a different random number generator for each thread by using
@@ -237,28 +237,32 @@ using Random
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
 @threads :static for i in 1:nthreads()
-       ThreadRNG[threadid()] = Random.MersenneTwister()
+       ThreadRNG[i] = Random.MersenneTwister(i)
+end
+
+function in_unit_circle_rng(N::Int64, rng)
+    M = zero(Int64)
+
+    for j in 1:N
+        if (rand(rng)^2 + rand(rng)^2) < 1
+            M += 1
+        end
+    end
+
+    return M
 end
 
 function in_unit_circle_threaded4(N::Int64)
     M = zeros(Int64, nthreads())
     len, rem = divrem(N, nthreads())
-    
-    @threads :static for i in 1:nthreads()
-        rng = ThreadRNG[threadid()]
-        m = 0
 
-        for j in 1:len
-            if (rand(rng)^2 + rand(rng)^2) < 1
-                m += 1
-            end
-        end
-        
-        M[threadid()] = m
+    @threads for i in 1:nthreads()
+      M[i] = in_unit_circle_rng(len, ThreadRNG[i])
     end
 
     return sum(M)
 end 
+
 ```
 and we test it
 ```julia-repl
