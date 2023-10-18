@@ -151,11 +151,11 @@ println(<span class="hljs-string">&quot;\nBuilt-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum($a)</code></pre>
 <p><pre><code class="plaintext hljs">
 Simple sum:
-  160.403 μs (0 allocations: 0 bytes)
+  148.503 μs (0 allocations: 0 bytes)
 
 Built-in sum:
-  15.100 μs (0 allocations: 0 bytes)
-49902.192349626726</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
+  14.100 μs (0 allocations: 0 bytes)
+50005.552136273924</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there. </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> mysimdsum(a)
     result = zero(eltype(a))
@@ -198,21 +198,21 @@ println(<span class="hljs-string">&quot;\nSimple mysum2 = &quot;</span>, mysum2(
 println(<span class="hljs-string">&quot;\nSimple mysimdsum2 = &quot;</span>, mysimdsum2(a))
 <span class="hljs-meta">@btime</span> mysimdsum2($a)</code></pre>
 <p><pre><code class="plaintext hljs">
-Simple mysum(a) = 49902.19234962691
-  160.404 μs (0 allocations: 0 bytes)
+Simple mysum(a) = 50005.55213627406
+  148.503 μs (0 allocations: 0 bytes)
 
-Built-in sum(a) = 49902.192349626726
-  15.100 μs (0 allocations: 0 bytes)
+Built-in sum(a) = 50005.552136273924
+  14.100 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum = 49902.19234962675
-  11.500 μs (0 allocations: 0 bytes)
+Simple mysimdsum = 50005.55213627393
+  10.000 μs (0 allocations: 0 bytes)
 
-Simple mysum2 = 49902.19234962691
-  160.404 μs (0 allocations: 0 bytes)
+Simple mysum2 = 50005.55213627406
+  148.603 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum2 = 49902.19234962675
-  11.500 μs (0 allocations: 0 bytes)
-49902.19234962675</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
+Simple mysimdsum2 = 50005.55213627393
+  10.600 μs (0 allocations: 0 bytes)
+50005.55213627393</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
 <p>This is due to the fact that the numerics involved are a bit tricky.  In short, when adding floating point numbers you lose accuracy when adding a large number to a small number.  This is exactly what is happening for our first example as we add all the numbers in one long sequence. </p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
@@ -222,7 +222,7 @@ Simple mysimdsum2 = 49902.19234962675
 printstyled(<span class="hljs-string">&quot;\n------Separator-------\n\n&quot;</span>; color = :red)
 <span class="hljs-meta">@code_llvm</span> mysimdsum(a)</code></pre>
 <pre><code class="plaintext hljs">;  @ none:2 within `mysum`
-define double @julia_mysum_2073({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mysum_2071({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:5 within `mysum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
@@ -277,7 +277,7 @@ L29:                                              ; preds = %L13, %top
 ------Separator-------
 
 ;  @ none:1 within `mysimdsum`
-define double @julia_mysimdsum_2082({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mysimdsum_2080({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:4 within `mysimdsum`
 ; ┌ @ simdloop.jl:69 within `macro expansion`

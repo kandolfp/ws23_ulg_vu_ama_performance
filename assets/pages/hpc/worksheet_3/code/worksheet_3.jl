@@ -2,7 +2,7 @@
 using FastGaussQuadrature
 using LaTeXStrings
 using LinearAlgebra
-using Plots; gr()
+using Plots; plotly()
 using CUDA
 
 struct Settings{T<:AbstractFloat}
