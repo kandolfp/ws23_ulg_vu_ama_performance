@@ -17,12 +17,12 @@ Both entries are a good read and give you an insight into the language and its c
 In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend [Scientific Coding with Julia](https://noxthot.github.io/ss22_julia_workshop/).
 
 ## Acknowledgment
-The foundation of this notes is based on parts of our Julia Workshop which was given at the [Doctoral College Computational Interdisciplinary Modelling (DK CIM)](https://www.uibk.ac.at/dk-cim/index.html.en).
+The foundation of these notes is based on parts of our Julia Workshop which was given at the [Doctoral College Computational Interdisciplinary Modelling (DK CIM)](https://www.uibk.ac.at/dk-cim/index.html.en).
 This lecture will dive a bit deeper than we did in the section [Parallel Computing](https://noxthot.github.io/ss22_julia_workshop/pages/hpc/).
 
 ## Some general words on the organization of this workshop
 
-For this workshop you do not need to be an Julia expert, not even a programming expert. We will introduce programming and Julia concepts along with examples. For this purpose you will find code blocks that you can copy if necessary (top right corner `copy`). Furthermore, if we think something is very important we will highlight it with a box:
+For this workshop you do not need to be a Julia expert, not even a programming expert. We will introduce programming and Julia concepts along with examples. For this purpose you will find code blocks that you can copy if necessary (top right corner `copy`). Furthermore, if we think something is very important we will highlight it with a box:
 
 @@important
 Pay extra attention to the content here.
