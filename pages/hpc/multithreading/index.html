@@ -247,7 +247,7 @@ rand(rng)</code></pre>
        ThreadRNG[i] = Random.MersenneTwister(i)
 <span class="hljs-keyword">end</span>
 
-<span class="hljs-keyword">function</span> in_unit_circle_rng(N::<span class="hljs-built_in">Int64</span>, rng)
+<span class="hljs-keyword">function</span> in_unit_circle(N::<span class="hljs-built_in">Int64</span>, rng)
     M = zero(<span class="hljs-built_in">Int64</span>)
 
     <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
@@ -264,7 +264,7 @@ rand(rng)</code></pre>
     len, rem = divrem(N, nthreads())
 
     <span class="hljs-meta">@threads</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:nthreads()
-      M[i] = in_unit_circle_rng(len, ThreadRNG[i])
+      M[i] = in_unit_circle(len, ThreadRNG[i])
     <span class="hljs-keyword">end</span>
 
     <span class="hljs-keyword">return</span> sum(M)
