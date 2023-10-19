@@ -214,8 +214,8 @@ First step is to define a separate random number generator per thread:
 using Random
 
 const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
-@threads :static for i in 1:nthreads()
-       ThreadRNG[threadid()] = Random.MersenneTwister(i)
+@threads for i in 1:nthreads()
+       ThreadRNG[i] = Random.MersenneTwister(i)
 end
 ```
 What we do in the third line is define a [`const`](https://docs.julialang.org/en/v1/base/base/#const) variable. That is a global variable whose type will not change. In fact we define a Vector of size `nthreads()` and fill it with distinct [`Random.MersenneTwister`](https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister). This allows us to have a different random number generator for each thread by using
