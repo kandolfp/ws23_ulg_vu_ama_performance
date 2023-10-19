@@ -240,7 +240,7 @@ const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
        ThreadRNG[i] = Random.MersenneTwister(i)
 end
 
-function in_unit_circle_rng(N::Int64, rng)
+function in_unit_circle(N::Int64, rng)
     M = zero(Int64)
 
     for j in 1:N
@@ -257,7 +257,7 @@ function in_unit_circle_threaded4(N::Int64)
     len, rem = divrem(N, nthreads())
 
     @threads for i in 1:nthreads()
-      M[i] = in_unit_circle_rng(len, ThreadRNG[i])
+      M[i] = in_unit_circle(len, ThreadRNG[i])
     end
 
     return sum(M)
