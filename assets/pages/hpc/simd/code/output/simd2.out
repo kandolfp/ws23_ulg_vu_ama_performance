@@ -1,15 +1,19 @@
+Simple sum(a)
+mysum(a) = 49969.917739880235
+  83.600 μs (0 allocations: 0 bytes)
 
-Simple mysum(a) = 50198.77749092231
-  133.602 μs (0 allocations: 0 bytes)
+Built-in sum
+sum(a) = 49969.9177398803
+  25.500 μs (0 allocations: 0 bytes)
 
-Built-in sum(a) = 50198.77749092206
-  11.800 μs (0 allocations: 0 bytes)
+Simple mysimdsum
+mysimdsum(a) = 49969.91773988033
+  24.300 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum = 50198.77749092208
-  8.900 μs (0 allocations: 0 bytes)
+Simple mysum2
+mysum2(a) = 49969.917739880235
+  83.600 μs (0 allocations: 0 bytes)
 
-Simple mysum2 = 50198.77749092231
-  133.602 μs (0 allocations: 0 bytes)
-
-Simple mysimdsum2 = 50198.77749092208
-  8.834 μs (0 allocations: 0 bytes)
+Simple mysimdsum2
+mysimdsum2(a) = 49969.91773988033
+  24.300 μs (0 allocations: 0 bytes)

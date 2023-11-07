@@ -1,4 +1,17 @@
 # This file was generated, do not modify it. # hide
+using BenchmarkTools
+
+function mysum(a)
+    result = zero(eltype(a))
+
+    for i in eachindex(a)
+        @inbounds result += a[i]
+    end
+
+    return result
+end
+
+
 function mysimdsum(a)
     result = zero(eltype(a))
 
@@ -8,6 +21,7 @@ function mysimdsum(a)
 
     return result
 end
+
 
 function mysum2(V)
     s = zero(eltype(V))
@@ -19,6 +33,7 @@ function mysum2(V)
     return s
 end
 
+
 function mysimdsum2(V)
     s = zero(eltype(V))
 
@@ -29,13 +44,28 @@ function mysimdsum2(V)
     return s
 end
 
-println("\nSimple mysum(a) = ", mysum(a))
+a = rand(100_000)
+
+println("Simple sum(a)")
+@show mysum(a)
 @btime mysum($a)
-println("\nBuilt-in sum(a) = ", sum(a))
+
+println()
+println("Built-in sum")
+@show sum(a)
 @btime sum($a)
-println("\nSimple mysimdsum = ", mysimdsum(a))
+
+println()
+println("Simple mysimdsum")
+@show mysimdsum(a)
 @btime mysimdsum($a)
-println("\nSimple mysum2 = ", mysum2(a))
+
+println()
+println("Simple mysum2")
+@show mysum2(a)
 @btime mysum2($a)
-println("\nSimple mysimdsum2 = ", mysimdsum2(a))
+
+println()
+println("Simple mysimdsum2")
+@show mysimdsum2(a)
 @btime mysimdsum2($a)

@@ -1,5 +1,5 @@
 ;  @ none:2 within `mysum`
-define double @julia_mysum_3716({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mysum_3709({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:5 within `mysum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
@@ -53,10 +53,10 @@ L29:                                              ; preds = %L13, %top
 
 ------Separator-------
 
-;  @ none:1 within `mysimdsum`
-define double @julia_mysimdsum_3725({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+;  @ none:3 within `mysimdsum`
+define double @julia_mysimdsum_3718({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
-;  @ none:4 within `mysimdsum`
+;  @ none:6 within `mysimdsum`
 ; ┌ @ simdloop.jl:69 within `macro expansion`
 ; │┌ @ abstractarray.jl:314 within `eachindex`
 ; ││┌ @ abstractarray.jl:133 within `axes1`
@@ -93,7 +93,7 @@ vector.body:                                      ; preds = %vector.body, %vecto
     %vec.phi11 = phi <4 x double> [ zeroinitializer, %vector.ph ], [ %17, %vector.body ]
     %6 = getelementptr inbounds double, double* %5, i64 %index
 ; │└
-; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │ @ simdloop.jl:77 within `macro expansion` @ none:7
 ; │┌ @ essentials.jl:13 within `getindex`
     %7 = bitcast double* %6 to <4 x double>*
     %wide.load = load <4 x double>, <4 x double>* %7, align 8
@@ -137,7 +137,7 @@ scalar.ph:                                        ; preds = %middle.block, %L13.
 L13:                                              ; preds = %L13, %scalar.ph
    %value_phi18 = phi i64 [ %bc.resume.val, %scalar.ph ], [ %23, %L13 ]
    %value_phi7 = phi double [ %bc.merge.rdx, %scalar.ph ], [ %22, %L13 ]
-; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │ @ simdloop.jl:77 within `macro expansion` @ none:7
 ; │┌ @ essentials.jl:13 within `getindex`
     %20 = getelementptr inbounds double, double* %5, i64 %value_phi18
     %21 = load double, double* %20, align 8
@@ -158,6 +158,6 @@ L13:                                              ; preds = %L13, %scalar.ph
 L30:                                              ; preds = %L13, %middle.block, %top
    %value_phi2 = phi double [ 0.000000e+00, %top ], [ %19, %middle.block ], [ %22, %L13 ]
 ; └
-;  @ none:8 within `mysimdsum`
+;  @ none:10 within `mysimdsum`
   ret double %value_phi2
 }

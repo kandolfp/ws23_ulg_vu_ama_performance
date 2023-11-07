@@ -12,7 +12,8 @@ function mysum(a)
 end
 
 a = rand(100_000)
-println("\nSimple sum:")
-@btime mysum($a)
-println("\nBuilt-in sum:")
-@btime sum($a)
+println("Simple sum:")
+@btime mysum(a)
+println()
+println("Built-in sum:")
+@btime sum(a)
