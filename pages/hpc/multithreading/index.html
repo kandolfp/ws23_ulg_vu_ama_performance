@@ -103,7 +103,7 @@
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> Threads.nthreads()
 </span>1</code></pre>
 <p>This does not mean that Julia is only using one thread. We mentioned the <a href="http://www.netlib.org/blas/">Basic Linear Algebra Subroutines - BLAS</a> before. Calls to this library &#40;e.g. matrix-matrix multiplication&#41; will be multithreaded by default and therefore, technically you have been doing multithreading all along ;&#41;. Let us illustrate this with a small example.</p>
-<button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  Influencing the number of threads in BLAS. When we include the <a href="https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/">LinearAlgebra</a> package we get the possibility to manipulate the number of threads. Here <code>BLAS</code> is a wrapper to the BLAS libraries used by Julia. </p>
+<button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  Influencing the number of threads in BLAS. When we include the <a href="https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/">LinearAlgebra</a> package we get the possibility to manipulate the number of threads. Here <code>BLAS</code> is a wrapper to the BLAS libraries used by Julia.</p>
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">using</span> BenchmarkTools, LinearAlgebra
 </span>
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> A = rand(<span class="hljs-number">2000</span>, <span class="hljs-number">2000</span>);
@@ -225,8 +225,8 @@
 <p>Now our result is correct, and the time is okay. </div> </div>
 <p>Now we are faster, but still not faster than the serial version. Why is it still not working?</p>
 <h3 id="global_states"><a href="#global_states" class="header-anchor">Global states</a></h3>
-<p>Without going into too much detail, <code>rand&#40;&#41;</code> is not thread safe. It does manipulate and read from some global state and that causes our slowdown. In fact, as the random numbers are not correctly distributed any more, the accuracy is also decaying. </p>
-<p>To avoid this we need to exchange the random number generator and make the call to <code>rand</code> thread safe. This solution is inspired by the section <em>Multithreading</em> of the <a href="https://juliaacademy.com/p/parallel-computing">Parallel Computing Class on JuliaAcademy.com</a> and slightly adapted for the setup we have. </p>
+<p>Without going into too much detail, <code>rand&#40;&#41;</code> is not thread safe. It does manipulate and read from some global state and that causes our slowdown  In fact, as the random numbers are not correctly distributed any more, the accuracy is also decaying.</p>
+<p>To avoid this we need to exchange the random number generator and make the call to <code>rand</code> thread safe. This solution is inspired by the section <em>Multithreading</em> of the <a href="https://juliaacademy.com/p/parallel-computing">Parallel Computing Class on JuliaAcademy.com</a> and slightly adapted for the setup we have.</p>
 <p>First step is to define a separate random number generator per thread:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> Random
 
@@ -237,8 +237,8 @@
 <p>What we do in the third line is define a <a href="https://docs.julialang.org/en/v1/base/base/#const"><code>const</code></a> variable. That is a global variable whose type will not change. In fact we define a Vector of size <code>nthreads&#40;&#41;</code> and fill it with distinct <a href="https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister"><code>Random.MersenneTwister</code></a>. This allows us to have a different random number generator for each thread by using</p>
 <pre><code class="julia hljs">rng = ThreadRNG[threadid()]
 rand(rng)</code></pre>
-<p>in each thread. </p>
-<p>Now for our final version of the code, the basic idea is to not have a threaded loop over the integer <code>N</code> but over the number of threads. In order for this to work we need to figure out how many iterations each thread needs to perform.  For that, we use <code>len, rem &#61; divrem&#40;N, nthreads&#40;&#41;&#41;</code> to divide up <code>N</code> into the quotient and remainder from the Euclidean division.  </p>
+<p>in each thread.</p>
+<p>Now for our final version of the code, the basic idea is to not have a threaded loop over the integer <code>N</code> but over the number of threads. In order for this to work we need to figure out how many iterations each thread needs to perform. For that, we use <code>len, rem &#61; divrem&#40;N, nthreads&#40;&#41;&#41;</code> to divide up <code>N</code> into the quotient and remainder from the Euclidean division.</p>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Define a new function <code>in_unit_circle_threaded4</code> with the <code>@threads</code> macro, <code>M</code> as array, the above code snippets and test the result as well as the timing. Extra points if you check if we do not loose any iterations due to the split. <div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> Random
 
@@ -300,9 +300,18 @@ Performance:
 <h3 id="other_pitfalls"><a href="#other_pitfalls" class="header-anchor">Other pitfalls</a></h3>
 <p>There are several other pitfalls that might occur with multithreading, here is an incomplete list:</p>
 <ul>
-<li><p><strong>Oversubscription</strong>: We can overdo it with threading. For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads. Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.</p>
+<li><p><strong>Oversubscription</strong>: We can overdo it with threading.</p>
 </li>
-<li><p><a href="https://en.wikipedia.org/wiki/False_sharing"><strong>False sharing</strong></a>: The latency of the different layers of memory inside a CPU vary and also the way a core on a CPU can access it. Usually, L3 is shared by all cores but not L2 and L1. This can result in <em>false</em> sharing and reduce the performance if one CPU accesses the data from a cache of another CPU. </p>
+<li><p>For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads.</p>
+</li>
+<li><p>Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.</p>
+</li>
+<li><p><a href="https://en.wikipedia.org/wiki/False_sharing"><strong>False sharing</strong></a>: The latency of the different layers of memory inside a CPU vary and also the way a core on a CPU can access it.</p>
+</li>
+</ul>
+<p>Usually, L3 is shared by all cores but not L2 and L1.</p>
+<ul>
+<li><p>This can result in <em>false</em> sharing and reduce the performance if one CPU accesses the data from a cache of another CPU.</p>
 </li>
 </ul>
 <div class="page-foot">

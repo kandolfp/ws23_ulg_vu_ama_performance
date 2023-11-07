@@ -95,12 +95,12 @@
 <div class="franklin-content"><h1 id="preface"><a href="#preface" class="header-anchor">Preface</a></h1>
 <div class="important">THIS WORKSHOP IS STILL UNDER CONSTRUCTION AND ACTIVE DEVELOPMENT.</div>
 <h1 id="getting_started_with_julia"><a href="#getting_started_with_julia" class="header-anchor">Getting started with Julia</a></h1>
-<p>Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing.  Visit <a href="https://julialang.org">julialang.org</a> for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language.  It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R. Julia recently entered its teens and for this occasion a blog post was published with the title <a href="https://julialang.org/blog/2022/02/10years/">Why We Use Julia, 10 Years Later</a> as a follow up to the <a href="https://julialang.org/blog/2012/02/why-we-created-julia/">Why We Created Julia</a>.  Both entries are a good read and give you an insight into the language and its creators.</p>
+<p>Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing. Visit <a href="https://julialang.org">julialang.org</a> for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language. It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R. Julia recently entered its teens and for this occasion a blog post was published with the title <a href="https://julialang.org/blog/2022/02/10years/">Why We Use Julia, 10 Years Later</a> as a follow up to the <a href="https://julialang.org/blog/2012/02/why-we-created-julia/">Why We Created Julia</a>. Both entries are a good read and give you an insight into the language and its creators.</p>
 <p>In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend <a href="https://noxthot.github.io/ss22_julia_workshop/">Scientific Coding with Julia</a>.</p>
 <h2 id="acknowledgment"><a href="#acknowledgment" class="header-anchor">Acknowledgment</a></h2>
 <p>The foundation of these notes is based on parts of our Julia Workshop which was given at the <a href="https://www.uibk.ac.at/dk-cim/index.html.en">Doctoral College Computational Interdisciplinary Modelling &#40;DK CIM&#41;</a>. This lecture will dive a bit deeper than we did in the section <a href="https://noxthot.github.io/ss22_julia_workshop/pages/hpc/">Parallel Computing</a>.</p>
 <h2 id="some_general_words_on_the_organization_of_this_workshop"><a href="#some_general_words_on_the_organization_of_this_workshop" class="header-anchor">Some general words on the organization of this workshop</a></h2>
-<p>For this workshop you do not need to be a Julia expert, not even a programming expert. We will introduce programming and Julia concepts along with examples. For this purpose you will find code blocks that you can copy if necessary &#40;top right corner <code>copy</code>&#41;. Furthermore, if we think something is very important we will highlight it with a box:</p>
+<p>For this workshop you do not need to be a Julia expert, not even a programming expert. We will introduce programming and Julia concepts along with examples.For this purpose you will find code blocks that you can copy if necessary &#40;top right corner <code>copy</code>&#41;. Furthermore, if we think something is very important we will highlight it with a box:</p>
 <div class="important">Pay extra attention to the content here.</div>
 <p>We also have various environments with different color coding that usually are collapsed to not hinder the reading process:</p>
 <ul>
@@ -141,13 +141,21 @@
 <h2 id="julia_and_vs_code"><a href="#julia_and_vs_code" class="header-anchor">Julia and VS Code</a></h2>
 <p>There is no better resource than <a href="https://www.julia-vscode.org">https://www.julia-vscode.org</a> to explain how to program in Julia with VS Code. The website also provides an interactive view of some of the following concepts.</p>
 <ul>
-<li><p>On the left you have the navigational panel where you can switch between context of the viewer. Specifically you will need the <strong>Explorer</strong> and <strong>Julia</strong>.</p>
+<li><p>On the left you have the navigational panel where you can switch between context of the viewer.</p>
 </li>
-<li><p>Right next to it you get additional information with regards to the current context. For example you will see files, when you are in <strong>Explorer</strong> or you see your <em>Workspace</em>, <em>Documentation</em>, and <em>Plot Navigation</em> in the <strong>Julia</strong> context.</p>
+<li><p>Specifically you will need the <strong>Explorer</strong> and <strong>Julia</strong>.</p>
+</li>
+<li><p>Right next to it you get additional information with regards to the current context.</p>
+</li>
+<li><p>For example you will see files, when you are in <strong>Explorer</strong> or you see your <em>Workspace</em>, <em>Documentation</em>, and <em>Plot Navigation</em> in the <strong>Julia</strong> context.</p>
 </li>
 <li><p>When opening a Julia file &#40;ending in <code>.jl</code>&#41; &#40;double click in the <strong>Explorer</strong> - single click only gives you a quick view and the file will not stay open if you click another file&#41; you have syntax highlighting and autocomplete right away.</p>
 </li>
-<li><p>To run a Julia program, click the small arrow on the top left or <code>Ctrl&#43;F5</code> if you prefer keyboard shortcuts. Both will run the code in the Julia REPL. You will see the output on the bottom.</p>
+<li><p>To run a Julia program, click the small arrow on the top left or <code>Ctrl&#43;F5</code> if you prefer keyboard shortcuts.</p>
+</li>
+<li><p>Both will run the code in the Julia REPL.</p>
+</li>
+<li><p>You will see the output on the bottom.</p>
 </li>
 </ul>
 <p>With these short basics and <a href="https://www.julia-vscode.org">https://www.julia-vscode.org</a> you are good to go for the lecture. You can also find a list of <a href="https://www.julia-vscode.org/docs/dev/userguide/keybindings/">keybindings</a> once you are more familiar with the IDE and never want to get your hands off the keyboard.</p>
