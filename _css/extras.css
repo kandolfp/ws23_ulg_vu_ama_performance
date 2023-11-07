@@ -72,7 +72,7 @@
 .solution {
   border-radius: 1em 1em 0 0;
   padding: 1em;
-  display: block;
+  display: none;
   overflow: hidden;
   background-color: #f2fde2;
 }
