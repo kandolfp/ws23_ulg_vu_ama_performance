@@ -151,11 +151,11 @@ println(<span class="hljs-string">&quot;\nBuilt-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum($a)</code></pre>
 <p><pre><code class="plaintext hljs">
 Simple sum:
-  92.583 μs (0 allocations: 0 bytes)
+  129.301 μs (0 allocations: 0 bytes)
 
 Built-in sum:
-  11.151 μs (0 allocations: 0 bytes)
-50078.42518831766</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
+  13.500 μs (0 allocations: 0 bytes)
+49994.263538800355</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there. </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> mysimdsum(a)
     result = zero(eltype(a))
@@ -198,21 +198,21 @@ println(<span class="hljs-string">&quot;\nSimple mysum2 = &quot;</span>, mysum2(
 println(<span class="hljs-string">&quot;\nSimple mysimdsum2 = &quot;</span>, mysimdsum2(a))
 <span class="hljs-meta">@btime</span> mysimdsum2($a)</code></pre>
 <p><pre><code class="plaintext hljs">
-Simple mysum(a) = 50078.42518831727
-  92.593 μs (0 allocations: 0 bytes)
+Simple mysum(a) = 49994.26353880011
+  129.302 μs (0 allocations: 0 bytes)
 
-Built-in sum(a) = 50078.42518831766
-  12.173 μs (0 allocations: 0 bytes)
+Built-in sum(a) = 49994.263538800355
+  13.500 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum = 50078.4251883177
-  9.868 μs (0 allocations: 0 bytes)
+Simple mysimdsum = 49994.26353880036
+  10.000 μs (0 allocations: 0 bytes)
 
-Simple mysum2 = 50078.42518831727
-  92.583 μs (0 allocations: 0 bytes)
+Simple mysum2 = 49994.26353880011
+  148.501 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum2 = 50078.4251883177
-  11.932 μs (0 allocations: 0 bytes)
-50078.4251883177</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
+Simple mysimdsum2 = 49994.26353880036
+  10.100 μs (0 allocations: 0 bytes)
+49994.26353880036</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
 <p>This is due to the fact that the numerics involved are a bit tricky.  In short, when adding floating point numbers you lose accuracy when adding a large number to a small number.  This is exactly what is happening for our first example as we add all the numbers in one long sequence. </p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
