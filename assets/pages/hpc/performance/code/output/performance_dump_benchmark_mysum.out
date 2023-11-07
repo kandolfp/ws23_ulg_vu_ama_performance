@@ -1,0 +1,14 @@
+BenchmarkTools.Trial
+  params: BenchmarkTools.Parameters
+    seconds: Float64 5.0
+    samples: Int64 10000
+    evals: Int64 1
+    overhead: Float64 0.0
+    gctrial: Bool true
+    gcsample: Bool false
+    time_tolerance: Float64 0.05
+    memory_tolerance: Float64 0.01
+  times: Array{Float64}((10000,)) [94646.0, 92652.0, 92673.0, 92633.0, 92693.0, 92633.0, 92662.0, 92662.0, 92702.0, 92662.0  …  92652.0, 92612.0, 92653.0, 92602.0, 92652.0, 92603.0, 92643.0, 92603.0, 92642.0, 92613.0]
+  gctimes: Array{Float64}((10000,)) [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  memory: Int64 0
+  allocs: Int64 0

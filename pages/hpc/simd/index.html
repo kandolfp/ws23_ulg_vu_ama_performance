@@ -151,11 +151,11 @@ println(<span class="hljs-string">&quot;\nBuilt-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum($a)</code></pre>
 <p><pre><code class="plaintext hljs">
 Simple sum:
-  129.301 μs (0 allocations: 0 bytes)
+  92.612 μs (0 allocations: 0 bytes)
 
 Built-in sum:
-  13.500 μs (0 allocations: 0 bytes)
-49994.263538800355</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
+  11.091 μs (0 allocations: 0 bytes)
+49964.641170210874</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. </p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there. </p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> mysimdsum(a)
     result = zero(eltype(a))
@@ -198,21 +198,21 @@ println(<span class="hljs-string">&quot;\nSimple mysum2 = &quot;</span>, mysum2(
 println(<span class="hljs-string">&quot;\nSimple mysimdsum2 = &quot;</span>, mysimdsum2(a))
 <span class="hljs-meta">@btime</span> mysimdsum2($a)</code></pre>
 <p><pre><code class="plaintext hljs">
-Simple mysum(a) = 49994.26353880011
-  129.302 μs (0 allocations: 0 bytes)
+Simple mysum(a) = 49964.64117021102
+  92.591 μs (0 allocations: 0 bytes)
 
-Built-in sum(a) = 49994.263538800355
-  13.500 μs (0 allocations: 0 bytes)
+Built-in sum(a) = 49964.641170210874
+  11.000 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum = 49994.26353880036
-  10.000 μs (0 allocations: 0 bytes)
+Simple mysimdsum = 49964.641170210874
+  9.789 μs (0 allocations: 0 bytes)
 
-Simple mysum2 = 49994.26353880011
-  148.501 μs (0 allocations: 0 bytes)
+Simple mysum2 = 49964.64117021102
+  92.592 μs (0 allocations: 0 bytes)
 
-Simple mysimdsum2 = 49994.26353880036
-  10.100 μs (0 allocations: 0 bytes)
-49994.26353880036</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
+Simple mysimdsum2 = 49964.641170210874
+  9.638 μs (0 allocations: 0 bytes)
+49964.641170210874</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same. </p>
 <p>This is due to the fact that the numerics involved are a bit tricky.  In short, when adding floating point numbers you lose accuracy when adding a large number to a small number.  This is exactly what is happening for our first example as we add all the numbers in one long sequence. </p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
@@ -222,7 +222,7 @@ Simple mysimdsum2 = 49994.26353880036
 printstyled(<span class="hljs-string">&quot;\n------Separator-------\n\n&quot;</span>; color = :red)
 <span class="hljs-meta">@code_llvm</span> mysimdsum(a)</code></pre>
 <pre><code class="plaintext hljs">;  @ none:2 within `mysum`
-define double @julia_mysum_2084({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mysum_3708({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:5 within `mysum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
@@ -277,7 +277,7 @@ L29:                                              ; preds = %L13, %top
 ------Separator-------
 
 ;  @ none:1 within `mysimdsum`
-define double @julia_mysimdsum_2093({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mysimdsum_3717({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:4 within `mysimdsum`
 ; ┌ @ simdloop.jl:69 within `macro expansion`
@@ -447,7 +447,7 @@ L30:                                              ; preds = %L13, %middle.block,
 ) =&gt; Float64</code></pre> We can see, that in the first output everything is of type <code>Int64</code>, including the result. The second output has the same instructions but with <code>Float64</code> as type. </p>
 <p>As we might have already seen throughout this workshop we can define the same function name for different input arguments. This is very obvious for the basic math operators but it is true for every function. Let us have a look at the <code>&#43;</code> operator:</p>
 <pre><code class="julia hljs">methods(+)</code></pre>
-<pre><code class="plaintext hljs"># 208 methods for generic function &quot;+&quot; from Base:
+<pre><code class="plaintext hljs"># 325 methods for generic function &quot;+&quot; from Base:
    [1] +(x::T, y::T) where T&lt;:Union{Int128, Int16, Int32, Int64, Int8, UInt128, UInt16, UInt32, UInt64, UInt8}
      @ int.jl:87
    [2] +(x::T, y::T) where T&lt;:Union{Float16, Float32, Float64}
@@ -464,405 +464,639 @@ L30:                                              ; preds = %L13, %middle.block,
      @ Base.MPFR mpfr.jl:423
    [8] +(x::Union{Dates.CompoundPeriod, Dates.Period})
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:342
-   [9] +(F::LinearAlgebra.Hessenberg, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:647
-  [10] +(r::AbstractRange{&lt;:Dates.TimeType}, x::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:65
-  [11] +(x::AbstractArray{&lt;:Dates.TimeType}, y::Union{Dates.CompoundPeriod, Dates.Period})
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:6
-  [12] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:754
-  [13] +(x::LinearAlgebra.Tridiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [14] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:162
-  [15] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:178
-  [16] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:198
-  [17] +(A::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:231
-  [18] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
-  [19] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
-  [20] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
-  [21] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
-  [22] +(x::P, y::P) where P&lt;:Dates.Period
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:75
-  [23] +(x::Dates.Period, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:331
-  [24] +(y::Dates.Period, x::Dates.CompoundPeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:333
-  [25] +(y::Dates.Period, x::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:85
-  [26] +(x::Dates.Period, r::AbstractRange{&lt;:Dates.TimeType})
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:64
-  [27] +(y::Union{Dates.CompoundPeriod, Dates.Period}, x::AbstractArray{&lt;:Dates.TimeType})
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:14
-  [28] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:646
-  [29] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:648
-  [30] +(UL::LinearAlgebra.UnitUpperTriangular, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
-  [31] +(x::LinearAlgebra.UnitUpperTriangular, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [32] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [33] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/bidiag.jl:374
-  [34] +(x::LinearAlgebra.Bidiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [35] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [36] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [37] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [38] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [39] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:120
-  [40] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:188
-  [41] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:208
-  [42] +(A::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:241
-  [43] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:647
-  [44] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:649
-  [45] +(UL::LinearAlgebra.UnitLowerTriangular, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
-  [46] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [47] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:642
-  [48] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:644
-  [49] +(x::LinearAlgebra.UpperTriangular, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [50] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [51] +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2065
-  [52] +(x::SparseArrays.AbstractSparseVector, y::SparseArrays.AbstractSparseVector)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsevector.jl:1516
-  [53] +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2068
-  [54] +(A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}, J::LinearAlgebra.UniformScaling{T}) where {T&lt;:Number, Tv, Ti}
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4098
-  [55] +(r1::OrdinalRange, r2::OrdinalRange)
-     @ range.jl:1441
-  [56] +(x::T, y::Integer) where T&lt;:AbstractChar
-     @ char.jl:237
-  [57] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:207
-  [58] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:485
-  [59] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s970&quot;, V} where {var&quot;#s970&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s970&quot;}}, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:487
-  [60] +(x::LinearAlgebra.SymTridiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [61] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:150
-  [62] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:164
-  [63] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:218
-  [64] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:236
-  [65] +(y::AbstractFloat, x::Bool)
-     @ bool.jl:176
-  [66] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
-  [67] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:486
-  [68] +(S::LinearAlgebra.Symmetric, D::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:191
-  [69] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
-  [70] +(A::LinearAlgebra.Symmetric, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
-  [71] +(A::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:25
-  [72] +(A::LinearAlgebra.Symmetric{var&quot;#s971&quot;, S} where {var&quot;#s971&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s971&quot;})}, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:484
-  [73] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:23
-  [74] +(x::Dates.Instant)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:4
-  [75] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
-  [76] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.SymTridiagonal{var&quot;#s969&quot;, V} where {var&quot;#s969&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s969&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:488
-  [77] +(H::LinearAlgebra.Hermitian, D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:197
-  [78] +(A::LinearAlgebra.Hermitian, J::LinearAlgebra.UniformScaling{&lt;:Complex})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:195
-  [79] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
-  [80] +(A::LinearAlgebra.Hermitian, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
-  [81] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:26
-  [82] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Symmetric{var&quot;#s972&quot;, S} where {var&quot;#s972&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s972&quot;})})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:483
-  [83] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:24
-  [84] +(A::LinearAlgebra.UpperHessenberg, B::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:104
-  [85] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [86] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [87] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [88] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [89] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [90] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [91] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
-  [92] +(z::Complex, w::Complex)
-     @ complex.jl:291
-  [93] +(x::AbstractIrrational, y::AbstractIrrational)
-     @ irrationals.jl:161
-  [94] +(index1::CartesianIndex{N}, index2::CartesianIndex{N}) where N
-     @ Base.IteratorsMD multidimensional.jl:111
-  [95] +(A::BitArray, B::BitArray)
-     @ bitarray.jl:1184
-  [96] +(x::Ptr, y::Integer)
-     @ pointer.jl:167
-  [97] +(Da::LinearAlgebra.Diagonal, Db::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:184
-  [98] +(D::LinearAlgebra.Diagonal, S::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:188
-  [99] +(D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}}, H::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:194
- [100] +(x::LinearAlgebra.Diagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
- [101] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:130
- [102] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:140
- [103] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:168
- [104] +(A::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:246
- [105] +(r1::LinRange{T}, r2::LinRange{T}) where T
-     @ range.jl:1448
- [106] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:643
- [107] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:645
- [108] +(A::LinearAlgebra.AbstractTriangular, B::LinearAlgebra.AbstractTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:650
- [109] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
- [110] +(J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:149
- [111] +(J::LinearAlgebra.UniformScaling, x::Number)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:144
- [112] +(J1::LinearAlgebra.UniformScaling, J2::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:150
- [113] +(J::LinearAlgebra.UniformScaling, B::BitMatrix)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:152
- [114] +(x::LinearAlgebra.UniformScaling, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
- [115] +(J::LinearAlgebra.UniformScaling, F::LinearAlgebra.Hessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:648
- [116] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:250
- [117] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:255
- [118] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:260
- [119] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:265
- [120] +(J::LinearAlgebra.UniformScaling{T}, A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}) where {T&lt;:Number, Tv, Ti}
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4100
- [121] +(J::LinearAlgebra.UniformScaling, A::AbstractMatrix)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:153
- [122] +(x::Base.TwicePrecision, y::Number)
-     @ twiceprecision.jl:290
- [123] +(x::Base.TwicePrecision{T}, y::Base.TwicePrecision{T}) where T
-     @ twiceprecision.jl:296
- [124] +(x::Base.TwicePrecision, y::Base.TwicePrecision)
-     @ twiceprecision.jl:301
- [125] +(y::Dates.TimeType, x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+   [9] +(a::Union{ColorTypes.LMS, ColorTypes.XYZ}, b::Union{ColorTypes.LMS, ColorTypes.XYZ})
+     @ Colors ~/.julia/packages/Colors/mIuXl/src/algorithms.jl:4
+  [10] +(A::Union{CUDA.CUSPARSE.CuSparseMatrixCOO{T}, LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO}, LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO}}, B::Union{CUDA.CUSPARSE.CuSparseMatrixCOO{T}, LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO}, LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:204
+  [11] +(y::Dates.TimeType, x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:18
- [126] +(A::Array, Bs::Array...)
-     @ arraymath.jl:12
- [127] +(X::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, Y::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:62
- [128] +(A::Array, B::SparseArrays.AbstractSparseMatrixCSC)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2069
- [129] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:55
- [130] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, y::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:10
- [131] +(r1::StepRangeLen{T, R}, r2::StepRangeLen{T, R}) where {R&lt;:Base.TwicePrecision, T}
+  [12] +(A::CUDA.CUSPARSE.CuSparseVector{T}, B::CUDA.CUSPARSE.CuSparseVector{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:202
+  [13] +(a::ColorTypes.AbstractGray{Bool}, b::Bool)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:322
+  [14] +(a::ColorTypes.AbstractGray{Bool}, b::Number)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:321
+  [15] +(a::ColorTypes.AbstractGray, b::Number)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:320
+  [16] +(a::StaticArraysCore.StaticArray{Tuple{N, M}, T, 2} where {N, M, T}, b::LinearAlgebra.UniformScaling)
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:29
+  [17] +(a::StaticArraysCore.StaticArray)
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:7
+  [18] +(a::StaticArraysCore.StaticArray, b::StaticArraysCore.StaticArray)
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:12
+  [19] +(a::AbstractArray, b::StaticArraysCore.StaticArray)
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:13
+  [20] +(a::StaticArraysCore.StaticArray, b::AbstractArray)
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:14
+  [21] +(r::AbstractRange{&lt;:Dates.TimeType}, x::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:65
+  [22] +(x::AbstractArray{&lt;:Dates.TimeType}, y::Union{Dates.CompoundPeriod, Dates.Period})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:6
+  [23] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:754
+  [24] +(x::LinearAlgebra.Tridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [25] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:162
+  [26] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:178
+  [27] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:198
+  [28] +(A::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:231
+  [29] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
+  [30] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
+  [31] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
+  [32] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
+  [33] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:647
+  [34] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:649
+  [35] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+  [36] +(A::LinearAlgebra.UnitLowerTriangular{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:33
+  [37] +(UL::LinearAlgebra.UnitLowerTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
+  [38] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:642
+  [39] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:644
+  [40] +(x::LinearAlgebra.UpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [41] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+  [42] +(A::LinearAlgebra.UpperTriangular{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:53
+  [43] +(x::CUDA.CuPtr, y::Integer)
+     @ CUDA ~/.julia/packages/CUDA/nbRJk/src/pointer.jl:76
+  [44] +(r1::OrdinalRange, r2::OrdinalRange)
+     @ range.jl:1441
+  [45] +(bb1::Measures.BoundingBox, bb2::Measures.BoundingBox)
+     @ Plots ~/.julia/packages/Plots/sxUvK/src/layouts.jl:21
+  [46] +(x::Core.LLVMPtr, y::Integer)
+     @ LLVM.Interop ~/.julia/packages/LLVM/vIbji/src/interop/pointer.jl:114
+  [47] +(y::AbstractFloat, x::Bool)
+     @ bool.jl:176
+  [48] +(lhs::CUDA.CUSPARSE.CuSparseMatrixCSC{T}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+  [49] +(A::CUDA.CUSPARSE.CuSparseMatrixCSC{T}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+  [50] +(A::CUDA.CUSPARSE.CuSparseMatrixCSC{T}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+  [51] +(A::CUDA.CUSPARSE.CuSparseMatrixCSC{T}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+  [52] +(A::CUDA.CUSPARSE.CuSparseMatrixCSC{T}, B::CUDA.CUSPARSE.CuSparseMatrixCSC{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+  [53] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
+  [54] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:486
+  [55] +(S::LinearAlgebra.Symmetric, D::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:191
+  [56] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
+  [57] +(A::LinearAlgebra.Symmetric, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
+  [58] +(A::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:25
+  [59] +(A::LinearAlgebra.Symmetric{var&quot;#s971&quot;, S} where {var&quot;#s971&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s971&quot;})}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:484
+  [60] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:23
+  [61] +(A::LinearAlgebra.Symmetric{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:53
+  [62] +(a::SentinelArrays.ChainedVectorIndex, b::SentinelArrays.ChainedVectorIndex)
+     @ SentinelArrays ~/.julia/packages/SentinelArrays/1kRo4/src/chainedvector.jl:209
+  [63] +(a::SentinelArrays.ChainedVectorIndex, b::Integer)
+     @ SentinelArrays ~/.julia/packages/SentinelArrays/1kRo4/src/chainedvector.jl:207
+  [64] +(A::GPUArraysCore.AbstractGPUMatrix{T}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:89
+  [65] +(A::LinearAlgebra.UpperHessenberg, B::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:104
+  [66] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [67] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [68] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [69] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [70] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [71] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [72] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
+  [73] +(a::Measures.Length{U}, b::Measures.Length{U}) where U
+     @ Measures ~/.julia/packages/Measures/PKOxJ/src/length.jl:31
+  [74] +(index1::CartesianIndex{N}, index2::CartesianIndex{N}) where N
+     @ Base.IteratorsMD multidimensional.jl:111
+  [75] +(x::Ptr, y::Integer)
+     @ pointer.jl:167
+  [76] +(x::X, y::X) where X&lt;:FixedPointNumbers.FixedPoint
+     @ FixedPointNumbers ~/.julia/packages/FixedPointNumbers/HAGk2/src/FixedPointNumbers.jl:237
+  [77] +(r1::LinRange{T}, r2::LinRange{T}) where T
+     @ range.jl:1448
+  [78] +(A::CUDA.CuArray{T, 2}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+  [79] +(A::CUDA.CuArray{T, 2}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+  [80] +(A::CUDA.CuArray{T, 2}, B::CUDA.CuArray{T, 2}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+  [81] +(J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:149
+  [82] +(J::LinearAlgebra.UniformScaling, F::LinearAlgebra.Hessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:648
+  [83] +(J::LinearAlgebra.UniformScaling{T}, A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4100
+  [84] +(x::LinearAlgebra.UniformScaling, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+  [85] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:250
+  [86] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:265
+  [87] +(a::LinearAlgebra.UniformScaling, b::StaticArraysCore.StaticArray{Tuple{N, M}, T, 2} where {N, M, T})
+     @ StaticArrays ~/.julia/packages/StaticArrays/cZ1ET/src/linalg.jl:30
+  [88] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [89] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [90] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [91] +(J1::LinearAlgebra.UniformScaling, J2::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:150
+  [92] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:255
+  [93] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:260
+  [94] +(J::LinearAlgebra.UniformScaling, A::CUDA.CUSPARSE.CuSparseMatrixCOO{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [95] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [96] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [97] +(J::LinearAlgebra.UniformScaling, A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [98] +(J::LinearAlgebra.UniformScaling, A::CUDA.CUSPARSE.CuSparseMatrixCSC{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+  [99] +(J::LinearAlgebra.UniformScaling, A::CUDA.CUSPARSE.CuSparseMatrixCSR{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:476
+ [100] +(J::LinearAlgebra.UniformScaling, x::Number)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:144
+ [101] +(J::LinearAlgebra.UniformScaling, B::BitMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:152
+ [102] +(J::LinearAlgebra.UniformScaling, A::AbstractMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:153
+ [103] +(x::Base.TwicePrecision, y::Number)
+     @ twiceprecision.jl:290
+ [104] +(x::Base.TwicePrecision{T}, y::Base.TwicePrecision{T}) where T
+     @ twiceprecision.jl:296
+ [105] +(x::Base.TwicePrecision, y::Base.TwicePrecision)
+     @ twiceprecision.jl:301
+ [106] +(p::SpecialFunctions.SimplePoly{S}, q::SpecialFunctions.SimplePoly{T}) where {S, T}
+     @ SpecialFunctions ~/.julia/packages/SpecialFunctions/QH8rV/src/expint.jl:11
+ [107] +(r1::StepRangeLen{T, R}, r2::StepRangeLen{T, R}) where {R&lt;:Base.TwicePrecision, T}
      @ twiceprecision.jl:628
- [132] +(r1::StepRangeLen{T, S}, r2::StepRangeLen{T, S}) where {T, S}
+ [108] +(r1::StepRangeLen{T, S}, r2::StepRangeLen{T, S}) where {T, S}
      @ range.jl:1464
- [133] +(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::Union{LinRange, OrdinalRange, StepRangeLen})
+ [109] +(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::Union{LinRange, OrdinalRange, StepRangeLen})
      @ range.jl:1457
- [134] +(A::AbstractArray, B::AbstractArray)
-     @ arraymath.jl:6
- [135] +(x::Rational, y::Integer)
-     @ rational.jl:327
- [136] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
-     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/versionweights.jl:22
- [137] +(x::BigFloat, c::Union{UInt16, UInt32, UInt64, UInt8})
-     @ Base.MPFR mpfr.jl:402
- [138] +(x::BigFloat, c::Union{Int16, Int32, Int64, Int8})
-     @ Base.MPFR mpfr.jl:410
- [139] +(x::BigFloat, c::Union{Float16, Float32, Float64})
-     @ Base.MPFR mpfr.jl:418
- [140] +(x::BigFloat, y::BigFloat)
-     @ Base.MPFR mpfr.jl:395
- [141] +(x::BigFloat, c::BigInt)
-     @ Base.MPFR mpfr.jl:426
- [142] +(a::BigFloat, b::BigFloat, c::BigFloat)
-     @ Base.MPFR mpfr.jl:567
- [143] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat)
-     @ Base.MPFR mpfr.jl:573
- [144] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat, e::BigFloat)
-     @ Base.MPFR mpfr.jl:580
- [145] +(z::Complex{Bool}, x::Bool)
-     @ complex.jl:303
- [146] +(z::Complex, x::Bool)
-     @ complex.jl:310
- [147] +(z::Complex{Bool}, x::Real)
-     @ complex.jl:317
- [148] +(z::Complex)
-     @ complex.jl:289
- [149] +(z::Complex, x::Real)
-     @ complex.jl:329
- [150] +(dt::Dates.Date, t::Dates.Time)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:19
- [151] +(dt::Dates.Date, y::Dates.Year)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:27
- [152] +(dt::Dates.Date, z::Dates.Month)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:54
- [153] +(x::Dates.Date, y::Dates.Quarter)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:73
- [154] +(x::Dates.Date, y::Dates.Week)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:77
- [155] +(x::Dates.Date, y::Dates.Day)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:79
- [156] +(x::Bool)
-     @ bool.jl:163
- [157] +(x::Integer, y::Ptr)
-     @ pointer.jl:169
- [158] +(y::Integer, x::Rational)
-     @ rational.jl:334
- [159] +(x::Integer, y::AbstractChar)
-     @ char.jl:247
- [160] +(x::Bool, y::T) where T&lt;:AbstractFloat
-     @ bool.jl:173
- [161] +(x::Bool, y::Bool)
-     @ bool.jl:166
- [162] +(x::Bool, z::Complex{Bool})
-     @ complex.jl:302
- [163] +(x::Real, z::Complex{Bool})
-     @ complex.jl:316
- [164] +(x::Bool, z::Complex)
-     @ complex.jl:309
- [165] +(x::Real, z::Complex)
-     @ complex.jl:328
- [166] +(x::Dates.CompoundPeriod, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:332
- [167] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:362
- [168] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:334
- [169] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:151
- [170] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:214
- [171] +(x::AbstractArray{&lt;:Number})
-     @ abstractarraymath.jl:220
- [172] +(x::BigInt, c::Union{UInt16, UInt32, UInt64, UInt8})
-     @ Base.GMP gmp.jl:538
- [173] +(x::BigInt, c::Union{Int16, Int32, Int64, Int8})
-     @ Base.GMP gmp.jl:544
- [174] +(x::BigInt, y::BigInt)
-     @ Base.GMP gmp.jl:490
- [175] +(a::BigInt, b::BigInt, c::BigInt)
-     @ Base.GMP gmp.jl:530
- [176] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt)
-     @ Base.GMP gmp.jl:531
- [177] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt, e::BigInt)
-     @ Base.GMP gmp.jl:532
- [178] +(x::BigInt, y::BigInt, rest::BigInt...)
-     @ Base.GMP gmp.jl:666
- [179] +(a::Integer, b::Integer)
-     @ int.jl:1038
- [180] +(c::BigInt, x::BigFloat)
-     @ Base.MPFR mpfr.jl:431
- [181] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
-     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
- [182] +(x::Dates.Time, y::Dates.TimePeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:83
- [183] +(t::Dates.Time, dt::Dates.Date)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:20
- [184] +(x::Rational{BigInt}, y::Rational{BigInt})
-     @ Base.GMP.MPQ gmp.jl:1027
- [185] +(x::Rational)
-     @ rational.jl:284
- [186] +(x::Number, y::Base.TwicePrecision)
-     @ twiceprecision.jl:294
- [187] +(::Number, ::Missing)
-     @ missing.jl:124
- [188] +(x::Number, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:145
- [189] +(x::Rational, y::Rational)
-     @ rational.jl:298
- [190] +(x::Number)
-     @ operators.jl:515
- [191] +(x::T, y::T) where T&lt;:Number
-     @ promotion.jl:485
- [192] +(x::Number, y::Number)
-     @ promotion.jl:410
- [193] +(::Missing)
-     @ missing.jl:101
- [194] +(::Missing, ::Number)
-     @ missing.jl:123
- [195] +(x::Missing, y::Dates.AbstractTime)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:89
- [196] +(::Missing, ::Missing)
-     @ missing.jl:122
- [197] +(level::Base.CoreLogging.LogLevel, inc::Integer)
-     @ Base.CoreLogging logging.jl:131
- [198] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
-     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/fieldvalues.jl:43
- [199] +(dt::Dates.DateTime, y::Dates.Year)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:23
- [200] +(dt::Dates.DateTime, z::Dates.Month)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:47
- [201] +(x::Dates.DateTime, y::Dates.Quarter)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:75
- [202] +(x::Dates.DateTime, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:81
- [203] +(x::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:8
- [204] +(x::Dates.AbstractTime, y::Missing)
+ [110] +(A::Array, Bs::Array...)
+     @ arraymath.jl:12
+ [111] +(X::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, Y::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:62
+ [112] +(A::Array, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2069
+ [113] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:55
+ [114] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:10
+ [115] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}, B::CUDA.CuArray{T, 2}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [116] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [117] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [118] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [119] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [120] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [121] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [122] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [123] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [124] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [125] +(lhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [126] +(lhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [127] +(lhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [128] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::CUDA.CUSPARSE.CuSparseMatrixCSC{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [129] +(A::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::CUDA.CUSPARSE.CuSparseMatrixCSR{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [130] +(a::ColorTypes.TransparentGray, b::ColorTypes.TransparentGray)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:312
+ [131] +(a::ColorTypes.TransparentColor{C, T, 4} where {C&lt;:ColorTypes.AbstractRGB, T}, b::ColorTypes.TransparentColor{C, T, 4} where {C&lt;:ColorTypes.AbstractRGB, T})
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:274
+ [132] +(c::Union{ColorTypes.TransparentColor{C, Bool}, C} where C&lt;:Union{ColorTypes.AbstractRGB{Bool}, ColorTypes.AbstractGray{Bool}})
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:250
+ [133] +(lhs::CUDA.CUSPARSE.CuSparseMatrixCOO{T}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [134] +(A::CUDA.CUSPARSE.CuSparseMatrixCOO{T}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [135] +(x::P, y::P) where P&lt;:Dates.Period
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:75
+ [136] +(x::Dates.Period, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:331
+ [137] +(y::Dates.Period, x::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:333
+ [138] +(y::Dates.Period, x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:85
+ [139] +(x::Dates.Period, r::AbstractRange{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:64
+ [140] +(y::Union{Dates.CompoundPeriod, Dates.Period}, x::AbstractArray{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:14
+ [141] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:646
+ [142] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:648
+ [143] +(x::LinearAlgebra.UnitUpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [144] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+ [145] +(A::LinearAlgebra.UnitUpperTriangular{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:33
+ [146] +(UL::LinearAlgebra.UnitUpperTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
+ [147] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/bidiag.jl:374
+ [148] +(x::LinearAlgebra.Bidiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [149] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+ [150] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+ [151] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+ [152] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
+ [153] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:120
+ [154] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:188
+ [155] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:208
+ [156] +(A::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:241
+ [157] +(a::ColorVectorSpace.RGBRGB)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:411
+ [158] +(a::ColorVectorSpace.RGBRGB, b::ColorVectorSpace.RGBRGB)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:413
+ [159] +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2065
+ [160] +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2068
+ [161] +(A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}, J::LinearAlgebra.UniformScaling{T}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4098
+ [162] +(x::T, y::Integer) where T&lt;:AbstractChar
+     @ char.jl:237
+ [163] +(a::Measures.Measure, b::Measures.Measure)
+     @ Measures ~/.julia/packages/Measures/PKOxJ/src/operations.jl:41
+ [164] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}, B::CUDA.CuArray{T, 2}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [165] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [166] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [167] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [168] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [169] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [170] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [171] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [172] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [173] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CuArray{T, 2}}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CuArray{T, 2}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUBLAS ~/.julia/packages/CUDA/nbRJk/lib/cublas/linalg.jl:675
+ [174] +(lhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [175] +(lhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [176] +(lhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [177] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}, B::CUDA.CUSPARSE.CuSparseMatrixCSC{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [178] +(A::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}, B::CUDA.CUSPARSE.CuSparseMatrixCSR{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [179] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:207
+ [180] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:485
+ [181] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s970&quot;, V} where {var&quot;#s970&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s970&quot;}}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:487
+ [182] +(x::LinearAlgebra.SymTridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [183] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:150
+ [184] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:164
+ [185] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:218
+ [186] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:236
+ [187] +(a::Tuple{Vararg{Measures.Measure, N}}, b::Tuple{Vararg{Measures.Measure, N}}) where N
+     @ Measures ~/.julia/packages/Measures/PKOxJ/src/point.jl:21
+ [188] +(a::Tuple{Vararg{Measures.Measure, N}} where N, b::Tuple{Vararg{Measures.Measure, N}} where N)
+     @ Measures ~/.julia/packages/Measures/PKOxJ/src/point.jl:15
+ [189] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
+ [190] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.SymTridiagonal{var&quot;#s969&quot;, V} where {var&quot;#s969&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s969&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:488
+ [191] +(H::LinearAlgebra.Hermitian, D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:197
+ [192] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
+ [193] +(A::LinearAlgebra.Hermitian, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
+ [194] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:26
+ [195] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Symmetric{var&quot;#s972&quot;, S} where {var&quot;#s972&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s972&quot;})})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:483
+ [196] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:24
+ [197] +(A::LinearAlgebra.Hermitian{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling{&lt;:Complex}) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:72
+ [198] +(A::LinearAlgebra.Hermitian, J::LinearAlgebra.UniformScaling{&lt;:Complex})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:195
+ [199] +(A::LinearAlgebra.Hermitian{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:53
+ [200] +(x::Dates.Instant)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:4
+ [201] +(x::Dates.AbstractTime, y::Missing)
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:88
- [205] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period)
+ [202] +(z::Complex, w::Complex)
+     @ complex.jl:291
+ [203] +(x::AbstractIrrational, y::AbstractIrrational)
+     @ irrationals.jl:161
+ [204] +(A::BitArray, B::BitArray)
+     @ bitarray.jl:1184
+ [205] +(x::CUDA.CuArrayPtr, y::Integer)
+     @ CUDA ~/.julia/packages/CUDA/nbRJk/src/pointer.jl:185
+ [206] +(D::LinearAlgebra.Diagonal, S::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:188
+ [207] +(D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}}, H::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:194
+ [208] +(x::LinearAlgebra.Diagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
+ [209] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [210] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [211] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [212] +(Da::LinearAlgebra.Diagonal, Db::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:184
+ [213] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:168
+ [214] +(lhs::LinearAlgebra.Diagonal, rhs::CUDA.CUSPARSE.CuSparseMatrixCOO{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [215] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:130
+ [216] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:140
+ [217] +(A::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:246
+ [218] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [219] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSC{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [220] +(lhs::LinearAlgebra.Diagonal, rhs::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCOO{T}}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [221] +(lhs::LinearAlgebra.Diagonal, rhs::CUDA.CUSPARSE.CuSparseMatrixCSC{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [222] +(lhs::LinearAlgebra.Diagonal, rhs::CUDA.CUSPARSE.CuSparseMatrixCSR{T}) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:502
+ [223] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:643
+ [224] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:645
+ [225] +(A::LinearAlgebra.AbstractTriangular, B::LinearAlgebra.AbstractTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:650
+ [226] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
+ [227] +(A::LinearAlgebra.LowerTriangular{T, &lt;:GPUArraysCore.AbstractGPUMatrix}, J::LinearAlgebra.UniformScaling) where T
+     @ GPUArrays ~/.julia/packages/GPUArrays/dAUOE/src/host/uniformscaling.jl:53
+ [228] +(lhs::CUDA.CUSPARSE.CuSparseMatrixCSR{T}, rhs::LinearAlgebra.Diagonal) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:505
+ [229] +(A::CUDA.CUSPARSE.CuSparseMatrixCSR{T}, J::LinearAlgebra.UniformScaling) where T
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:475
+ [230] +(A::CUDA.CUSPARSE.CuSparseMatrixCSR{T}, B::LinearAlgebra.Adjoint{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [231] +(A::CUDA.CUSPARSE.CuSparseMatrixCSR{T}, B::LinearAlgebra.Transpose{T, &lt;:CUDA.CUSPARSE.CuSparseMatrixCSR{T}}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [232] +(A::CUDA.CUSPARSE.CuSparseMatrixCSR{T}, B::CUDA.CUSPARSE.CuSparseMatrixCSR{T}) where T&lt;:Union{Float32, Float64, ComplexF32, ComplexF64}
+     @ CUDA.CUSPARSE ~/.julia/packages/CUDA/nbRJk/lib/cusparse/interfaces.jl:197
+ [233] +(x::SparseArrays.AbstractSparseVector, y::SparseArrays.AbstractSparseVector)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsevector.jl:1516
+ [234] +(A::AbstractArray, B::AbstractArray)
+     @ arraymath.jl:6
+ [235] +(F::LinearAlgebra.Hessenberg, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:647
+ [236] +(a::CEnum.Cenum{T}, b::S) where {T&lt;:Integer, S&lt;:Integer}
+     @ CEnum ~/.julia/packages/CEnum/Bqafi/src/operators.jl:9
+ [237] +(a::CEnum.Cenum{T}, b::CEnum.Cenum{S}) where {T&lt;:Integer, S&lt;:Integer}
+     @ CEnum ~/.julia/packages/CEnum/Bqafi/src/operators.jl:5
+ [238] +(a::ColorTypes.AbstractRGB, b::ColorTypes.AbstractRGB)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:272
+ [239] +(a::ColorTypes.AbstractGray{Bool}, b::ColorTypes.AbstractGray{Bool})
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:311
+ [240] +(c::Union{ColorTypes.TransparentColor{C, T}, C} where {T, C&lt;:Union{ColorTypes.AbstractRGB{T}, ColorTypes.AbstractGray{T}}})
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:249
+ [241] +(a::ColorTypes.AbstractGray, b::ColorTypes.AbstractGray)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:310
+ [242] +(a::Union{ColorTypes.TransparentColor{C, T}, C} where {T, C&lt;:Union{ColorTypes.AbstractRGB{T}, ColorTypes.AbstractGray{T}}}, b::Union{ColorTypes.TransparentColor{C, T}, C} where {T, C&lt;:Union{ColorTypes.AbstractRGB{T}, ColorTypes.AbstractGray{T}}})
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:260
+ [243] +(x::Rational, y::Integer)
+     @ rational.jl:327
+ [244] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/versionweights.jl:22
+ [245] +(x::BigFloat, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.MPFR mpfr.jl:402
+ [246] +(x::BigFloat, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.MPFR mpfr.jl:410
+ [247] +(x::BigFloat, c::Union{Float16, Float32, Float64})
+     @ Base.MPFR mpfr.jl:418
+ [248] +(x::BigFloat, y::BigFloat)
+     @ Base.MPFR mpfr.jl:395
+ [249] +(x::BigFloat, c::BigInt)
+     @ Base.MPFR mpfr.jl:426
+ [250] +(a::BigFloat, b::BigFloat, c::BigFloat)
+     @ Base.MPFR mpfr.jl:567
+ [251] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat)
+     @ Base.MPFR mpfr.jl:573
+ [252] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat, e::BigFloat)
+     @ Base.MPFR mpfr.jl:580
+ [253] +(self::TimerOutputs.TimeData, other::TimerOutputs.TimeData)
+     @ TimerOutputs ~/.julia/packages/TimerOutputs/RsWnF/src/TimerOutput.jl:14
+ [254] +(x::Bool)
+     @ bool.jl:163
+ [255] +(x::Integer, y::Ptr)
+     @ pointer.jl:169
+ [256] +(y::Integer, x::Rational)
+     @ rational.jl:334
+ [257] +(x::Integer, y::AbstractChar)
+     @ char.jl:247
+ [258] +(a::T, b::CEnum.Cenum{S}) where {T&lt;:Integer, S&lt;:Integer}
+     @ CEnum ~/.julia/packages/CEnum/Bqafi/src/operators.jl:13
+ [259] +(x::Integer, y::Core.LLVMPtr)
+     @ LLVM.Interop ~/.julia/packages/LLVM/vIbji/src/interop/pointer.jl:116
+ [260] +(a::Integer, b::SentinelArrays.ChainedVectorIndex)
+     @ SentinelArrays ~/.julia/packages/SentinelArrays/1kRo4/src/chainedvector.jl:208
+ [261] +(x::Integer, y::CUDA.CuArrayPtr)
+     @ CUDA ~/.julia/packages/CUDA/nbRJk/src/pointer.jl:187
+ [262] +(x::Integer, y::CUDA.CuPtr)
+     @ CUDA ~/.julia/packages/CUDA/nbRJk/src/pointer.jl:78
+ [263] +(x::Bool, y::T) where T&lt;:AbstractFloat
+     @ bool.jl:173
+ [264] +(x::Bool, y::Bool)
+     @ bool.jl:166
+ [265] +(x::Bool, z::Complex{Bool})
+     @ complex.jl:302
+ [266] +(x::Real, z::Complex{Bool})
+     @ complex.jl:316
+ [267] +(x::Bool, z::Complex)
+     @ complex.jl:309
+ [268] +(x::Real, z::Complex)
+     @ complex.jl:328
+ [269] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
+     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
+ [270] +(dt::Dates.Date, t::Dates.Time)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:19
+ [271] +(dt::Dates.Date, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:27
+ [272] +(dt::Dates.Date, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:54
+ [273] +(x::Dates.Date, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:73
+ [274] +(x::Dates.Date, y::Dates.Week)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:77
+ [275] +(x::Dates.Date, y::Dates.Day)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:79
+ [276] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:151
+ [277] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:214
+ [278] +(x::AbstractArray{&lt;:Number})
+     @ abstractarraymath.jl:220
+ [279] +(::Missing)
+     @ missing.jl:101
+ [280] +(::Missing, ::Number)
+     @ missing.jl:123
+ [281] +(x::Missing, y::Dates.AbstractTime)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:89
+ [282] +(::Missing, ::Missing)
+     @ missing.jl:122
+ [283] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/fieldvalues.jl:43
+ [284] +(dt::Dates.DateTime, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:23
+ [285] +(dt::Dates.DateTime, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:47
+ [286] +(x::Dates.DateTime, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:75
+ [287] +(x::Dates.DateTime, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:81
+ [288] +(a::Random123.__m128i, b::Integer)
+     @ Random123 ~/.julia/packages/Random123/u5oEp/src/aesni_common.jl:35
+ [289] +(a::Random123.__m128i, b::Random123.__m128i)
+     @ Random123 ~/.julia/packages/Random123/u5oEp/src/aesni_common.jl:29
+ [290] +(z::Complex{Bool}, x::Bool)
+     @ complex.jl:303
+ [291] +(z::Complex, x::Bool)
+     @ complex.jl:310
+ [292] +(z::Complex{Bool}, x::Real)
+     @ complex.jl:317
+ [293] +(z::Complex)
+     @ complex.jl:289
+ [294] +(z::Complex, x::Real)
+     @ complex.jl:329
+ [295] +(x::Dates.CompoundPeriod, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:332
+ [296] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:362
+ [297] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:334
+ [298] +(x::BigInt, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.GMP gmp.jl:538
+ [299] +(x::BigInt, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.GMP gmp.jl:544
+ [300] +(x::BigInt, y::BigInt)
+     @ Base.GMP gmp.jl:490
+ [301] +(a::BigInt, b::BigInt, c::BigInt)
+     @ Base.GMP gmp.jl:530
+ [302] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt)
+     @ Base.GMP gmp.jl:531
+ [303] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt, e::BigInt)
+     @ Base.GMP gmp.jl:532
+ [304] +(x::BigInt, y::BigInt, rest::BigInt...)
+     @ Base.GMP gmp.jl:666
+ [305] +(a::Integer, b::Integer)
+     @ int.jl:1038
+ [306] +(c::BigInt, x::BigFloat)
+     @ Base.MPFR mpfr.jl:431
+ [307] +(x::Dates.Time, y::Dates.TimePeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:83
+ [308] +(t::Dates.Time, dt::Dates.Date)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:20
+ [309] +(x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:8
+ [310] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period)
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:353
- [206] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period, d::Dates.Period...)
+ [311] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period, d::Dates.Period...)
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:354
- [207] +(x::Dates.TimeType, y::Dates.CompoundPeriod)
+ [312] +(x::Dates.TimeType, y::Dates.CompoundPeriod)
      @ Dates /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:356
- [208] +(a, b, c, xs...)
+ [313] +(x::Rational{BigInt}, y::Rational{BigInt})
+     @ Base.GMP.MPQ gmp.jl:1027
+ [314] +(x::Rational)
+     @ rational.jl:284
+ [315] +(x::Number, y::Base.TwicePrecision)
+     @ twiceprecision.jl:294
+ [316] +(::Number, ::Missing)
+     @ missing.jl:124
+ [317] +(x::Number, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.3/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:145
+ [318] +(a::Number, b::ColorTypes.AbstractGray)
+     @ ColorVectorSpace ~/.julia/packages/ColorVectorSpace/tLy1N/src/ColorVectorSpace.jl:323
+ [319] +(x::Rational, y::Rational)
+     @ rational.jl:298
+ [320] +(level::Base.CoreLogging.LogLevel, inc::Integer)
+     @ Base.CoreLogging logging.jl:131
+ [321] +(x::BFloat16s.BFloat16, y::BFloat16s.BFloat16)
+     @ BFloat16s ~/.julia/packages/BFloat16s/uUmkF/src/bfloat16.jl:146
+ [322] +(x::Number)
+     @ operators.jl:515
+ [323] +(x::T, y::T) where T&lt;:Number
+     @ promotion.jl:485
+ [324] +(x::Number, y::Number)
+     @ promotion.jl:410
+ [325] +(a, b, c, xs...)
      @ operators.jl:578</code></pre>
 <p>This shows us two things. First, we did not think anybody will print this workshop out or we would have gone for shorter outputs. Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best. As a result we can write optimized code for different types and in general this is one key stone in the excellent performance numbers of Julia. </p>
 <p>Before we continue to the other parallel computation concepts, we introduce an <a href="../pi/">example</a> that will help us along, same as the sum did for the beginning of this section. </p>

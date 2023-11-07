@@ -1,5 +1,7 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 Franklin = "713c75ef-9fc9-4b05-94a9-213340da978e"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"

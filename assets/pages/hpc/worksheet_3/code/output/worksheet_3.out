@@ -1,2 +1,1 @@
-ArgumentError: Package FastGaussQuadrature not found in current path.
-- Run `import Pkg; Pkg.add("FastGaussQuadrature")` to install the FastGaussQuadrature package.
+CUDA driver not found
