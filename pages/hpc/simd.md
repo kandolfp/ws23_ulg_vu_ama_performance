@@ -41,7 +41,7 @@ or visualized as:
 \figenvsource{Single instruction single data vs. single instruction multiple data.}{/assets/pages/hpc/Single-Instruction-Single-Data-vs-Single-Instruction-Multiple-Data.ppm}{}{https://www.researchgate.net/figure/Single-Instruction-Single-Data-vs-Single-Instruction-Multiple-Data_fig6_45145832}
 
 Even if you do not see it right away, we can modify our sum over a vector, and learn how Julia is including the SIMD concept and why it is most of the time better to call library functions than programming them on your own. As we already know how to do benchmarking, let us try to figure out if our sum function is doing a good job.
-```julia:./code/simd.jl
+```julia:./code/simd1.jl
 using BenchmarkTools
 
 function mysum(a)
@@ -60,11 +60,11 @@ println("\nSimple sum:")
 println("\nBuilt-in sum:")
 @btime sum($a)
 ```
-\show{./code/simd.jl}
+\show{./code/simd1.jl}
 As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times. 
 
 In order to enable SIMD in a program (if it is not done by library calls anyway), we can use the `@simd` macro, this works if we loop over the indices or the elements, Julia is quite flexible there. 
-```julia:./code/simd.jl
+```julia:./code/simd2.jl
 function mysimdsum(a)
     result = zero(eltype(a))
 
@@ -106,7 +106,7 @@ println("\nSimple mysum2 = ", mysum2(a))
 println("\nSimple mysimdsum2 = ", mysimdsum2(a))
 @btime mysimdsum2($a)
 ```
-\show{./code/simd.jl}
+\show{./code/simd2.jl}
 We can see a massive speed up (that will depend on the CPU architecture you are running your code on). What is interesting is, that the results of the three function calls are not the same. 
 
 This is due to the fact that the numerics involved are a bit tricky. 
@@ -116,14 +116,14 @@ This is exactly what is happening for our first example as we add all the number
 The built-in `sum` function as well as the `@simd` macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.
 
 If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference (Hint: look out for something called `vector.ph`).
-```julia:./code/simd.jl
+```julia:./code/simd3.jl
 using InteractiveUtils
 
 @code_llvm mysum(a)
 printstyled("\n------Separator-------\n\n"; color = :red)
 @code_llvm mysimdsum(a)
 ```
-\show{./code/simd.jl}
+\show{./code/simd3.jl}
 
 The [LLVM](https://llvm.org/) project is the compiler toolchain technology that Julia uses for its *Just in Time* (JIT) compilation. Basically, it translates the Julia code into a machine language close to Assembler (but quite readable, if you get used to it) and this is compiled when needed. We could see JIT doing its magic in the beginning of the [Benchmark](#how-to-measure-performance-in-julia) section, as the function `mysum` was compiled on its first run. Note: in general packages get precompiled before they are used to gain performance.
 
@@ -135,15 +135,15 @@ Like most of the time, this concept is best explained by showing an example. In 
 For this we use another macro from the `InteractiveUtils` package, namely `@code_typed`. Again, we get some intermediate code that Julia produces for us. This time a bit more compact but most important, all the type information of the input argument attached to it. 
 
 For an array of `Int64` we get:
-```julia:./code/simd.jl
+```julia:./code/simd4.jl
 @code_typed optimize=false mysum([1, 2, 3])
 ```
-\show{./code/simd.jl}
+\show{./code/simd4.jl}
 and for `Float64`:
-```julia:./code/simd.jl
+```julia:./code/simd5.jl
 @code_typed optimize=false mysum([1.0, 2.0, 3.0])
 ```
-\show{./code/simd.jl}
+\show{./code/simd5.jl}
 We can see, that in the first output everything is of type `Int64`, including the result. The second output has the same instructions but with `Float64` as type. 
 
 As we might have already seen throughout this workshop we can define the same function name for different input arguments. This is very obvious for the basic math operators but it is true for every function. Let us have a look at the `+` operator:

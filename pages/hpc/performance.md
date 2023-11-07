@@ -6,7 +6,7 @@
 # How to measure performance in Julia
 
 For that, we recall the vector summation example from the introduction to [function](../../introduction/functions/) and include the simple `@time` macro.
-```julia:./code/performance.jl
+```julia:./code/performance_time_mysum.jl
 function mysum(V)
     s = zero(eltype(V))
 
@@ -21,7 +21,7 @@ V = rand(100_000)
 @time mysum(V)
 @time mysum(V)
 ```
-\show{./code/performance.jl}
+\show{./code/performance_time_mysum.jl}
 
 @@important
 In order to optimize the loop call we use the [`@inbounds`](https://docs.julialang.org/en/v1/devdocs/boundscheck/) macro to eliminate inbound checks - does the index exist - for the array access.
@@ -40,23 +40,23 @@ Benchmark our `mysum` function with the following macros:
 and compare the output and results.
 \solution{
 To measure the performance of the above code we do the following:
-```julia:./code/performance.jl
+```julia:./code/performance_benchmark_mysum.jl
 using BenchmarkTools
 
 @benchmark mysum($V)
 ```
-\show{./code/performance.jl}
+\show{./code/performance_benchmark_mysum.jl}
 the full details with 
-```julia:./code/performance.jl
+```julia:./code/performance_dump_benchmark_mysum.jl
 t = @benchmark mysum($V)
 dump(t)
 ```
-\show{./code/performance.jl}
+\show{./code/performance_dump_benchmark_mysum.jl}
 and the often used sanity check, that actually also shows you the output of your code.
-```julia:./code/performance.jl
+```julia:./code/performance_btime_mysum.jl
 @btime mysum($V)
 ```
-\show{./code/performance.jl}
+\show{./code/performance_btime_mysum.jl}
 }
 }
 
