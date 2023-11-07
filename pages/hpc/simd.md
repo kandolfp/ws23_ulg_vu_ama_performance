@@ -70,6 +70,19 @@ As we can see, we are slower, exactly how much slower depends on the architectur
 
 In order to enable SIMD in a program (if it is not done by library calls anyway), we can use the `@simd` macro, this works if we loop over the indices or the elements, Julia is quite flexible there.
 ```julia:./code/simd2.jl
+using BenchmarkTools
+
+function mysum(a)
+    result = zero(eltype(a))
+
+    for i in eachindex(a)
+        @inbounds result += a[i]
+    end
+
+    return result
+end
+
+
 function mysimdsum(a)
     result = zero(eltype(a))
 
@@ -80,6 +93,7 @@ function mysimdsum(a)
     return result
 end
 
+
 function mysum2(V)
     s = zero(eltype(V))
 
@@ -89,6 +103,7 @@ function mysum2(V)
 
     return s
 end
+
 
 function mysimdsum2(V)
     s = zero(eltype(V))
