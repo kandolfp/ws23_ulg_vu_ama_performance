@@ -107,9 +107,9 @@
 V = rand(<span class="hljs-number">100_000</span>)
 <span class="hljs-meta">@time</span> mysum(V)
 <span class="hljs-meta">@time</span> mysum(V)</code></pre>
-<pre><code class="plaintext hljs">  0.005539 seconds (2.30 k allocations: 158.491 KiB, 98.14% compilation time)
-  0.000101 seconds (1 allocation: 16 bytes)
-50095.81185784361</code></pre>
+<pre><code class="plaintext hljs">  0.007206 seconds (2.30 k allocations: 158.491 KiB, 97.49% compilation time)
+  0.000169 seconds (1 allocation: 16 bytes)
+49957.481855426064</code></pre>
 <div class="important">In order to optimize the loop call we use the <a href="https://docs.julialang.org/en/v1/devdocs/boundscheck/"><code>@inbounds</code></a> macro to eliminate inbound checks - does the index exist - for the array access.</div>
 <p>The downside with the <code>@time</code> macro is, that it really just measures the execution time of what is given to it. This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate. </p>
 <p>Therefore, if we are serious about measuring performance we should stick to the <a href="https://juliaci.github.io/BenchmarkTools.jl/stable/"><code>BenchmarkTools</code></a>. It comes with a couple of macros that we should test out:</p>
@@ -127,13 +127,13 @@ V = rand(<span class="hljs-number">100_000</span>)
 
 <span class="hljs-meta">@benchmark</span> mysum($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.582 μs … 117.218 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.643 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   93.055 μs ±   1.813 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  160.399 μs … 187.500 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     160.399 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   160.672 μs ±   1.212 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █                                                            ▁
-  █▄▃▅██▄▅▇▅▅▆▆▇▇▇▆▅▄▅▄▄▃▃▂▂▄▄▄▄▃▄▄▃▄▄▅▂▅▅▃▃▄▄▄▄▄▄▄▃▃▃▄▄▄▆▇▇▇▆ █
-  92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
+  █▅                                                            ▁
+  ██▆▅▅▃▁▁▁▁▁▁▁▁▁▆██▇▇▁▅▅▅▃▃▁▄▁▁▁▁▁▁▁▁▁▁▄▁▁▁▁▁▅▅▇▇█▇▇▇▇▇▆▆▇▆▅▄▃ █
+  160 μs        Histogram: log(frequency) by time        166 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> the full details with </p>
 <pre><code class="julia hljs">t = <span class="hljs-meta">@benchmark</span> mysum($V)
@@ -148,14 +148,14 @@ dump(t)</code></pre>
     gcsample: Bool false
     time_tolerance: Float64 0.05
     memory_tolerance: Float64 0.01
-  times: Array{Float64}((10000,)) [94646.0, 92652.0, 92673.0, 92633.0, 92693.0, 92633.0, 92662.0, 92662.0, 92702.0, 92662.0  …  92652.0, 92612.0, 92653.0, 92602.0, 92652.0, 92603.0, 92643.0, 92603.0, 92642.0, 92613.0]
+  times: Array{Float64}((10000,)) [166299.0, 160799.0, 160399.0, 160399.0, 160399.0, 160400.0, 160399.0, 160399.0, 160399.0, 160399.0  …  160400.0, 160399.0, 160399.0, 160399.0, 160399.0, 160400.0, 160399.0, 160399.0, 160399.0, 160399.0]
   gctimes: Array{Float64}((10000,)) [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   memory: Int64 0
   allocs: Int64 0
 </code></pre> and the often used sanity check, that actually also shows you the output of your code.</p>
 <pre><code class="julia hljs"><span class="hljs-meta">@btime</span> mysum($V)</code></pre>
-<p><pre><code class="plaintext hljs">  92.592 μs (0 allocations: 0 bytes)
-50095.81185784361</code></pre> </div> </div>
+<p><pre><code class="plaintext hljs">  160.399 μs (0 allocations: 0 bytes)
+49957.481855426064</code></pre> </div> </div>
 <div class="important">Note that for benchmarking we often use the <code>&#36;</code> literal for variables to tell the Julia interpreter to use interpolation.  This will make sure that the variable is not allocated inside the function and the measurement is more accurate, or more likely what we actually want to know.</div>
 <p>We can also use the <a href="https://docs.julialang.org/en/v1/manual/profile/#Profiling"><code>Profiler</code></a> package to really dig into profiling the code but this is a bit too much of a deep dive for this class, it would look like this:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> Profile
@@ -279,12 +279,19 @@ Total snapshots: 16562</code></pre>
 
 <script>
   var coll = document.getElementsByClassName("solutioncollapsible");
+  var sols = document.getElementsByClassName("solution");
+  
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const myVar = urlParams.get('solution')
+
   if ( myVar == 'true') {
     for (i = 0; i < coll.length; i++) {
       coll[i].style.display = "block";
+    }
+
+    for (i = 0; i < sols.length; i++) {
+      sols[i].style.display = "block";
     }
   }
 </script>
