@@ -59,10 +59,11 @@ function mysum(a)
 end
 
 a = rand(100_000)
-println("\nSimple sum:")
-@btime mysum($a)
-println("\nBuilt-in sum:")
-@btime sum($a)
+println("Simple sum:")
+@btime mysum(a)
+println()
+println("Built-in sum:")
+@btime sum(a)
 ```
 \show{./code/simd1.jl}
 As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.
@@ -99,15 +100,30 @@ function mysimdsum2(V)
     return s
 end
 
-println("\nSimple mysum(a) = ", mysum(a))
+a = rand(100_000)
+
+println("Simple sum(a)")
+@show mysum(a)
 @btime mysum($a)
-println("\nBuilt-in sum(a) = ", sum(a))
+
+println()
+println("Built-in sum")
+@show sum(a)
 @btime sum($a)
-println("\nSimple mysimdsum = ", mysimdsum(a))
+
+println()
+println("Simple mysimdsum")
+@show mysimdsum(a)
 @btime mysimdsum($a)
-println("\nSimple mysum2 = ", mysum2(a))
+
+println()
+println("Simple mysum2")
+@show mysum2(a)
 @btime mysum2($a)
-println("\nSimple mysimdsum2 = ", mysimdsum2(a))
+
+println()
+println("Simple mysimdsum2")
+@show mysimdsum2(a)
 @btime mysimdsum2($a)
 ```
 \show{./code/simd2.jl}
