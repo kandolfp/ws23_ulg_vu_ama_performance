@@ -5,15 +5,24 @@
 
 # HPC for radiation transport
 
-Maybe you have noticed that the number of velocities heavily effect the accuracy of the numerical solution. In radiation therapy, one needs to use a large number of spatial cells and velocities to make sure the error that we make through the discretization is small. Quite naturally, we should therefore think about how can we use modern computer architectures to speed up convergence. Take a few moments to think about how this can be done. Also, don't forget that certain parts of the program are already using many of the discussed HPC concepts automatically. So be careful when trying to speed up your code, since it might interfer with the parallelism that Julia took care of for you.
+Maybe you have noticed that the number of velocities heavily effect the accuracy of the numerical solution.
+In radiation therapy, one needs to use a large number of spatial cells and velocities to make sure the error that we make through the discretization is small.
+Quite naturally, we should therefore think about how can we use modern computer architectures to speed up convergence.
+Take a few moments to think about how this can be done.
+Also, don't forget that certain parts of the program are already using many of the discussed HPC concepts automatically.
+So be careful when trying to speed up your code, since it might interfer with the parallelism that Julia took care of for you.
 
 ## GPU Computing
 
-In the following, we extend the Code from [worksheet 2](../introduction/worksheet_2.md) to GPUs. First, make sure you have CUDA installed and use it in your Julia file. Now think about what datatype your GPU can handle. In case you do not have access to a scientific (and very expensive) GPU that can handle `Float64` datatypes, make sure the code is using single precision floats. 
+In the following, we extend the Code from [worksheet 2](../introduction/worksheet_2.md) to GPUs.
+First, make sure you have CUDA installed and use it in your Julia file.
+Now think about what datatype your GPU can handle.
+In case you do not have access to a scientific (and very expensive) GPU that can handle `Float64` datatypes, make sure the code is using single precision floats.
 
 \collapssol{
 
-Since we have implemented types in [worksheet 2](../introduction/worksheet_2.md), it is straightforward to change to single precision accuracy. Simply call the settings struct with
+Since we have implemented types in [worksheet 2](../introduction/worksheet_2.md), it is straightforward to change to single precision accuracy.
+Simply call the settings struct with
 ```julia
 # generate setup
 nx = 101
@@ -24,9 +33,13 @@ settings = Settings(nx,nv,sigma2)
 
 }
 
-Now, make sure that all arrays that you use in the main time loop are of type `CuArray`. Note that it might be beneficial to not directly perform all operations of your code on your GPU. Whenever you access indices, it might make more sense to work on the CPU. You can cast your data arrays to type `CuArray` once everything is set up.
+Now, make sure that all arrays that you use in the main time loop are of type `CuArray`.
+Note that it might be beneficial to not directly perform all operations of your code on your GPU.
+Whenever you access indices, it might make more sense to work on the CPU.
+You can cast your data arrays to type `CuArray` once everything is set up.
 
-To illustrate how to move the computation to the GPU, let us look writing the initial condition. Try to run the two implementations
+To illustrate how to move the computation to the GPU, let us look writing the initial condition.
+Try to run the two implementations
 ```julia
 T = Float32
 nx = 100
@@ -56,11 +69,15 @@ end
 
 ψ = CuArray(ψ)
 ```
-Which one is faster and why? Use these observations to ensure your main time loop uses GPU arrays. Once you are confident your implementation should work, run it on the GPU. And since you expect to be super fast now, why not use $5000$ spatial points and $1000$ velocity points? See how much the solution changes.
+Which one is faster and why? Use these observations to ensure your main time loop uses GPU arrays.
+Once you are confident your implementation should work, run it on the GPU.
+And since you expect to be super fast now, why not use $5000$ spatial points and $1000$ velocity points? See how much the solution changes.
 
 \collapssol{
 
-One possible GPU implementation looks like the following. Note that we abandon sparse matrices. To use sparse matrices on the GPU, we can employ the `CuSparseMatrixCSC` in the `CuSparse` package.
+One possible GPU implementation looks like the following.
+Note that we abandon sparse matrices.
+To use sparse matrices on the GPU, we can employ the `CuSparseMatrixCSC` in the `CuSparse` package.
 
 ```julia:./code/worksheet_3.jl
 using FastGaussQuadrature

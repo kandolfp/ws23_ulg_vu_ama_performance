@@ -27,12 +27,14 @@ V = rand(100_000)
 In order to optimize the loop call we use the [`@inbounds`](https://docs.julialang.org/en/v1/devdocs/boundscheck/) macro to eliminate inbound checks - does the index exist - for the array access.
 @@
 
-The downside with the `@time` macro is, that it really just measures the execution time of what is given to it. This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate. 
+The downside with the `@time` macro is, that it really just measures the execution time of what is given to it.
+This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate.
 
-Therefore, if we are serious about measuring performance we should stick to the [`BenchmarkTools`](https://juliaci.github.io/BenchmarkTools.jl/stable/). It comes with a couple of macros that we should test out:
+Therefore, if we are serious about measuring performance we should stick to the [`BenchmarkTools`](https://juliaci.github.io/BenchmarkTools.jl/stable/).
+It comes with a couple of macros that we should test out:
 
 \exercise{
-In order to use the BenchmarkTools we need to include it with `using BenchmarkTools`, as any other package. 
+In order to use the BenchmarkTools we need to include it with `using BenchmarkTools`, as any other package.
 Benchmark our `mysum` function with the following macros:
 1. `@benchmark`
 1. `@btime` 
@@ -61,8 +63,8 @@ and the often used sanity check, that actually also shows you the output of your
 }
 
 @@important
-Note that for benchmarking we often use the `$` literal for variables to tell the Julia interpreter to use interpolation. 
-This will make sure that the variable is not allocated inside the function and the measurement is more accurate, or more likely what we actually want to know. 
+Note that for benchmarking we often use the `$` literal for variables to tell the Julia interpreter to use interpolation.
+This will make sure that the variable is not allocated inside the function and the measurement is more accurate, or more likely what we actually want to know.
 @@ 
 
 We can also use the [`Profiler`](https://docs.julialang.org/en/v1/manual/profile/#Profiling) package to really dig into profiling the code but this is a bit too much of a deep dive for this class, it would look like this:

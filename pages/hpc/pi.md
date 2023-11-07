@@ -5,7 +5,9 @@
 
 # Not the most efficient way of computing $\pi$
 
-As we very well know, there are a lot of ways to compute $\pi$. There is even a [blog entry](https://julialang.org/blog/2017/03/piday/) in the Julia blog for that. Nevertheless, we decided for a different method (that is part of the introductory courses on [JuliaAcademy](https://juliaacademy.com/)).
+As we very well know, there are a lot of ways to compute $\pi$.
+There is even a [blog entry](https://julialang.org/blog/2017/03/piday/) in the Julia blog for that.
+Nevertheless, we decided for a different method (that is part of the introductory courses on [JuliaAcademy](https://juliaacademy.com/)).
 
 A circle with radius $r$ has an area of 
 $$A_{circle} = \pi r^2$$
@@ -20,14 +22,16 @@ and therefore we can define $\pi$ as
 $$
 \pi = 4\frac{A_{circle}}{A_{square}}.
 $$
-The same is true if we just take the first quadrant, so $\frac14$ of the square as well as the circle. This simplification will make the code more compact and faster. 
+The same is true if we just take the first quadrant, so $\frac14$ of the square as well as the circle.
+This simplification will make the code more compact and faster.
 
-The above formula suggests that we can compute $\pi$ by a [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method). Actually this example is also included in the Wiki article and it comes with this nice gif.
+The above formula suggests that we can compute $\pi$ by a [Monte Carlo Method](https://en.wikipedia.org/wiki/Monte_Carlo_method).
+Actually this example is also included in the Wiki article and it comes with this nice gif.
 
 \figenvsource{Simulation of the Monte Carlo Method for computing &pi;.}{/assets/pages/hpc/Pi_30K.gif}{}{https://commons.wikimedia.org/wiki/File:Pi_30K.gif}
 
 The algorithm therefore becomes:
-1. For a given number $N$ of uniformly scattered points in the quadrant determine if these points are in the circle (distance less than 1) or not. We call the number of points in the circle $M$. 
+1. For a given number $N$ of uniformly scattered points in the quadrant determine if these points are in the circle (distance less than 1) or not. We call the number of points in the circle $M$.
 1. Estimate $\pi$ by computing 
 $$
 \pi \approx 4  \frac{M}{N}.

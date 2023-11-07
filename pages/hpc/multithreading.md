@@ -10,7 +10,11 @@ Before we have a look how [Julia deals with the concept of multithreading](https
 
 ## What is multithreading?
 
-In the terminology of computer science a thread is the smallest sequence of instructions that can be managed by the scheduler of the operating system. It is often also called a light weight process and is most of the time considered to exist inside the context of a process. Consequently, multithreading is the ability to mange multiple concurrently executed threads. Multiple threads share their resources, this makes this quite a powerful tool. The threads run on a single CPU or on multiple CPUs and give us the opportunity to leverage the full force of our computer (or cell phone for that matter).
+In the terminology of computer science a thread is the smallest sequence of instructions that can be managed by the scheduler of the operating system.
+It is often also called a light weight process and is most of the time considered to exist inside the context of a process.
+Consequently, multithreading is the ability to mange multiple concurrently executed threads.
+Multiple threads share their resources, this makes this quite a powerful tool.
+The threads run on a single CPU or on multiple CPUs and give us the opportunity to leverage the full force of our computer (or cell phone for that matter).
 
 ## Back to Julia
 
@@ -19,10 +23,15 @@ By default, Julia will start with a single computational thread of execution:
 julia> Threads.nthreads()
 1
 ```
-This does not mean that Julia is only using one thread. We mentioned the [Basic Linear Algebra Subroutines - BLAS](http://www.netlib.org/blas/) before. Calls to this library (e.g. matrix-matrix multiplication) will be multithreaded by default and therefore, technically you have been doing multithreading all along ;). Let us illustrate this with a small example.
+This does not mean that Julia is only using one thread.
+We mentioned the [Basic Linear Algebra Subroutines - BLAS](http://www.netlib.org/blas/) before.
+Calls to this library (e.g. matrix-matrix multiplication) will be multithreaded by default and therefore, technically you have been doing multithreading all along ;).
+Let us illustrate this with a small example.
 
 \example{
-Influencing the number of threads in BLAS. When we include the [LinearAlgebra](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/) package we get the possibility to manipulate the number of threads. Here `BLAS` is a wrapper to the BLAS libraries used by Julia. 
+Influencing the number of threads in BLAS.
+When we include the [LinearAlgebra](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/) package we get the possibility to manipulate the number of threads.
+Here `BLAS` is a wrapper to the BLAS libraries used by Julia.
 ```julia-repl
 julia> using BenchmarkTools, LinearAlgebra
 
@@ -40,7 +49,8 @@ julia> @btime $A * $B;
 ```
 }
 
-In order to have multiple threads available you need to start Julia with the `--threads <Int|auto>` option or define the environment variable `JULIA_NUM_THREADS=<Int>`. With the command `threadid()` from the [`Threads`](https://docs.julialang.org/en/v1/base/base/#Base.Threads) module you can find out on which thread you currently are.
+In order to have multiple threads available you need to start Julia with the `--threads <Int|auto>` option or define the environment variable `JULIA_NUM_THREADS=<Int>`.
+With the command `threadid()` from the [`Threads`](https://docs.julialang.org/en/v1/base/base/#Base.Threads) module you can find out on which thread you currently are.
 ```julia-repl
 > julia --threads auto
 julia> Threads.nthreads()
@@ -52,7 +62,7 @@ By default, the Julia REPL, or the main Julia process for that matter, will alwa
 We do not have the time for a deep dive into all the dirty details on how do do proper multithreaded programming (raise conditions, locks, atomic operations, thread safe programming, ...), therefore we keep it light and simple with the `@threads` macro and introduce the needed concepts when we need them along the way.
 
 @@important
-For comparison, all the benchmarks and computations are performed with `4` threads. 
+For comparison, all the benchmarks and computations are performed with `4` threads.
 @@
 
 Like all the other macros it gives us the possibility to bring something rather complex in our code by still staying very readable as the following example shows.
@@ -132,15 +142,26 @@ julia> get_accuracy(in_unit_circle_threaded1, N)
 julia> @btime estimate_pi(in_unit_circle_threaded1, N);
   21.899 s (843326330 allocations: 12.57 GiB)
 ```
-Well that is underwhelming. The result is wrong and it is slower. So what happened?
+Well that is underwhelming.
+The result is wrong and it is slower.
+So what happened?
 }
 }
 
 ### Atomic Operations
 
-As we could see, in the above example from the docs, the loop is automatically split up per index for the threads available. This means each of the threads is performing the same loop and as the context and memory is shared also access the same storage. This is problematic for our variable `M`. This means each thread reads and writes in the same variable but this also means the result is not correct. It might override the results of other threads or they all read at the same time but only one result will be written in the end. In short the counter is totally wrong. We call this [race condition](https://en.wikipedia.org/wiki/Race_condition).
+As we could see, in the above example from the docs, the loop is automatically split up per index for the threads available.
+This means each of the threads is performing the same loop and as the context and memory is shared also access the same storage.
+This is problematic for our variable `M`.
+This means each thread reads and writes in the same variable but this also means the result is not correct.
+It might override the results of other threads or they all read at the same time but only one result will be written in the end.
+In short the counter is totally wrong.
+We call this [race condition](https://en.wikipedia.org/wiki/Race_condition).
 
-To solve this issue Julia supports [atomic](https://docs.julialang.org/en/v1/manual/multi-threading/#Atomic-Operations) values. This allows us to access a variable in a thread-safe way and avoid race conditions. All primitive types can be wrapped with `M = Atomic{Int64}(0)` and can only be accessed in a thread safe way. In order to do the atomic add we use the function `atomic_add!(M, 1)` and we can access the value with `M[]`.
+To solve this issue Julia supports [atomic](https://docs.julialang.org/en/v1/manual/multi-threading/#Atomic-Operations) values.
+This allows us to access a variable in a thread-safe way and avoid race conditions.
+All primitive types can be wrapped with `M = Atomic{Int64}(0)` and can only be accessed in a thread safe way.
+In order to do the atomic add we use the function `atomic_add!(M, 1)` and we can access the value with `M[]`.
 
 \exercise{
 Define a new function `in_unit_circle_threaded2` with the `@threads` macro, an atomic `M` and test the result as well as the timing.
@@ -171,7 +192,11 @@ Now our result is correct, but the time is still not better but worse.
 }
 
 ### Actually distribute the work
-We are still not fast, because each `attomic_add!` is checking which thread has the current result and needs to add the new value. To avoid this we need to eliminate atomic again. We can actually split up the work quite neatly if we remember the example from the docs. It is possible to access the `threadid()` and the number of threads `nthreads()`. So why not define `M` as an array of length `nthreads()` and in each thread write to separate values in the array by using `threadid()` as index.
+We are still not fast, because each `attomic_add!` is checking which thread has the current result and needs to add the new value.
+To avoid this we need to eliminate atomic again.
+We can actually split up the work quite neatly if we remember the example from the docs.
+It is possible to access the `threadid()` and the number of threads `nthreads()`.
+So why not define `M` as an array of length `nthreads()` and in each thread write to separate values in the array by using `threadid()` as index.
 
 \exercise{
 Define a new function `in_unit_circle_threaded3` with the `@threads`, `M` as array and test the result as well as the timing.
@@ -201,13 +226,17 @@ Now our result is correct, and the time is okay.
 }
 }
 
-Now we are faster, but still not faster than the serial version. Why is it still not working?
+Now we are faster, but still not faster than the serial version.
+Why is it still not working?
 
 ### Global states
 
-Without going into too much detail, `rand()` is not thread safe. It does manipulate and read from some global state and that causes our slowdown. In fact, as the random numbers are not correctly distributed any more, the accuracy is also decaying. 
+Without going into too much detail, `rand()` is not thread safe.
+It does manipulate and read from some global state and that causes our slowdown
+ In fact, as the random numbers are not correctly distributed any more, the accuracy is also decaying.
 
-To avoid this we need to exchange the random number generator and make the call to `rand` thread safe. This solution is inspired by the section *Multithreading* of the [Parallel Computing Class on JuliaAcademy.com](https://juliaacademy.com/p/parallel-computing) and slightly adapted for the setup we have. 
+To avoid this we need to exchange the random number generator and make the call to `rand` thread safe.
+This solution is inspired by the section *Multithreading* of the [Parallel Computing Class on JuliaAcademy.com](https://juliaacademy.com/p/parallel-computing) and slightly adapted for the setup we have.
 
 First step is to define a separate random number generator per thread:
 ```julia
@@ -218,15 +247,19 @@ const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
        ThreadRNG[i] = Random.MersenneTwister(i)
 end
 ```
-What we do in the third line is define a [`const`](https://docs.julialang.org/en/v1/base/base/#const) variable. That is a global variable whose type will not change. In fact we define a Vector of size `nthreads()` and fill it with distinct [`Random.MersenneTwister`](https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister). This allows us to have a different random number generator for each thread by using
+What we do in the third line is define a [`const`](https://docs.julialang.org/en/v1/base/base/#const) variable.
+That is a global variable whose type will not change.
+In fact we define a Vector of size `nthreads()` and fill it with distinct [`Random.MersenneTwister`](https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister).
+This allows us to have a different random number generator for each thread by using
 ```julia
 rng = ThreadRNG[threadid()]
 rand(rng)
 ```
-in each thread. 
+in each thread.
 
-Now for our final version of the code, the basic idea is to not have a threaded loop over the integer `N` but over the number of threads. In order for this to work we need to figure out how many iterations each thread needs to perform. 
-For that, we use `len, rem = divrem(N, nthreads())` to divide up `N` into the quotient and remainder from the Euclidean division.  
+Now for our final version of the code, the basic idea is to not have a threaded loop over the integer `N` but over the number of threads.
+In order for this to work we need to figure out how many iterations each thread needs to perform.
+For that, we use `len, rem = divrem(N, nthreads())` to divide up `N` into the quotient and remainder from the Euclidean division.
 
 \exercise{
 Define a new function `in_unit_circle_threaded4` with the `@threads` macro, `M` as array, the above code snippets and test the result as well as the timing.
@@ -303,6 +336,10 @@ Performance:
 ### Other pitfalls
 
 There are several other pitfalls that might occur with multithreading, here is an incomplete list:
-- **Oversubscription**: We can overdo it with threading. For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads. Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.
-- [**False sharing**](https://en.wikipedia.org/wiki/False_sharing): The latency of the different layers of memory inside a CPU vary and also the way a core on a CPU can access it. Usually, L3 is shared by all cores but not L2 and L1. This can result in *false* sharing and reduce the performance if one CPU accesses the data from a cache of another CPU. 
+- **Oversubscription**: We can overdo it with threading.
+- For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads.
+- Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.
+- [**False sharing**](https://en.wikipedia.org/wiki/False_sharing): The latency of the different layers of memory inside a CPU vary and also the way a core on a CPU can access it.
+Usually, L3 is shared by all cores but not L2 and L1.
+- This can result in *false* sharing and reduce the performance if one CPU accesses the data from a cache of another CPU.
 
