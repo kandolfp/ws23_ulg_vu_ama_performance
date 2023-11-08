@@ -10,3 +10,5 @@ In this section we discuss _Remote Computing_, which for the purpose of this cla
 We will have a special focus on **High Performance Computing** (HPC) but also look at differences to **Cloud compting** and other possibilities to offload computational work. 
 
 In order to get a better understanding on what the differences are, how they work together and whatnot we start by a short history of computing. 
+
+1. [History](history/)
