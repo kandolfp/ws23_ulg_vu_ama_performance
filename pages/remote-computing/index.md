@@ -12,3 +12,4 @@ We will have a special focus on **High Performance Computing** (HPC) but also lo
 In order to get a better understanding on what the differences are, how they work together and whatnot we start by a short history of computing. 
 
 1. [History](history/)
+1. [High performance computing](hpc/)
