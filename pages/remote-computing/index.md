@@ -13,3 +13,4 @@ In order to get a better understanding on what the differences are, how they wor
 
 1. [History](history/)
 1. [High performance computing](hpc/)
+1. [Cloud computing](cloud/)
