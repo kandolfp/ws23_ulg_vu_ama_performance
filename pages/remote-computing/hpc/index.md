@@ -15,3 +15,4 @@ Therefore, we will do a bit of a hands on so that next time you see an HPC Syste
 
 1. [Basics](basics/)
 1. [Architecture](architecture/)
+1. [Usage](usage/)
