@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>Remote Computing - High Performance Computing - Architecture</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link ">Start</a>
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link ">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link ">Single Instruction Multiple Data</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
+          </ul>
+          <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remoate computing</a>
+            <ul class="menu-list-child-list ">
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link active">High Performance Computing</a>
+              <ul class="menu-list-child-list ">
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/basics" class="menu-list-link ">Basics</a>
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link active">Architecture</a>
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
+              </ul>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
+            </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="architecture"><a href="#architecture" class="header-anchor">Architecture</a></h1>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#reasons_and_consequences">Reasons and consequences</a></li></ol></div>
+<h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
+<p>While each and every specify supercomputer looks different there are some common features that we can describe. </p>
+<p>In general, such a system is composed of several <em>individual computers</em> which are called <strong>nodes</strong>.  Several nodes are combined inside a <strong>rack</strong>.</p>
+<p>Quite often, the cooling and networking is done within the racks. I.e., for cooling this is either &#40;warm&#41; water cooling that runs through each node or the one of the doors and the heat from the nodes spread via normal fans.  For the network whe have a switch in each rack that connects to the nodes.</p>
+<p>In general we try to have a homogeneous architecture, i.e. homogeneous nodes in one rack. </p>
+<p>Nowadays, with the use of accelerator cards &#40;GPUs or FPGAs&#41; we quite often see that several racks form a partition. Where inside the partition the nodes all look the same, are located near each other, and are interconnected with high speed.</p>
+
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/hpc/parts1.svg" style="padding:0; " alt=" Architecture 1 - From node to partition."/>
+<figcaption> Architecture 1 - From node to partition.</figcaption>
+</figure>
+
+<p>Finally, several partitions will form the computing part of the high performance system, but some additional components are required.</p>
+<p>This includes various high performance parallel storage systems for different usage &#40;home, scratch, ...&#41;, the high speed netword &#40; switches, routers, and so forth&#41;, login nodes, monitoring systems, and more. </p>
+
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/hpc/parts2.svg" style="padding:0; " alt=" Architecture 2 - Partitions and the support components."/>
+<figcaption> Architecture 2 - Partitions and the support components.</figcaption>
+</figure>
+
+<p>Leonardo &#40;#4 on the TOP500&#41; has a nice animated video that shows the different sections nicely: 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/CFSOY3rWwo4?si=dKTsDj_gloOORhgT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
+<p>For Lumi the layout looks the following 
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/hpc/snowflake-lumi.png" style="padding:0; " alt=" The architecture of Lumi **the queen of the north**."/>
+<figcaption> The architecture of Lumi **the queen of the north**. Original source: <p style="font-size:11px"><a href=" https://www.lumi-supercomputer.eu/lumi_supercomputer/"> https://www.lumi-supercomputer.eu/lumi_supercomputer/</a></p></figcaption>
+</figure>
+</p>
+<h2 id="reasons_and_consequences"><a href="#reasons_and_consequences" class="header-anchor">Reasons and consequences</a></h2>
+<p>The main idea of a HPC System is to maximize performance of a computation <sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>.  This is strongly reflected in the architecture described above. </p>
+<p>For these considerations we assume that we start with a computation on a single core and spread it out over the entire system.  This allows us to discuss hww the different parts help to do make the computation as fast as possible.  While this will probably be some weather simulation or the collision of two galaxies it could also just be the computation of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>.</p>
+<p>Let us start with </p>
+<ul>
+<li><p>the node.</p>
+</li>
+</ul>
+<p>We have seen in the how we can move the computation form a single core in one CPU to multiple cores.  Obviously, the faster CPU the faster the computation.  Usually a node will have multiple CPUs so with a bit of extra work we can make sure that all of them are used as well.  Now there is going to be a bit of communication between the CPUs so the faster they are connected the better.  Nevertheless, we will try to write our code such that communication between the two different CPUs is minimized &#40;locality&#41;. The more we know about the architecture and the particular components of the node the better we can optimize our code and soon the node is running at 100&#37; peak performance.  Now we spread out to the next nodes in the</p>
+<ul>
+<li><p>the rack.</p>
+</li>
+</ul>
+<p>This is not to hard as they look exactly the same and they are &#40;physically&#41; close. Of course there is some overhead with the code, we need to communicate between the nodes but luckily there is a fast connection.  Again, we will try to write our code such that the communication between the nodes is minimized. Soon the entire rack is again working at peak load so we the more racks in and occupy  </p>
+<ul>
+<li><p>the partition.</p>
+</li>
+</ul>
+<p>As one partition consists of racks all looking the same we just need to make sure that we localize communication again but the rest is simple.</p>
+<p>The main idea of partitions is to have some differences in the hardware.  So maybe the neighboring partition has GPUs &#40;probably 2 to 4 per node&#41;.  Luckily, we know how to includes GPUs in our computation.  Maybe there is even one part of our computation that is super fast on GPUs but not so fast on CPUs, so we move this part to the GPU section while the CPU is running CPU optimized code.  Again communication is needed so lets consider </p>
+<ul>
+<li><p>the high speed interconnect.</p>
+</li>
+</ul>
+<p>We could simple wire up the nodes with normal TCP/IP cables or if we are insane try WiFi.  This works fine if we do not have a lot of data that gets send around it is the same as with the internet connection at home, if you watch two 4K video streams, download the latest data bundles for you new cool project you will see that performance goes down.</p>
+<p>This is basically the reason for the high speed interconnect.  Mostly this is some glass fiber connection, with special dedicated hardware. Of course you want to have several ports, just in case one goes down and two different routs to connect from each node to another to make sure you can always communicate. The faster this system is the faster our computation will be, and again, if we know how it looks we can optimize for it. </p>
+<p>Speaking of data transfer, we probably also need to store and load data from discs. So lets look at</p>
+<ul>
+<li><p>the storage.</p>
+</li>
+</ul>
+<p>Providing storage in such a system is not an easy feat.  We want to make sure that each node can access all the data it needs and while on it we also want to make sure that several nodes can access data at the same time, while no user should be able to access data from somebody else &#40;sensitive data, or data with licenses&#41;. And this is why there is a parallel filesystem in place. The different layers and spaces are easily explained from their use. </p>
+<p>Each node will have a SSD for the operating system and the basic programs needed, maybe you can also use this for temporary storage during computations</p>
+<p>Next each user should have a home directory where the most important part of the project is stored and we need this available all the time on all the nodes, but this directory can be rather small.</p>
+<p>Usually we will also have something called <em>scratch</em> where data is stored as a result of computations or from steps.  With regard from <code>julia</code> this could also be the packages used.  Nevertheless, this should be large but for that we should assume that stuff can get deleted here and there is no backup.  Some systems will offer an <code>archive</code> or something similar for long term storage</p>
+<p>So last we come to </p>
+<ul>
+<li><p>the entire HPC system.</p>
+</li>
+</ul>
+<p>A Supercomputer, as the name suggests, is at its core a scaled up version of a normal CPU/GPU/computer. At the end, it even works similar, we will see how to interact with one a bit later.</p>
+<p>What we skipped above when we moved from one node to an entire rack was access.  Now accessing multiple computers from our program is not trivial but also not magic. In order to make it not unnecessarily hard and therefore fast a HPC system is build such that his access is easy, you will have the same user with the same data and rights.  Basically the system is build as a <strong>trusted space</strong>. Once you are in you can move around freely.  Of course this will also mean you need to be careful not to get in the way of others but the way you run programs on such a system helps to keep it manageable.  As always, the idea behind it is that the entire purpose of the system is to generate as much performance as possible so this is a risk worth taking. </p>
+<div class="important"><p>First, the key to utilizing the maximal performance of a system is to know how it is build. As we have seen in the previous section, the more we know about the system the better we can optimize our code. </p>
+<p>Second, all design choices are made with code performance in mind. As a consequence, some tasks are cumbersome for users but they are always improved.</p></div>
+<table class="fndef" id="fndef:1">
+    <tr>
+        <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
+        <td class="fndef-content">There is a large discussion if his i the correct metric and maybe the overall time, including the user waiting to run something should be included but we leave that for later. </td>
+    </tr>
+</table>
+
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 08, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
+    
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  var sols = document.getElementsByClassName("solution");
+  
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+
+    for (i = 0; i < sols.length; i++) {
+      sols[i].style.display = "block";
+    }
+  }
+</script>

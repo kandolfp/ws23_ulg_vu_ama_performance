@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
+  
+  
+  <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
+  <script>
+    // This function is used when calling `\fig{...}` See # Using \fig{...} below
+    const PlotlyJS_json = async (div, url) => {
+      response = await fetch(url); // get file
+      fig = await response.json(); // convert it to json
+      // Make the plot fit the screen responsively. See the documentation of plotly.js. https://plotly.com/javascript/responsive-fluid-layout/
+      if (typeof fig.config === 'undefined') { fig["config"]={} }
+      delete fig.layout.width
+      delete fig.layout.height
+      fig["layout"]["autosize"] = true
+      fig["config"]["autosizable"] = true
+      fig["config"]["responsive"] = true
+
+      // make it easier to scroll throught the website rather than being blocked by a figure.
+      fig.config["scrollZoom"] = false
+
+      // PlotlyJS.savefig by default add the some more attribute to make a static plot.
+      // Disable them to make the website fancier.
+      delete fig.config.staticPlot
+      delete fig.config.displayModeBar
+      delete fig.config.doubleClick
+      delete fig.config.showTips
+
+      Plotly.newPlot(div, fig);
+    };
+  </script>
+  
+  <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/jtd.css">
+<link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/css/extras.css">
+<link rel="icon" href="/ws23_ulg_vu_ama_performance/assets/favicon.ico">
+
+<style>
+  /* #148 wrap long header */
+  .franklin-content a.header-anchor,
+  .franklin-toc li a
+   {
+    word-wrap: break-word;
+    white-space: normal;
+  }
+</style>
+
+   <title>Remote Computing - High Performance Computing - Basics</title>  
+</head>
+<body>                      <!-- closed in foot.html -->
+<div class="page-wrap">   <!-- closed in foot.html -->
+  <!-- SIDE BAR -->
+  <div class="side-bar">
+    <div class="header">
+      <a href="/ws23_ulg_vu_ama_performance/" class="title">
+        Julia
+      </a>
+    </div>
+    <label for="show-menu" class="show-menu">MENU</label>
+    <input type="checkbox" id="show-menu" role="button">
+    <div class="menu" id="side-menu">
+      <ul class="menu-list">
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/" class="menu-list-link ">Start</a>
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/" class="menu-list-link ">Parallel computing</a>
+          <ul class="menu-list-child-list ">
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/performance/" class="menu-list-link ">Measuring performance</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/simd/" class="menu-list-link ">Single Instruction Multiple Data</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/pi/" class="menu-list-link ">&pi; example</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/multithreading/" class="menu-list-link ">Multithreading</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
+          </ul>
+          <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remoate computing</a>
+            <ul class="menu-list-child-list ">
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link active">High Performance Computing</a>
+              <ul class="menu-list-child-list ">
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/basics" class="menu-list-link active">Basics</a>
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link ">Architecture</a>
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
+              </ul>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
+            </ul>
+      </ul>
+    </div>
+    <div class="footer">
+      This is <em>Just the docs</em>, adapted from the <a href="https://github.com/pmarsceill/just-the-docs" target="_blank">Jekyll theme</a>.
+    </div>
+  </div>
+  <!-- CONTENT -->
+  <div class="main-content-wrap"> <!-- closed in foot.html -->
+    <div class="main-content">    <!-- closed in foot.html -->
+      <div class="main-header">
+        WS23 971007 VU Advanced Methods and its Applications - Performance topics
+      </div>
+
+
+
+<!-- Content appended here (in class franklin-content) -->
+<div class="franklin-content"><h1 id="basics"><a href="#basics" class="header-anchor">Basics</a></h1>
+<div class="franklin-toc"><ol><li><a href="#tiering">Tiering</a></li><li><a href="#what_are_flops_and_how_are_they_measured">What are flops and how are they measured</a></li></ol></div>
+<h2 id="tiering"><a href="#tiering" class="header-anchor">Tiering</a></h2>
+<p>Usually we classify HPC Systems in different tiers, 
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/hpc/tiering.svg" style="padding:0; " alt=" Tiering structure for (high performance) computing systems."/>
+<figcaption> Tiering structure for (high performance) computing systems.</figcaption>
+</figure>
+ most of the time illustrated with a pyramid. </p>
+<p>As indicated on the side the idea is that the computing power rises when moving up the pyramid while availability of such systems decreases. </p>
+<p>A list of the most powerful HPC Systems or Supercomputers of the world is the <a href="https://www.top500.org/">Top500</a> where <a href="https://www.top500.org/system/180047/">Frontier</a> reached the Exaflop mark. In Europ <a href="https://www.lumi-supercomputer.eu/">Lumi</a> is the fastest &#40;global #3&#41; with 309 peta flops.</p>
+
+<figure style="text-align:center;">
+<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/hpc/flopsvstime.svg" style="padding:0; " alt=" Performance of supercomputers in flops over time."/>
+<figcaption> Performance of supercomputers in flops over time. Original source: <p style="font-size:11px"><a href=" https://en.wikipedia.org/wiki/FLOPS#/media/File:Supercomputer_Power_(FLOPS),_OWID.svg"> https://en.wikipedia.org/wiki/FLOPS#/media/File:Supercomputer_Power_(FLOPS),_OWID.svg</a></p></figcaption>
+</figure>
+
+<p>Before we talk about how these systems achieve astonishing performance we discuss how the performance is measured</p>
+<h2 id="what_are_flops_and_how_are_they_measured"><a href="#what_are_flops_and_how_are_they_measured" class="header-anchor">What are flops and how are they measured</a></h2>
+<p>Flops or <strong>floating point operations per second</strong> is the usual measure of performance used here as floating point operations are the building blocks of most compute intense workloads. It is usually much more reliable than <em>instructions per seconds</em>. </p>
+<p>Needless to say the prefix <em>exa</em> corresponds to <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mn>0</mn><mn>18</mn></msup></mrow><annotation encoding="application/x-tex">10^{18}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">18</span></span></span></span></span></span></span></span></span></span></span></span>.</p>
+<p>For comparison a current Intel or AMD CPU with 16 Cores will have about 220 Gflops, a recent apple watch about 3Gflops, and the Intel Pentium II 0.4 Gflops &#40;released 1999&#41;.</p>
+<p>We already peaked into BLAS and LAPACK before, but they come into play here again.  In order to create the <a href="https://www.top500.org/">Top500</a> list, or more precisely, in order to get your supercomputer on the list you run the <strong><a href="https://www.netlib.org/benchmark/hpl/">HPL</a> - A Portable Implementation of the High-Performance Linpack Benchmark for Distributed-Memory Computers.</strong></p>
+<blockquote>
+<p><strong>HPL</strong> is a software package that solves a &#40;random&#41; dense linear system in double precision &#40;64 bits&#41; arithmetic on distributed-memory computers. It can thus be regarded as a portable as well as freely available implementation of the High Performance Computing Linpack Benchmark.</p>
+</blockquote>
+<p>Of cores there are a lot of factors that can potentially influence this performance and we are going to look into ways to maximize it when we look into the architecture. </p>
+<p>Before we do that we also want to mention, that the <em>double precision &#40;64 bit&#41;</em> her is of importance. As we have learned, the performance of GPUs highly depends on the used precision so this benchmark will only be one part of how the system works. </p>
+<p>Nevertheless, this benchmark or its predecessors have been around for a very long time and nobody has come up with a better way to measure performance so the number does represent a reliable and standardized way to measure performance. </p>
+<div class="page-foot">
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 08, 2023.
+    Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
+</div>
+</div><!-- CONTENT ENDS HERE -->
+    </div> <!-- end of class main-content -->
+    </div> <!-- end of class main-content-wrap -->
+    </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
+    
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
+    
+  </body>
+</html>
+
+<script>
+  var coll = document.getElementsByClassName("collapsible");
+  var i;
+
+  for (i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var content = this.nextElementSibling;
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
+    });
+  }
+</script>
+
+<script>
+  var coll = document.getElementsByClassName("solutioncollapsible");
+  var sols = document.getElementsByClassName("solution");
+  
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const myVar = urlParams.get('solution')
+
+  if ( myVar == 'true') {
+    for (i = 0; i < coll.length; i++) {
+      coll[i].style.display = "block";
+    }
+
+    for (i = 0; i < sols.length; i++) {
+      sols[i].style.display = "block";
+    }
+  }
+</script>
