@@ -337,9 +337,9 @@ Performance:
 
 There are several other pitfalls that might occur with multithreading, here is an incomplete list:
 - **Oversubscription**: We can overdo it with threading.
-- For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads.
-- Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.
+For example if we multithread an algorithm that uses a BLAS routine, it can result in the scenario, that inside each thread a subroutine is trying to run on multiple threads.
+Thus, they might partially block each other and the overall performance is reduced, depending on the capacities we are working on.
 - [**False sharing**](https://en.wikipedia.org/wiki/False_sharing): The latency of the different layers of memory inside a CPU vary and also the way a core on a CPU can access it.
 Usually, L3 is shared by all cores but not L2 and L1.
-- This can result in *false* sharing and reduce the performance if one CPU accesses the data from a cache of another CPU.
+This can result in *false* sharing and reduce the performance if one CPU accesses the data from a cache of another CPU.
 
