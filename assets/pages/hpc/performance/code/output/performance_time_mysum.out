@@ -1,2 +1,2 @@
-  0.010818 seconds (2.30 k allocations: 158.491 KiB, 97.97% compilation time)
-  0.000192 seconds (1 allocation: 16 bytes)
+  0.005982 seconds (2.30 k allocations: 158.491 KiB, 98.21% compilation time)
+  0.000107 seconds (1 allocation: 16 bytes)
