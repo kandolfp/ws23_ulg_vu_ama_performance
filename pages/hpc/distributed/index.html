@@ -118,8 +118,7 @@
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> schedule(t)
 </span>Task (runnable) @0x00007fb859f336b0
 
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> done
-</span><span class="hljs-meta prompt_">julia&gt;</span></code></pre>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> done</span></code></pre>
 <p>The main idea is, that a task can be interrupted and the order of tasks is not set. This means if we have multiple tasks the order of execution is not guaranteed. This also means, that the main Julia process is not blocked by a task but works independently. If we want to wait for the task to finish before the calling task continues, we can do this with <code>wait&#40;t&#41;</code>.</p>
 <p>Most of the time we create a task and schedule it right away. This can be done by the <code>@async</code> macro. It is basically equivalent to <code>schedule&#40;@task x&#41;</code>. We can also catch the task &#40;and therefore the state&#41; with <code>t &#61; @async x</code>. If we want to wait for several tasks, we can use the <code>@sync</code> macro. It will wait until all enclosed tasks spanned by <code>@async</code>, <code>@spawn</code>, <code>@spawnat</code>, and <code>@distributed</code> are completed.</p>
 <p>A task can also return a value, we can get the value with <code>fetch&#40;t&#41;</code> or with <code>take&#33;&#40;t&#41;</code>,  which will remove the value as well.</p>
@@ -190,22 +189,27 @@
 <blockquote>
 <p>A remote reference is an object that can be used from any process to refer to an object stored on a particular process. A remote call is a request by one process to call a certain function on certain arguments on another &#40;possibly the same&#41; process.</p>
 </blockquote>
-<p>All of this is managed from the <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/#man-distributed"><code>Distributed</code></a> package. It is easy to imagine, that the field of distributed computing can quickly become quite extensive, so let us look at some concepts that are useful for our <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example and give us an idea on how this works.</p>
+<p>All of this is managed by the <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/#man-distributed"><code>Distributed</code></a> package. It is easy to imagine, that the field of distributed computing can quickly become quite extensive, so let us look at some concepts that are useful for our <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example and give us an idea on how this works.</p>
 <h3 id="the_pi_example_for_distributed_computing"><a href="#the_pi_example_for_distributed_computing" class="header-anchor">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example for distributed computing</a></h3>
 <p>In order to start with distributed computing, we need to add some distributed processes or <em>workers</em>. Similar as with threads each process has an associated identifier. The process providing the Julia REPL or the main call has id <code>1</code>. As long as there are more than two processes, each process that does not have id <code>1</code> is considered a worker process.</p>
 <p>We can add workers at startup:</p>
 <pre><code class="bash hljs">$ julia -p 2</code></pre>
-<p>where we defined 2 workers on the local machine. We can also add workers from within Julia by calling </p>
+<p>where we defined 2 workers on the local machine. We can also add &#40;further&#41; workers from within Julia by calling </p>
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">using</span> Distributed
-</span><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> addprocs(<span class="hljs-number">4</span>)
-</span>5</code></pre>
-<p>This added four workers and in total we have now 5 processes, hence the return value. Consequently, we can remove workers again by calling</p>
+</span>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> addprocs(<span class="hljs-number">4</span>)
+</span>4-element Vector{Int64}:
+ 4
+ 5
+ 6
+ 7</code></pre>
+<p>This added four workers and in total we have now seven processes. The return value gives the IDs of the recently added workers. You can also use <code>procs&#40;&#41;</code> to get a full list of active processes. Consequently, we can remove workers again by calling</p>
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> rmprocs(<span class="hljs-number">2</span>:<span class="hljs-number">5</span>)
 </span>Task (done) @0x00007fb859fc1430</code></pre>
 <p>and with <code>myid&#40;&#41;</code> we get the id of the process we are on.</p>
 <h3 id="the_distributed_macro"><a href="#the_distributed_macro" class="header-anchor">The <code>@distributed</code> macro</a></h3>
 <p>There is an obvious problem right away. If we define a function or a variable on a process how does another process know about this? </p>
-<p>The easiest concept is to run a parallel for loop. As before we can do this with a macro, namely the <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/#Distributed.@distributed"><code>@distributed</code></a> macro. The general construct is</p>
+<p>The easiest concept is to run a parallel <code>for</code> loop. As before we can do this with a macro, namely the <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/#Distributed.@distributed"><code>@distributed</code></a> macro. The general construct is</p>
 <pre><code class="julia hljs"><span class="hljs-meta">@distributed</span> [reducer] <span class="hljs-keyword">for</span> var = range
     body
 <span class="hljs-keyword">end</span></code></pre>

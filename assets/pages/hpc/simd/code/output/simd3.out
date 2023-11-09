@@ -1,7 +1,7 @@
-;  @ none:2 within `mysum`
-define double @julia_mysum_3716({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+;  @ none:2 within `mySum`
+define double @julia_mySum_3743({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
-;  @ none:5 within `mysum`
+;  @ none:5 within `mySum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
 ; │┌ @ abstractarray.jl:133 within `axes1`
 ; ││┌ @ abstractarray.jl:98 within `axes`
@@ -21,13 +21,13 @@ top:
 L13.preheader:                                    ; preds = %top
   %4 = bitcast {}* %0 to double**
   %5 = load double*, double** %4, align 8
-;  @ none:7 within `mysum`
+;  @ none:7 within `mySum`
   br label %L13
 
 L13:                                              ; preds = %L13, %L13.preheader
   %value_phi3 = phi i64 [ %10, %L13 ], [ 1, %L13.preheader ]
   %value_phi5 = phi double [ %9, %L13 ], [ 0.000000e+00, %L13.preheader ]
-;  @ none:6 within `mysum`
+;  @ none:6 within `mySum`
 ; ┌ @ essentials.jl:13 within `getindex`
    %6 = add nsw i64 %value_phi3, -1
    %7 = getelementptr inbounds double, double* %5, i64 %6
@@ -36,7 +36,7 @@ L13:                                              ; preds = %L13, %L13.preheader
 ; ┌ @ float.jl:408 within `+`
    %9 = fadd double %value_phi5, %8
 ; └
-;  @ none:7 within `mysum`
+;  @ none:7 within `mySum`
 ; ┌ @ range.jl:891 within `iterate`
 ; │┌ @ promotion.jl:499 within `==`
     %.not.not12 = icmp eq i64 %value_phi3, %3
@@ -47,16 +47,16 @@ L13:                                              ; preds = %L13, %L13.preheader
 
 L29:                                              ; preds = %L13, %top
   %value_phi9 = phi double [ 0.000000e+00, %top ], [ %9, %L13 ]
-;  @ none:9 within `mysum`
+;  @ none:9 within `mySum`
   ret double %value_phi9
 }
 
 ------Separator-------
 
-;  @ none:3 within `mysimdsum`
-define double @julia_mysimdsum_3725({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+;  @ none:3 within `mySumSIMD`
+define double @julia_mySumSIMD_3752({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
-;  @ none:6 within `mysimdsum`
+;  @ none:6 within `mySumSIMD`
 ; ┌ @ simdloop.jl:69 within `macro expansion`
 ; │┌ @ abstractarray.jl:314 within `eachindex`
 ; ││┌ @ abstractarray.jl:133 within `axes1`
@@ -158,6 +158,6 @@ L13:                                              ; preds = %L13, %scalar.ph
 L30:                                              ; preds = %L13, %middle.block, %top
    %value_phi2 = phi double [ 0.000000e+00, %top ], [ %19, %middle.block ], [ %22, %L13 ]
 ; └
-;  @ none:10 within `mysimdsum`
+;  @ none:10 within `mySumSIMD`
   ret double %value_phi2
 }

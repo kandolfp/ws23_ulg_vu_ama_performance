@@ -1,29 +1,29 @@
 # This file was generated, do not modify it. # hide
 using BenchmarkTools
 
-function mysum(a)
-    result = zero(eltype(a))
+function mySum(V)
+    result = zero(eltype(V))
 
-    for i in eachindex(a)
-        @inbounds result += a[i]
+    for i in eachindex(V)
+        @inbounds result += V[i]
     end
 
     return result
 end
 
 
-function mysimdsum(a)
-    result = zero(eltype(a))
+function mySumSIMD(V)
+    result = zero(eltype(V))
 
-    @simd for i in eachindex(a)
-        @inbounds result += a[i]
+    @simd for i in eachindex(V)
+        @inbounds result += V[i]
     end
 
     return result
 end
 
 
-function mysum2(V)
+function mySum2(V)
     s = zero(eltype(V))
 
     for v in V
@@ -34,7 +34,7 @@ function mysum2(V)
 end
 
 
-function mysimdsum2(V)
+function mySumSIMD2(V)
     s = zero(eltype(V))
 
     @simd for v in V
@@ -46,9 +46,9 @@ end
 
 a = rand(100_000)
 
-println("Simple sum(a)")
-@show mysum(a)
-@btime mysum($a)
+println("Simple sum")
+@show mySum(a)
+@btime mySum($a)
 
 println()
 println("Built-in sum")
@@ -56,16 +56,16 @@ println("Built-in sum")
 @btime sum($a)
 
 println()
-println("Simple mysimdsum")
-@show mysimdsum(a)
-@btime mysimdsum($a)
+println("Simple sum with SIMD")
+@show mySumSIMD(a)
+@btime mySumSIMD($a)
 
 println()
-println("Simple mysum2")
-@show mysum2(a)
-@btime mysum2($a)
+println("Simple mySum with direct element access")
+@show mySum2(a)
+@btime mySum2($a)
 
 println()
-println("Simple mysimdsum2")
-@show mysimdsum2(a)
-@btime mysimdsum2($a)
+println("Simple sum with SIMD and direct element access")
+@show mySumSIMD2(a)
+@btime mySumSIMD2($a)

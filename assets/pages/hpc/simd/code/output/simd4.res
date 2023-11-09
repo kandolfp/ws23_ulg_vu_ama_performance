@@ -1,7 +1,7 @@
 CodeInfo(
-1 ─ %1  = Main.FD_SANDBOX_1113260776286120926.eltype(a)::Core.Const(Int64)
+1 ─ %1  = Main.FD_SANDBOX_1113260776286120926.eltype(V)::Core.Const(Int64)
 │         (result = Main.FD_SANDBOX_1113260776286120926.zero(%1))::Core.Const(0)
-│   %3  = Main.FD_SANDBOX_1113260776286120926.eachindex(a)::Base.OneTo{Int64}
+│   %3  = Main.FD_SANDBOX_1113260776286120926.eachindex(V)::Base.OneTo{Int64}
 │         (@_3 = Base.iterate(%3))::Union{Nothing, Tuple{Int64, Int64}}
 │   %5  = (@_3 === nothing)::Bool
 │   %6  = Base.not_int(%5)::Bool
@@ -11,7 +11,7 @@ CodeInfo(
 │   %10 = Core.getfield(%8, 2)::Int64
 │         nothing::Core.Const(nothing)
 │   %12 = result::Int64
-│   %13 = Base.getindex(a, i)::Int64
+│   %13 = Base.getindex(V, i)::Int64
 │   %14 = (%12 + %13)::Int64
 │         (result = %14)::Int64
 │         (val = %14)::Int64

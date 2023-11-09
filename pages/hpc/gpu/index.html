@@ -418,7 +418,7 @@ Stacktrace:
 
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu, N);
 </span>  1.740 s (157 allocations: 8.25 KiB)</code></pre>
-<p>We are already faster than the standard Julia implementation but this is not what we were hoping for. The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that GPU is not utilized fully.</p>
+<p>We are already faster than the standard Julia implementation but this is not what we were hoping for. The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that GPU is not fully utilized.</p>
 <pre><code class="bash hljs">+-----------------------------------------------------------------------------+
 | NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |
 |-------------------------------+----------------------+----------------------+

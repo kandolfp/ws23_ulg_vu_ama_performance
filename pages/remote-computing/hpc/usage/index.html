@@ -107,10 +107,10 @@
 <div class="franklin-content"><h1 id="usage"><a href="#usage" class="header-anchor">Usage</a></h1>
 <div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
-<p>As we can imagine, the idea of a HPC System is to be used as much as possible, usually by a lot of different people.  In order to make sure that we do not interfere with each others processes &#40;unless wanted&#41; the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.</p>
+<p>As we can imagine, the idea of an HPC System is to be used as much as possible, usually by a lot of different people.  In order to make sure that we do not interfere with each others&#39; processes &#40;unless wanted&#41; the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.</p>
 <p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard way is via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
 <p>So via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished queue our job. </p>
-<p>While there are different job schedulers around the most commonly found one is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
+<p>While there are different job schedulers around, the most commonly found one is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
 <h2 id="slurm_-_as_a_job_scheduler"><a href="#slurm_-_as_a_job_scheduler" class="header-anchor">Slurm - as a job scheduler</a></h2>
 <div class="important"><p>HAVE A CLUSTER ON ONE OF THE WORKSTATIONS OR DOCKER-COMPOSE</p>
 <p>Describe the setup</p></div>
@@ -135,10 +135,10 @@
 <div class="note"><div class="title">⚠ Note</div>
 <div class="content">The next parts are designed as a type along session.      We also ask some questions in between to keep your focus, the <a href="#answers_to_the_questions">answers</a> are at the bottom of the page.</div></div>
 <h3 id="submitting_a_job"><a href="#submitting_a_job" class="header-anchor">Submitting a job</a></h3>
-<p>Let us start of by directly handing over a job to slurm</p>
+<p>Let us start by directly handing over a job to slurm</p>
 <pre><code class="bash hljs">$ sbatch --wrap=<span class="hljs-string">&quot;sleep 10s &amp;&amp; /bin/hostname&quot;</span>
 Submitted batch job 1</code></pre>
-<p>the <code>--wrap</code> option allows us to _wrap a command string in a shell script and submit it. </p>
+<p>the <code>--wrap</code> option allows us to wrap a command string in a shell script and submit it. </p>
 <p><strong>Question 1</strong>: What does the command <code>sleep 10s &amp;&amp; /bin/hostname</code> do? </p>
 <p>Slurm keeps track of the standard and error output of the command executed and this is stored into an output file.  By default this file is called <code>slurm-n.out</code> where <code>n</code> corresponds to the job number. </p>
 <pre><code class="bash hljs">$ <span class="hljs-built_in">cat</span> slurm-1.out
@@ -174,9 +174,9 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Have a look at the <code>sbatch</code> options and provide a maximal &#40;wallclock&#41; time for the job, e.g. 11 seconds. </p>
 <p>What happens if this time is shorter than the runtime of our job?</p>
 <p><strong>Important</strong>: for some reason on the test cluster you can not specify seconds, so change the example from above to sleep for <code>10</code> seconds and work with one minute. </p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We show just how to include this via a command line argument.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We just show how to include this via a command line argument.</p>
 <pre><code class="bash hljs">sbatch --time=0:1 job.slurm</code></pre>
-<p>If the time is smaller than the actual execution time of execution, the job is killed before it finishes. </p>
+<p>If the time is smaller than the actual execution time, the job is killed before it finishes. </p>
 <p>You can check this with </p>
 <pre><code class="bash hljs">$ sacct
 JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
@@ -227,14 +227,14 @@ running on c1
 <pre><code class="bash hljs">$ sbatch --cpus-per-task=2 --verbose job.slurm 
 sbatch: error: CPU count per node can not be satisfied
 sbatch: error: Batch job submission failed: Requested node configuration is not available</code></pre>
-<p>As our testcluster only supports one CPU per node. Slum is not able to schedule this task and therefore you get the error telling you this. </div> </div>
+<p>As our testcluster only supports one CPU per node. Slurm is not able to schedule this task and therefore you get the error telling you this. </div> </div>
 <p>As we can see it might happen, that our job can not be submitted or that we have an error in the setup.  In order to check if the job is correct we can use the <code>--test-only</code> option</p>
 <pre><code class="bash hljs">$ sbatch --test-only job.slurm
 sbatch: Job 5 to start at 2023-11-09T17:49:30 using 1 processors on nodes c1 <span class="hljs-keyword">in</span> partition normal
 
 $ sbatch --cpus-per-task=2 --test-only job.slurm
 allocation failure: Requested node configuration is not available</code></pre>
-<p>On success, it will tell us when to job will probably run &#40;to the best of its knowledge&#41; and where.  If it is not successful we see why. </p>
+<p>On success it will tell us when to job will probably run &#40;to the best of its knowledge&#41; and where.  If it is not successful we see why. </p>
 <h3 id="running_parallel_jobs"><a href="#running_parallel_jobs" class="header-anchor">Running parallel jobs</a></h3>
 <h2 id="answers_to_the_questions"><a href="#answers_to_the_questions" class="header-anchor">Answers to the questions</a></h2>
 <ol>
@@ -246,7 +246,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 <p><table class="fndef" id="fndef:1">
     <tr>
         <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
-        <td class="fndef-content">The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go her.</td>
+        <td class="fndef-content">The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.</td>
     </tr>
 </table>
  <table class="fndef" id="fndef:2">
