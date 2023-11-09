@@ -22,9 +22,7 @@ The foundation of these notes is based on parts of our Julia Workshop which was 
 This lecture will dive a bit deeper than we did in the section [Parallel Computing](https://noxthot.github.io/ss22_julia_workshop/pages/hpc/).
 
 ## Some general words on the organization of this workshop
-
-For this workshop you do not need to be a Julia expert, not even a programming expert.
-We will introduce programming and Julia concepts along with examples.For this purpose you will find code blocks that you can copy if necessary (top right corner `copy`).
+You will find code blocks that you can copy if necessary (top right corner `copy`).
 Furthermore, if we think something is very important we will highlight it with a box:
 
 @@important
