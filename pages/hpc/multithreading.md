@@ -6,7 +6,7 @@
 # Multithreading in Julia
 \toc
 
-Before we have a look how [Julia deals with the concept of multithreading](https://docs.julialang.org/en/v1/manual/multi-threading/), let us make clear what we are talking about.
+Before we have a look at how [Julia deals with the concept of multithreading](https://docs.julialang.org/en/v1/manual/multi-threading/), let us make clear what we are talking about.
 
 ## What is multithreading?
 
@@ -58,8 +58,8 @@ julia> Threads.nthreads()
 julia> Threads.threadid()
 1
 ```
-By default, the Julia REPL, or the main Julia process for that matter, will always run on the thread with id `1`race.
-We do not have the time for a deep dive into all the dirty details on how do do proper multithreaded programming (raise conditions, locks, atomic operations, thread safe programming, ...), therefore we keep it light and simple with the `@threads` macro and introduce the needed concepts when we need them along the way.
+By default, the Julia REPL, or the main Julia process for that matter, will always run on the thread with id `1`.
+We do not have the time for a deep dive into all the dirty details on how to do proper multithreaded programming (raise conditions, locks, atomic operations, thread safe programming, ...), therefore we keep it light and simple with the `@threads` macro and introduce the needed concepts when we need them along the way.
 
 @@important
 For comparison, all the benchmarks and computations are performed with `4` threads.
@@ -153,7 +153,7 @@ So what happened?
 As we could see, in the above example from the docs, the loop is automatically split up per index for the threads available.
 This means each of the threads is performing the same loop and as the context and memory is shared also access the same storage.
 This is problematic for our variable `M`.
-This means each thread reads and writes in the same variable but this also means the result is not correct.
+This means each thread reads and writes into the same variable but this also means the result is not correct.
 It might override the results of other threads or they all read at the same time but only one result will be written in the end.
 In short the counter is totally wrong.
 We call this [race condition](https://en.wikipedia.org/wiki/Race_condition).
@@ -263,7 +263,7 @@ For that, we use `len, rem = divrem(N, nthreads())` to divide up `N` into the qu
 
 \exercise{
 Define a new function `in_unit_circle_threaded4` with the `@threads` macro, `M` as array, the above code snippets and test the result as well as the timing.
-Extra points if you check if we do not loose any iterations due to the split.
+Extra points if you ensure that we do not loose any iterations due to the split.
 \solution{
 ```julia
 using Random

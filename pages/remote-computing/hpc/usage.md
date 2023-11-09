@@ -7,8 +7,8 @@
 
 ## Overview
 
-As we can imagine, the idea of a HPC System is to be used as much as possible, usually by a lot of different people. 
-In order to make sure that we do not interfere with each others processes (unless wanted) the nodes can not be accessed directly. 
+As we can imagine, the idea of an HPC System is to be used as much as possible, usually by a lot of different people. 
+In order to make sure that we do not interfere with each others' processes (unless wanted) the nodes can not be accessed directly. 
 The actual execution of programs is done by a job scheduler. 
 We need to define a job, with all the resources we need and hand this job over to the job scheduler. 
 The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.
@@ -18,7 +18,7 @@ While there is a lot of work going into making the access and use of such system
 So via `ssh` we usually reach one of the login nodes and from here we get access to the job scheduler.
 We can prepare our job script, maybe compile some sources, sort out data and when everything is finished queue our job. 
 
-While there are different job schedulers around the most commonly found one is [Slurm](https://www.schedmd.com/). 
+While there are different job schedulers around, the most commonly found one is [Slurm](https://www.schedmd.com/). 
 The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® _distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration_[^2].
 
 ## Slurm - as a job scheduler
@@ -51,12 +51,12 @@ Let us dive right in and submit our first job and from there we extend our job t
 
 ### Submitting a job
 
-Let us start of by directly handing over a job to slurm
+Let us start by directly handing over a job to slurm
 ```bash
 $ sbatch --wrap="sleep 10s && /bin/hostname"
 Submitted batch job 1
 ```
-the `--wrap` option allows us to _wrap a command string in a shell script and submit it. 
+the `--wrap` option allows us to wrap a command string in a shell script and submit it. 
 
 **Question 1**: What does the command `sleep 10s && /bin/hostname` do? 
 
@@ -123,12 +123,12 @@ What happens if this time is shorter than the runtime of our job?
 
 \solution{
 
-We show just how to include this via a command line argument.
+We just show how to include this via a command line argument.
 ```bash
 sbatch --time=0:1 job.slurm
 ```
 
-If the time is smaller than the actual execution time of execution, the job is killed before it finishes. 
+If the time is smaller than the actual execution time, the job is killed before it finishes. 
 
 You can check this with 
 ```bash 
@@ -200,7 +200,7 @@ sbatch: error: CPU count per node can not be satisfied
 sbatch: error: Batch job submission failed: Requested node configuration is not available
 ```
 As our testcluster only supports one CPU per node.
-Slum is not able to schedule this task and therefore you get the error telling you this. 
+Slurm is not able to schedule this task and therefore you get the error telling you this. 
 }
 }
 
@@ -213,7 +213,7 @@ sbatch: Job 5 to start at 2023-11-09T17:49:30 using 1 processors on nodes c1 in 
 $ sbatch --cpus-per-task=2 --test-only job.slurm
 allocation failure: Requested node configuration is not available
 ```
-On success, it will tell us when to job will probably run (to the best of its knowledge) and where. 
+On success it will tell us when to job will probably run (to the best of its knowledge) and where. 
 If it is not successful we see why. 
 
 ### Running parallel jobs
@@ -224,7 +224,7 @@ If it is not successful we see why.
 1. Our job only runs on one CPU, therefore it only runs on one of the nodes.
 
 
-[^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go her.
+[^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.
 
 [^2]: [www.schedmd.com](https://www.schedmd.com/index.php)
 

@@ -14,7 +14,7 @@ most of the time illustrated with a pyramid.
 
 As indicated on the side the idea is that the computing power rises when moving up the pyramid while availability of such systems decreases. 
 
-A list of the most powerful HPC Systems or Supercomputers of the world is the [Top500](https://www.top500.org/) where [Frontier](https://www.top500.org/system/180047/) reached the Exaflop mark. In Europ [Lumi](https://www.lumi-supercomputer.eu/) is the fastest (global #3) with 309 Petaflops.
+A list of the most powerful HPC Systems or Supercomputers of the world is the [Top500](https://www.top500.org/) where [Frontier](https://www.top500.org/system/180047/) reached the Exaflop mark. In Europe [Lumi](https://www.lumi-supercomputer.eu/) is the fastest (global #3) with 309 Petaflops.
 
 \figenvsource{Performance of supercomputers in flops over time.}{/assets/pages/remote-computing/hpc/flopsvstime.svg}{}{https://en.wikipedia.org/wiki/FLOPS#/media/File:Supercomputer_Power_(FLOPS),_OWID.svg}
 
@@ -36,7 +36,7 @@ In order to create the [Top500](https://www.top500.org/) list, or more precisely
 
 Of course there are a lot of factors that can potentially influence this performance and we are going to look into ways to maximize it when we look into the architecture. 
 
-Before we do that we also want to mention, that the _double precision (64 bit)_ her is of importance.
+Before we do that we also want to mention, that the _double precision (64 bit)_ here is of importance.
 As we have learned, the performance of GPUs highly depends on the used precision so this benchmark will only be one part of how the system works. 
 
 Nevertheless, this benchmark or its predecessors have been around for a very long time and nobody has come up with a better way to measure performance so the number does represent a reliable and standardized way to measure performance. 

@@ -139,7 +139,7 @@ For this, Julia provides two primitives, *remote reference* and *remote calls*, 
 > A remote reference is an object that can be used from any process to refer to an object stored on a particular process.
 > A remote call is a request by one process to call a certain function on certain arguments on another (possibly the same) process.
 
-All of this is managed from the [`Distributed`](https://docs.julialang.org/en/v1/stdlib/Distributed/#man-distributed) package.
+All of this is managed by the [`Distributed`](https://docs.julialang.org/en/v1/stdlib/Distributed/#man-distributed) package.
 It is easy to imagine, that the field of distributed computing can quickly become quite extensive, so let us look at some concepts that are useful for our $\pi$ example and give us an idea on how this works.
 
 ### The $\pi$ example for distributed computing

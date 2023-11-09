@@ -9,4 +9,4 @@
 ## Overview
 
 This section is going to give a brief overview on what is commonly called **cloud computing** and how such systems look like. 
-We will look into public and private clouds as well as use and touche on how you interact with such systems. 
+We will look into public and private clouds as well as use and touch on how you interact with such systems. 

@@ -43,7 +43,7 @@ Implement the above described algorithm to compute $\pi$.
 1. Define a function that estimates $\pi$ for a given function $f$ and integer $N$.
 1. Test your code with different values for $N$.
 
-Help: The function `rand()` will give you a uniformly scattered point in the interval $[0,1]$.
+Hint: The function `rand()` (without additional arguments) generates a random sample from a uniform distribution spanning the interval $[0,1]$.
 \solution{
 ```julia:./code/pi.jl
 function in_unit_circle(N::Int64)

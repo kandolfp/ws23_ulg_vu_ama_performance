@@ -5,7 +5,7 @@
 
 # How to measure performance in Julia
 
-For that, we recall the vector summation example from the introduction to [function](../../introduction/functions/) and include the simple `@time` macro.
+For that, we have a look at a simple vector summation function and include the simple `@time` macro.
 ```julia:./code/performance_time_mysum.jl
 function mysum(V)
     s = zero(eltype(V))
@@ -38,7 +38,7 @@ In order to use the BenchmarkTools we need to include it with `using BenchmarkTo
 Benchmark our `mysum` function with the following macros:
 1. `@benchmark`
 1. `@btime` 
-1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run.
+1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run
 and compare the output and results.
 \solution{
 To measure the performance of the above code we do the following:

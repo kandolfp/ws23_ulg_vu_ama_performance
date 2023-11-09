@@ -7,14 +7,14 @@
 
 ## Overview
 
-While each and every specify supercomputer looks different there are some common features that we can describe. 
+While each and every specific supercomputer looks different there are some common features that can be described. 
 
 In general, such a system is composed of several _individual computers_ which are called **nodes**. 
 Several nodes are combined inside a **rack**.
 
 Quite often, the cooling and networking is done within the racks.
-I.e., for cooling this is either (warm) water cooling that runs through each node or the one of the doors and the heat from the nodes spread via normal fans. 
-For the network whe have a switch in each rack that connects to the nodes.
+I.e., for cooling this is either (warm) water cooling that runs through each node or to one of the doors and the heat from the nodes spread via normal fans. 
+For the network we have a switch in each rack that connects to the nodes.
 
 In general we try to have a homogeneous architecture, i.e. homogeneous nodes in one rack. 
 
@@ -25,7 +25,7 @@ Where inside the partition the nodes all look the same, are located near each ot
 
 Finally, several partitions will form the computing part of the high performance system, but some additional components are required.
 
-This includes various high performance parallel storage systems for different usage (home, scratch, ...), the high speed netword ( switches, routers, and so forth), login nodes, monitoring systems, and more. 
+This includes various high performance parallel storage systems for different usage (home, scratch, ...), the high speed netword (switches, routers, and so forth), login nodes, monitoring systems, and more. 
 
 \figenv{Architecture 2 - Partitions and the support components.}{/assets/pages/remote-computing/hpc/parts2.svg}{}
 
@@ -35,7 +35,8 @@ Leonardo (#4 on the TOP500) has a nice animated video that shows the different s
 <iframe width="560" height="315" src="https://www.youtube.com/embed/CFSOY3rWwo4?si=dKTsDj_gloOORhgT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ~~~
 
-For Lumi the layout looks the following
+For Lumi the layout looks like the following.
+
 \figenvsource{The architecture of Lumi **the queen of the north**.}{/assets/pages/remote-computing/hpc/snowflake-lumi.png}{}{https://www.lumi-supercomputer.eu/lumi_supercomputer/}
 
 ## Reasons and consequences
@@ -44,13 +45,13 @@ The main idea of a HPC System is to maximize performance of a computation [^1].
 This is strongly reflected in the architecture described above. 
 
 For these considerations we assume that we start with a computation on a single core and spread it out over the entire system. 
-This allows us to discuss hww the different parts help to do make the computation as fast as possible. 
+This allows us to discuss the different parts that help to make the computation as fast as possible. 
 While this will probably be some weather simulation or the collision of two galaxies it could also just be the computation of $\pi$.
 
 Let us start with 
 - the node.
 We have seen in the how we can move the computation form a single core in one CPU to multiple cores. 
-Obviously, the faster CPU the faster the computation. 
+Obviously, the faster the CPU the faster the computation. 
 Usually a node will have multiple CPUs so with a bit of extra work we can make sure that all of them are used as well. 
 Now there is going to be a bit of communication between the CPUs so the faster they are connected the better. 
 Nevertheless, we will try to write our code such that communication between the two different CPUs is minimized (locality).
@@ -61,7 +62,7 @@ Now we spread out to the next nodes in the
 This is not to hard as they look exactly the same and they are (physically) close.
 Of course there is some overhead with the code, we need to communicate between the nodes but luckily there is a fast connection. 
 Again, we will try to write our code such that the communication between the nodes is minimized.
-Soon the entire rack is again working at peak load so we the more racks in and occupy  
+Soon the entire rack is again working at peak load. Thus we put more racks in and form a partition.  
 
 - the partition.
 As one partition consists of racks all looking the same we just need to make sure that we localize communication again but the rest is simple.
@@ -74,7 +75,7 @@ Again communication is needed so lets consider
 
 - the high speed interconnect.
 We could simple wire up the nodes with normal TCP/IP cables or if we are insane try WiFi. 
-This works fine if we do not have a lot of data that gets send around it is the same as with the internet connection at home, if you watch two 4K video streams, download the latest data bundles for you new cool project you will see that performance goes down.
+This works fine if we do not have a lot of data that gets send around. It is the same as with the internet connection at home, if you watch two 4K video streams, download the latest data bundles for your new cool project you will see that performance goes down.
 
 This is basically the reason for the high speed interconnect. 
 Mostly this is some glass fiber connection, with special dedicated hardware.
@@ -86,10 +87,10 @@ So lets look at
 - the storage.
 Providing storage in such a system is not an easy feat. 
 We want to make sure that each node can access all the data it needs and while on it we also want to make sure that several nodes can access data at the same time, while no user should be able to access data from somebody else (sensitive data, or data with licenses).
-And this is why there is a parallel filesystem in place.
+This is why there is a parallel filesystem in place.
 The different layers and spaces are easily explained from their use. 
 
-Each node will have a SSD for the operating system and the basic programs needed, maybe you can also use this for temporary storage during computations
+Each node will have a SSD for the operating system and the basic programs needed, maybe you can also use this for temporary storage during computations.
 
 Next each user should have a home directory where the most important part of the project is stored and we need this available all the time on all the nodes, but this directory can be rather small.
 
@@ -103,7 +104,7 @@ So last we come to
 A Supercomputer, as the name suggests, is at its core a scaled up version of a normal CPU/GPU/computer.
 At the end, it even works similar, we will see how to interact with one a bit later.
 
-What we skipped above when we moved from one node to an entire rack was access. 
+What we skipped above when we moved from one node to an entire rack was access.
 Now accessing multiple computers from our program is not trivial but also not magic.
 In order to make it not unnecessarily hard and therefore fast a HPC system is build such that his access is easy, you will have the same user with the same data and rights. 
 Basically the system is build as a **trusted space**.
@@ -119,4 +120,4 @@ Second, all design choices are made with code performance in mind.
 As a consequence, some tasks are cumbersome for users but they are always improved. 
 @@
 
-[^1]: There is a large discussion if his i the correct metric and maybe the overall time, including the user waiting to run something should be included but we leave that for later. 
+[^1]: There is a large discussion if this is the correct metric and maybe the overall time, including the user waiting to run something should be included but we leave that for later. 
