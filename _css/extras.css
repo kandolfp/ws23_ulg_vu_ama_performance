@@ -85,3 +85,8 @@
   overflow: hidden;
   background-color: #f2fde2;
 }
+
+.nonumber .katex-display::after {
+  counter-increment: nothing;
+  content: "";
+}
