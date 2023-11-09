@@ -30,7 +30,6 @@ julia> schedule(t)
 Task (runnable) @0x00007fb859f336b0
 
 julia> done
-julia> 
 ```
 
 The main idea is, that a task can be interrupted and the order of tasks is not set.
@@ -174,11 +173,10 @@ Task (done) @0x00007fb859fc1430
 and with `myid()` we get the id of the process we are on.
 
 ### The `@distributed` macro
-
 There is an obvious problem right away.
 If we define a function or a variable on a process how does another process know about this? 
 
-The easiest concept is to run a parallel for loop.
+The easiest concept is to run a parallel `for` loop.
 As before we can do this with a macro, namely the [`@distributed`](https://docs.julialang.org/en/v1/stdlib/Distributed/#Distributed.@distributed) macro.
 The general construct is
 ```julia

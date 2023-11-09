@@ -46,7 +46,7 @@ Let us dive right in and submit our first job and from there we extend our job t
 
 \note{
     The next parts are designed as a type along session. 
-    We also ask some questions in between to keep your focus, the [answers](#answers_to_the_questions) are at the bottom of the page. 
+    We also ask some questions in between to keep your focus, the [answers](#answers_to_the_questions) are at the bottom of the page.
 }
 
 ### Submitting a job
