@@ -1,19 +1,19 @@
 Simple sum(a)
-mysum(a) = 49986.802235611
-  92.593 μs (0 allocations: 0 bytes)
+mysum(a) = 49928.960810335775
+  133.603 μs (0 allocations: 0 bytes)
 
 Built-in sum
-sum(a) = 49986.802235611554
-  12.113 μs (0 allocations: 0 bytes)
+sum(a) = 49928.96081033575
+  14.300 μs (0 allocations: 0 bytes)
 
 Simple mysimdsum
-mysimdsum(a) = 49986.80223561155
-  11.862 μs (0 allocations: 0 bytes)
+mysimdsum(a) = 49928.96081033577
+  11.300 μs (0 allocations: 0 bytes)
 
 Simple mysum2
-mysum2(a) = 49986.802235611
-  92.593 μs (0 allocations: 0 bytes)
+mysum2(a) = 49928.960810335775
+  133.598 μs (0 allocations: 0 bytes)
 
 Simple mysimdsum2
-mysimdsum2(a) = 49986.80223561155
-  11.902 μs (0 allocations: 0 bytes)
+mysimdsum2(a) = 49928.96081033577
+  11.400 μs (0 allocations: 0 bytes)
