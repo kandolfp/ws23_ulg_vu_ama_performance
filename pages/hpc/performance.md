@@ -40,6 +40,8 @@ Benchmark our `mySum` function with the following macros:
 1. `@btime` 
 1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run
 and compare the output and results.
+
+1. Duplicate `mySum()`, name it `mySumNoInBounds()`, remove the `@inbounds` macro and compare the performance to that of `mySum()`.
 \solution{
 To measure the performance of the above code we do the following:
 ```julia:./code/performance_benchmark_mysum.jl
@@ -59,6 +61,23 @@ and the often used sanity check, that actually also shows you the output of your
 @btime mySum($V)
 ```
 \show{./code/performance_btime_mysum.jl}
+
+Skipping the `inbound` check only gives a minor improvement as you can see when you compare the results to the following version which performs the check:
+
+```julia:./code/performance_btime_mysumnoinbounds.jl
+function mySumNoInbounds(V)
+    s = zero(eltype(V))
+
+    for i in eachindex(V)
+        s += V[i]
+    end
+
+    return s
+end
+
+@benchmark mySumNoInbounds($V)
+```
+\show{./code/performance_btime_mysumnoinbounds.jl}
 }
 }
 
