@@ -154,13 +154,18 @@ We can add workers at startup:
 $ julia -p 2
 ```
 where we defined 2 workers on the local machine.
-We can also add workers from within Julia by calling 
+We can also add (further) workers from within Julia by calling 
 ```julia-repl
 julia> using Distributed
+
 julia> addprocs(4)
-5
+4-element Vector{Int64}:
+ 4
+ 5
+ 6
+ 7
 ```
-This added four workers and in total we have now 5 processes, hence the return value.
+This added four workers and in total we have now seven processes. The return value gives the IDs of the recently added workers. You can also use `procs()` to get a full list of active processes.
 Consequently, we can remove workers again by calling
 ```julia-repl
 julia> rmprocs(2:5)
