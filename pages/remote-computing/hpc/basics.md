@@ -35,7 +35,7 @@ In order to create the [Top500](https://www.top500.org/) list, or more precisely
 
 > **HPL** is a software package that solves a (random) dense linear system in double precision (64 bits) arithmetic on distributed-memory computers. It can thus be regarded as a portable as well as freely available implementation of the High Performance Computing Linpack Benchmark.
 
-Of cores there are a lot of factors that can potentially influence this performance and we are going to look into ways to maximize it when we look into the architecture. 
+Of course there are a lot of factors that can potentially influence this performance and we are going to look into ways to maximize it when we look into the architecture. 
 
 Before we do that we also want to mention, that the _double precision (64 bit)_ her is of importance.
 As we have learned, the performance of GPUs highly depends on the used precision so this benchmark will only be one part of how the system works. 
