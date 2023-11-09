@@ -262,7 +262,7 @@ in each thread.
 
 Now for our final version of the code, the basic idea is to not have a threaded loop over the integer `N` but over the number of threads.
 In order for this to work we need to figure out how many iterations each thread needs to perform.
-For that, we use `len, rem = divrem(N, nthreads())` to divide up `N` into the quotient and remainder from the Euclidean division.
+Hint: We can use `divrem()` for this task.
 
 \exercise{
 Define a new function `in_unit_circle_threaded4` with the `@threads` macro, `M` as array, the above code snippets and test the result as well as the timing.
