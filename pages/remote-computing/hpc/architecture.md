@@ -48,45 +48,47 @@ For these considerations we assume that we start with a computation on a single 
 This allows us to discuss the different parts that help to make the computation as fast as possible. 
 While this will probably be some weather simulation or the collision of two galaxies it could also just be the computation of $\pi$.
 
-Let us start with 
-- the node.
-We have seen in the how we can move the computation form a single core in one CPU to multiple cores. 
+
+### Node
+In the previous sections we have seen how to move the computation from a single core within one CPU to multiple cores. 
 Obviously, the faster the CPU the faster the computation. 
 Usually a node will have multiple CPUs so with a bit of extra work we can make sure that all of them are used as well. 
 Now there is going to be a bit of communication between the CPUs so the faster they are connected the better. 
 Nevertheless, we will try to write our code such that communication between the two different CPUs is minimized (locality).
 The more we know about the architecture and the particular components of the node the better we can optimize our code and soon the node is running at 100% peak performance. 
-Now we spread out to the next nodes in the
+Now we spread out to the next nodes in the rack.
 
-- the rack.
-This is not to hard as they look exactly the same and they are (physically) close.
+### Rack
+This is not too hard as they look exactly the same and they are (physically) close.
 Of course there is some overhead with the code, we need to communicate between the nodes but luckily there is a fast connection. 
 Again, we will try to write our code such that the communication between the nodes is minimized.
 Soon the entire rack is again working at peak load. Thus we put more racks in and form a partition.  
 
-- the partition.
-As one partition consists of racks all looking the same we just need to make sure that we localize communication again but the rest is simple.
+### Partition
+Since one partition usually consists of identical racks, we just need to make sure that we localize communication again.
 
 The main idea of partitions is to have some differences in the hardware. 
 So maybe the neighboring partition has GPUs (probably 2 to 4 per node). 
 Luckily, we know how to includes GPUs in our computation. 
 Maybe there is even one part of our computation that is super fast on GPUs but not so fast on CPUs, so we move this part to the GPU section while the CPU is running CPU optimized code. 
-Again communication is needed so lets consider 
+Again communication is needed so lets consider the high speed interconnect.
 
-- the high speed interconnect.
-We could simple wire up the nodes with normal TCP/IP cables or if we are insane try WiFi. 
+### High Speed Interconnect
+We could simple wire up the nodes with normal ethernet cables or if we are insane try WiFi. 
 This works fine if we do not have a lot of data that gets send around. It is the same as with the internet connection at home, if you watch two 4K video streams, download the latest data bundles for your new cool project you will see that performance goes down.
 
 This is basically the reason for the high speed interconnect. 
-Mostly this is some glass fiber connection, with special dedicated hardware.
-Of course you want to have several ports, just in case one goes down and two different routs to connect from each node to another to make sure you can always communicate.
+Mostly glass fiber connections with special dedicated hardware are used.
+Naturally, having multiple ports is essential in case one fails.
+Each node is connected to others via two different routes to ensure constant communication.
 The faster this system is the faster our computation will be, and again, if we know how it looks we can optimize for it. 
 
-Speaking of data transfer, we probably also need to store and load data from discs.
-So lets look at
-- the storage.
+Speaking of data transfer, we probably also need to store and load data from disks.
+So lets look at the storage.
+
+### Storage
 Providing storage in such a system is not an easy feat. 
-We want to make sure that each node can access all the data it needs and while on it we also want to make sure that several nodes can access data at the same time, while no user should be able to access data from somebody else (sensitive data, or data with licenses).
+We want to make sure that each node can access all the data it needs and we also want to make sure that several nodes can access data at the same time, while no user should be able to access data from somebody else (sensitive data, or data with licenses).
 This is why there is a parallel filesystem in place.
 The different layers and spaces are easily explained from their use. 
 
@@ -95,13 +97,12 @@ Each node will have a SSD for the operating system and the basic programs needed
 Next each user should have a home directory where the most important part of the project is stored and we need this available all the time on all the nodes, but this directory can be rather small.
 
 Usually we will also have something called _scratch_ where data is stored as a result of computations or from steps. 
-With regard from `julia` this could also be the packages used. 
-Nevertheless, this should be large but for that we should assume that stuff can get deleted here and there is no backup. 
-Some systems will offer an `archive` or something similar for long term storage
+With regard from Julia this could also be the packages used. 
+Nevertheless, this should be large but for that we should assume that this memory is volatile and there is no backup. 
+Some systems will offer an archive or something similar for long term storage.
 
-So last we come to 
-- the entire HPC system.
-A Supercomputer, as the name suggests, is at its core a scaled up version of a normal CPU/GPU/computer.
+### Entire HPC System
+A supercomputer, as the name suggests, is at its core a scaled up version of a normal CPU/GPU/computer.
 At the end, it even works similar, we will see how to interact with one a bit later.
 
 What we skipped above when we moved from one node to an entire rack was access.
