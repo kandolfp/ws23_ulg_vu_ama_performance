@@ -10,18 +10,18 @@ There is even a [blog entry](https://julialang.org/blog/2017/03/piday/) in the J
 Nevertheless, we decided for a different method (that is part of the introductory courses on [JuliaAcademy](https://juliaacademy.com/)).
 
 A circle with radius $r$ has an area of 
-$$A_{circle} = \pi r^2$$
+\nonumber{$$A_{circle} = \pi r^2$$}
 and the square that encases it 
-$$A_{square} = 4 r^2.$$
+\nonumber{$$A_{square} = 4 r^2.$$}
 
 The ratio between the area of the circle and the area of the square is 
-$$
+\nonumber{$$
 \frac{A_{circle}}{A_{square}} = \frac{\pi r^2}{4 r^2} = \frac{\pi}{4}
-$$
+$$}
 and therefore we can define $\pi$ as
-$$
+\nonumber{$$
 \pi = 4\frac{A_{circle}}{A_{square}}.
-$$
+$$}
 The same is true if we just take the first quadrant, so $\frac14$ of the square as well as the circle.
 This simplification will make the code more compact and faster.
 
