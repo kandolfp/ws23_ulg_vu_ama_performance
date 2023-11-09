@@ -24,7 +24,7 @@ V = rand(100_000)
 \show{./code/performance_time_mysum.jl}
 
 @@important
-In order to optimize the loop call we use the [`@inbounds`](https://docs.julialang.org/en/v1/devdocs/boundscheck/) macro to eliminate inbound checks - does the index exist - for the array access.
+In order to optimize the loop call we use the [`@inbounds`](https://docs.julialang.org/en/v1/devdocs/boundscheck/) macro to eliminate inbound checks for the array access and thus improve performance. It is challenging and probably even not possible to prove the safety of methods using `@inbounds`, so it is essential to consider the trade-off between performance gains and the potential for unnoticed errors. Rule of thumb: Do not use it, unless you really need this performance gain.
 @@
 
 The downside with the `@time` macro is, that it really just measures the execution time of what is given to it.
