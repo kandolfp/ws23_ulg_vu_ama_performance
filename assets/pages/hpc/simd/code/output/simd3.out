@@ -1,5 +1,5 @@
 ;  @ none:2 within `mySum`
-define double @julia_mySum_3737({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mySum_3739({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:5 within `mySum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
@@ -54,7 +54,7 @@ L29:                                              ; preds = %L13, %top
 ------Separator-------
 
 ;  @ none:3 within `mySumSIMD`
-define double @julia_mySumSIMD_3746({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_mySumSIMD_3748({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:6 within `mySumSIMD`
 ; ┌ @ simdloop.jl:69 within `macro expansion`

@@ -105,42 +105,42 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="usage"><a href="#usage" class="header-anchor">Usage</a></h1>
-<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li></ol></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
-<p>As we can imagine, the idea of HPC Systems is to be used as much as possible, usually by a lot of different people.  In order to make sure that we do not interfere with each others&#39; processes &#40;unless wanted&#41; the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.</p>
-<p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard way is via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
-<p>So via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished queue our job. </p>
-<p>While there are different job schedulers around, the most commonly found one is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
+<p>The idea of HPC Systems is to be used as much as possible, usually by a lot of different people or programs.  In order to make sure that the users and programs do not interfere with each other the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs.</p>
+<p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard mode of access is still via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
+<p>Via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our to the queue &#40;and wait&#41;. </p>
+<p>There are different job schedulers around, the most commonly found is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
 <h2 id="slurm_-_as_a_job_scheduler"><a href="#slurm_-_as_a_job_scheduler" class="header-anchor">Slurm - as a job scheduler</a></h2>
 <div class="important"><p>HAVE A CLUSTER ON ONE OF THE WORKSTATIONS OR DOCKER-COMPOSE</p>
 <p>Describe the setup</p></div>
-<p>The inner working of the Slurm can be found in the <a href="https://slurm.schedmd.com/">documentation</a>. The most important commands to know are<sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup></p>
+<p>The inner workings of the Slurm can be found in the <a href="https://slurm.schedmd.com/">documentation</a>, we discuss some of the most important commands<sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup></p>
 <ul>
 <li><p><code>sbatch</code> is used so submit a job script </p>
 </li>
 <li><p><code>srun</code> is used to submit a job for execution in real time</p>
 </li>
-<li><p><code>scancel</code> is used to cancel a pending or running job or job step.</p>
+<li><p><code>scancel</code> is used to cancel a pending or running job or job step</p>
 </li>
-<li><p><code>squeue</code> reports the state of jobs or job steps.</p>
+<li><p><code>squeue</code> reports the state of jobs or job steps</p>
 </li>
-<li><p><code>sacct</code> is used to report job or job step accounting information about active or completed jobs.</p>
+<li><p><code>sacct</code> is used to report job or job step accounting information about active or completed jobs</p>
 </li>
-<li><p><code>scontrol</code> is the administrative tool used to view and/or modify Slurm state.</p>
+<li><p><code>scontrol</code> is the administrative tool used to view and/or modify jobs or the Slurm state</p>
 </li>
 </ul>
-<div class="note"><div class="title">⚠ Note</div>
-<div class="content">The following notes are a combination from various sources <sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup> <sup id="fnref:4"><a href="#fndef:4" class="fnref">[4]</a></sup></div></div>
 <p>Let us dive right in and submit our first job and from there we extend our job to be more refined.</p>
 <div class="note"><div class="title">⚠ Note</div>
-<div class="content">The next parts are designed as a type along session.      We also ask some questions in between to keep your focus, the <a href="#answers_to_the_questions">answers</a> are at the bottom of the page.</div></div>
+<div class="content">The next part is designed as a type along section.      We also ask some questions in between to keep your focus, the <a href="#answers_to_the_questions">answers</a> are at the bottom of the page.</div></div>
+<div class="note"><div class="title">⚠ Note</div>
+<div class="content">The following notes are a combination from various sources <sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup> <sup id="fnref:4"><a href="#fndef:4" class="fnref">[4]</a></sup>.</div></div>
 <h3 id="submitting_a_job"><a href="#submitting_a_job" class="header-anchor">Submitting a job</a></h3>
 <p>Let us start by directly handing over a job to Slurm</p>
 <pre><code class="bash hljs">$ sbatch --wrap=<span class="hljs-string">&quot;sleep 10s &amp;&amp; /bin/hostname&quot;</span>
 Submitted batch job 1</code></pre>
-<p>the <code>--wrap</code> option allows us to wrap a command string in a shell script and submit it. </p>
+<p>the <code>--wrap</code> option allows us to wrap a command string into a shell script and submit this script to the job scheduler. </p>
 <p><strong>Question 1</strong>: What does the command <code>sleep 10s &amp;&amp; /bin/hostname</code> do? </p>
-<p>Slurm keeps track of the standard and error output of the command executed and this is stored into an output file.  By default this file is called <code>slurm-n.out</code> where <code>n</code> corresponds to the job number. </p>
+<p>Slurm keeps track of the <em>standard output</em> and <em>error output</em> of the command executed and redirects them into an output file.  By default this file is called <code>slurm-n.out</code> where <code>n</code> corresponds to the <code>JobID</code> &#40;<code>1</code> in the example above&#41;. </p>
 <pre><code class="bash hljs">$ <span class="hljs-built_in">cat</span> slurm-1.out
 c1</code></pre>
 <p>This job takes a while to complete, in order to see the status of our currently scheduled jobs we use <code>squeue</code>:</p>
@@ -150,7 +150,7 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 <p>With a couple of options we can see more details about the job, e.g. <code>--start</code> will tell us the expected start time and with <code>--user&#61;user_name</code> we can limit the output to just our users.</p>
 <p>Now that we have submitted a first job we can have a look how to do this in a more orderly fashion.  The general format of the <code>sbatch</code> command is</p>
 <pre><code class="bash hljs">sbatch [OPTIONS(0)...] [ : [OPTIONS(N)...]] script(0) [args(0)...]</code></pre>
-<p>where the important part her is <code>script</code>.  Let us transfer and extend the previous job into a job script <code>job.slurm</code> and add some of the long list of <code>sbatch</code> <a href="https://slurm.schedmd.com/sbatch.html">options</a></p>
+<p>where the important part here is <code>script</code>.  Let us transfer and extend the previous job into a job script <code>job.slurm</code> and add some of the long list of <code>sbatch</code> <a href="https://slurm.schedmd.com/sbatch.html">options</a></p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
 <span class="hljs-comment">#SBATCH --job-name=peter</span>
@@ -163,18 +163,19 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
     <span class="hljs-built_in">sleep</span> 1
     <span class="hljs-built_in">echo</span> <span class="hljs-variable">$i</span>
 <span class="hljs-keyword">done</span></code></pre>
-<p>Note that the lines starting with <code>#SBATCH</code> are comments for the shell script but will be parsed by <code>sbatch</code>.  We can submit the job and watch in the queue</p>
+<p>Note that the lines starting with <code>#SBATCH</code> are comments for the shell script but will be parsed by <code>sbatch</code>.  We can submit the job and check in the queue</p>
 <pre><code class="bash hljs">$ sbatch job.slurm
 Submitted batch job 2
+
 $ squeue
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
     2    normal    peter     root  R       0:03      1 c1</code></pre>
-<p>Now of course it is possible to have options in the job file and provide them during the call of <code>sbatch</code>.  In this case, the ones provide to the command line will have precedence and this can be used to override your default settings. </p>
-<p>Now we not running on a production cluster but of course it is always a good idea to limit the resources that you use as much as possible. In our case we know how long the job runs so let us include this information.</p>
+<p>Of course it is possible to have options in the job file and provide them during the call in the command line.  In this case, the ones provide to the command line will have precedence and this can be used to override our default settings. </p>
+<p>We are not running on a production cluster but of course it is always a good idea to limit the resources that we use as much as possible. In our case we know how long the job runs so let us include this information.</p>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Have a look at the <code>sbatch</code> options and provide a maximal &#40;wallclock&#41; time for the job, e.g. 11 seconds. </p>
 <p>What happens if this time is shorter than the runtime of our job?</p>
-<p><strong>Important</strong>: for some reason on the test cluster you can not specify seconds, so change the example from above to sleep for <code>10</code> seconds and work with one minute. </p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We just show how to include this via a command line argument.</p>
+<p><strong>Important</strong>: for some reason on the test cluster you can not specify seconds, so change the example from above to <code>sleep 10</code> and work with one minute. </p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We just show how to include this via a command line argument</p>
 <pre><code class="bash hljs">sbatch --time=0:1 job.slurm</code></pre>
 <p>If the time is smaller than the actual execution time, the job is killed before it finishes. </p>
 <p>You can check this with </p>
@@ -188,7 +189,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 3                 peter     normal       root          1    TIMEOUT      0:0 
 3.batch           batch                  root          1  CANCELLED     0:15</code></pre>
 <p></div> </div>
-<p>By specifying <code>--ntasks&#61;1</code> we only requested one CPU, lets extend this to two and also try the <code>--verbose</code> option to see if the actual variable is overwritten.</p>
+<p>By specifying <code>--ntasks&#61;1</code> we only requested one task, lets extend this to two and also try the <code>--verbose</code> option to see if the actual variable is overwritten.</p>
 <pre><code class="bash hljs">$ sbatch --ntasks=2 --verbose job.slurm 
 sbatch: defined options
 sbatch: -------------------- --------------------
@@ -225,23 +226,23 @@ running on c1
 <p>Try this and explain the result.</p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  The following will execute the job with one task but two CPUs</p>
 <pre><code class="bash hljs">$ sbatch --cpus-per-task=2 --verbose job.slurm 
-sbatch: error: CPU count per node caperformancen not be satisfied
+sbatch: error: CPU count per node can not be satisfied
 sbatch: error: Batch job submission failed: Requested node configuration is not available</code></pre>
-<p>As our testcluster only supports one CPU per node. Slurm is not able to schedule this task and therefore you get the error telling you this. </div> </div>
-<p>As we can see it might happen, that our job can not be submitted or that we have an error in the setup.  In order to check if the job is correct we can use the <code>--test-only</code> option</p>
+<p>As our test cluster only supports one CPU per node. Slurm is not able to schedule this task and therefore we get the error. </div> </div>
+<p>As we can see it might happen, that our job can not be submitted or that we have an error in the setup.  In order to check if the job is correct, we can use the <code>--test-only</code> option</p>
 <pre><code class="bash hljs">$ sbatch --test-only job.slurm
 sbatch: Job 5 to start at 2023-11-09T17:49:30 using 1 processors on nodes c1 <span class="hljs-keyword">in</span> partition normal
 
 $ sbatch --cpus-per-task=2 --test-only job.slurm
 allocation failure: Requested node configuration is not available</code></pre>
-<p>On success it will tell us when to job will probably run &#40;to the best of its knowledge&#41; and where.  If it is not successful we see why. </p>
+<p>On success Slurm will tell us when to job is probably starting &#40;to the best of its knowledge&#41; and where.  If it is not successful we see why. </p>
 <h3 id="running_parallel_jobs"><a href="#running_parallel_jobs" class="header-anchor">Running parallel jobs</a></h3>
 <p>Slurm provides the <code>srun</code> command to execute parallel jobs. The command will do the resource allocation and launch of the task implicitly.</p>
 <pre><code class="bash hljs">$ srun --nodes=2 --label /bin/hostname
 1: c2
 0: c1</code></pre>
 <p>Here <code>--nodes&#61;2</code> allocated two nodes and <code>--label</code> includes the task number for the output.</p>
-<p>As we have seen before, we can define multiple tasks in <code>sbatch</code> and that is the recommended way to do this. Therefore, running a parallel job consists of two phases:</p>
+<p>As we have seen before, we can define multiple tasks in <code>sbatch</code> and that is the recommended way. Therefore, running a parallel job consists of two phases:</p>
 <ol>
 <li><p>Starting the job script on the main node selected by the job scheduler. In Slurm terms this is the actual job.</p>
 </li>
@@ -249,7 +250,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 </li>
 </ol>
 <button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks and such that the actual workload is distributed with <code>srun</code>.</p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need split up the code and put the <code>echo</code> and the for loop into a separate script, i.e. <code>task.sh</code>.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need to split up the code and put the <code>echo</code> and the <code>for</code> loop into a separate script, i.e. <code>task.sh</code>.</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
 <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;running on `/bin/hostname`&quot;</span>
@@ -298,7 +299,7 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 1: 10</code></pre>
 <p></div> </div>
 <p><strong>Question 3</strong>: Why does the job see the file <code>task.sh</code> on every node?</p>
-<h2 id="interactive_jobs"><a href="#interactive_jobs" class="header-anchor">Interactive jobs</a></h2>
+<h3 id="interactive_jobs"><a href="#interactive_jobs" class="header-anchor">Interactive jobs</a></h3>
 <p>With <code>srun</code> we can also start <em>interactive jobs</em>.  This gives us access to a node by still obeying to the job scheduler. </p>
 <pre><code class="bash hljs">[root@slurmctld data]<span class="hljs-comment"># srun --pty bash</span>
 [root@c1 data]<span class="hljs-comment"># /bin/hostname</span>
@@ -307,7 +308,7 @@ c1
 <span class="hljs-built_in">exit</span>
 [root@slurmctld data]<span class="hljs-comment">#</span></code></pre>
 <p>Note how the prompt changes.  For the advanced users, with <code>--x11</code> you can also forward the DISPLAY and have e.g. a new <code>xterm</code> window.</p>
-<h2 id="monitoring"><a href="#monitoring" class="header-anchor">Monitoring</a></h2>
+<h3 id="monitoring"><a href="#monitoring" class="header-anchor">Monitoring</a></h3>
 <p>We have already seen how to use <code>squeue</code> to list all running or waiting jobs.  There are a couple of options that extend the table, like </p>
 <ul>
 <li><p><code>--start</code> to display the estimated start time &#40;you might always start earlier&#41;</p>
@@ -318,7 +319,7 @@ c1
 </li>
 </ul>
 <div class="important">In particular we can use <code>squeue</code> to look up our <code>JobID</code> that is needed for a lot of the following commands.</div>
-<p>In order to get information about past jobs we can use <code>sacct</code> or <code>sacct -X</code> to skip the information about the job steps.</p>
+<p>In order to get information about past jobs we can use <code>sacct</code> or <code>sacct -X</code> to skip the information about the individual job steps.</p>
 <div class="important">NEEDS TO BE REPLACED</div>
 <pre><code class="bash hljs">sacct -X
 JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
@@ -331,11 +332,11 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 55                peter     normal       root          1  COMPLETED      0:0 
 56                peter     normal       root          2  COMPLETED      0:0 
 57                 bash     normal       root          1  COMPLETED      0:0</code></pre>
-<h2 id="altering_jobs"><a href="#altering_jobs" class="header-anchor">Altering jobs</a></h2>
-<p>While you job is in a <em>pending</em> state you can change its configuration.  This is done via <code>scontrol</code> so for example you can change the run time with</p>
+<h3 id="altering_jobs"><a href="#altering_jobs" class="header-anchor">Altering jobs</a></h3>
+<p>While our job is in a <em>pending</em> state we can change its configuration.  This is done via <code>scontrol</code> so for example we can change the maximal runtime with</p>
 <pre><code class="bash hljs">scontrol update job JobID TimeLimit=2</code></pre>
-<h2 id="deleting_jobs"><a href="#deleting_jobs" class="header-anchor">Deleting jobs</a></h2>
-<p>To delete jobs we use <code>scancel</code> together with the <code>JobID</code>, you can actually delete multiple jobs with one call to <code>scancel</code>:</p>
+<h3 id="deleting_jobs"><a href="#deleting_jobs" class="header-anchor">Deleting jobs</a></h3>
+<p>To delete jobs we use <code>scancel</code> together with the <code>JobID</code>. We can actually delete multiple jobs with one call of <code>scancel</code>:</p>
 <pre><code class="bash hljs">scancel 6</code></pre>
 <h2 id="answers_to_the_questions"><a href="#answers_to_the_questions" class="header-anchor">Answers to the questions</a></h2>
 <ol>
@@ -343,7 +344,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 </li>
 <li><p>Our job only runs on one CPU, therefore it only runs on one of the nodes.</p>
 </li>
-<li><p>The directory is shared over all the nodes. Recall the shared filesystem section in previous sections. </p>
+<li><p>The directory is shared over all the nodes. Recall the previous section about shared filesystems, <a href="../architecture#storage">link</a>. </p>
 </li>
 </ol>
 <p><table class="fndef" id="fndef:1">
