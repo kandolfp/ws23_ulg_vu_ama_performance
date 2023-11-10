@@ -311,6 +311,52 @@ exit
 Note how the prompt changes. 
 For the advanced users, with `--x11` you can also forward the DISPLAY and have e.g. a new `xterm` window.
 
+## Monitoring
+
+We have already seen how to use `squeue` to list all running or waiting jobs. 
+There are a couple of options that extend the table, like 
+- `--start` to display the estimated start time (you might always start earlier)
+- `--name=job_name(s)` for a comma separated list of job names
+- `--user=user_name(s)` for a comma separated list of user names
+
+@@important
+In particular we can use `squeue` to look up our `JobID` that is needed for a lot of the following commands. 
+@@
+
+In order to get information about past jobs we can use `sacct` or `sacct -X` to skip the information about the job steps.
+
+@@important
+NEEDS TO BE REPLACED
+@@
+```bash
+ sacct -X
+JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
+------------ ---------- ---------- ---------- ---------- ---------- -------- 
+49             hostname     normal       root          2  COMPLETED      0:0 
+50             hostname     normal       root          2  COMPLETED      0:0 
+52                peter     normal       root          1     FAILED     13:0 
+53                peter     normal       root          1  COMPLETED      0:0 
+54                peter     normal       root          1  COMPLETED      0:0 
+55                peter     normal       root          1  COMPLETED      0:0 
+56                peter     normal       root          2  COMPLETED      0:0 
+57                 bash     normal       root          1  COMPLETED      0:0 
+```
+
+## Altering jobs
+
+While you job is in a _pending_ state you can change its configuration. 
+This is done via `scontrol` so for example you can change the run time with
+```bash
+scontrol update job JobID TimeLimit=2
+```
+
+## Deleting jobs
+
+To delete jobs we use `scancel` together with the `JobID`, you can actually delete multiple jobs with one call to `scancel`:
+```bash
+scancel 6
+```
+
 ## Answers to the questions
 1. The command `sleep 10s && /bin/hostname` first sleeps for 10 seconds, afterwards it will output the node (what we usually see in the prompt) where the job is started.
 
