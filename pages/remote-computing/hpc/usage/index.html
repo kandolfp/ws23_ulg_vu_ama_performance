@@ -107,7 +107,7 @@
 <div class="franklin-content"><h1 id="usage"><a href="#usage" class="header-anchor">Usage</a></h1>
 <div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
-<p>As we can imagine, the idea of an HPC System is to be used as much as possible, usually by a lot of different people.  In order to make sure that we do not interfere with each others&#39; processes &#40;unless wanted&#41; the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.</p>
+<p>As we can imagine, the idea of HPC Systems is to be used as much as possible, usually by a lot of different people.  In order to make sure that we do not interfere with each others&#39; processes &#40;unless wanted&#41; the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs according to some metric.</p>
 <p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard way is via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
 <p>So via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished queue our job. </p>
 <p>While there are different job schedulers around, the most commonly found one is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
@@ -225,7 +225,7 @@ running on c1
 <p>Try this and explain the result.</p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  The following will execute the job with one task but two CPUs</p>
 <pre><code class="bash hljs">$ sbatch --cpus-per-task=2 --verbose job.slurm 
-sbatch: error: CPU count per node can not be satisfied
+sbatch: error: CPU count per node caperformancen not be satisfied
 sbatch: error: Batch job submission failed: Requested node configuration is not available</code></pre>
 <p>As our testcluster only supports one CPU per node. Slurm is not able to schedule this task and therefore you get the error telling you this. </div> </div>
 <p>As we can see it might happen, that our job can not be submitted or that we have an error in the setup.  In order to check if the job is correct we can use the <code>--test-only</code> option</p>
@@ -269,7 +269,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 09, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 10, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

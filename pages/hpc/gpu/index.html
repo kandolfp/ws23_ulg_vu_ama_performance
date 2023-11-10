@@ -418,7 +418,7 @@ Stacktrace:
 
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu, N);
 </span>  1.740 s (157 allocations: 8.25 KiB)</code></pre>
-<p>We are already faster than the standard Julia implementation but this is not what we were hoping for. The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that GPU is not fully utilized.</p>
+<p>We are already faster than the standard Julia implementation but this is not what we were hoping for. The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that the GPU is not fully utilized.</p>
 <pre><code class="bash hljs">+-----------------------------------------------------------------------------+
 | NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |
 |-------------------------------+----------------------+----------------------+
@@ -518,7 +518,7 @@ Stacktrace:
 <h3 id="additional_notes"><a href="#additional_notes" class="header-anchor">Additional notes</a></h3>
 <p>Like with the rest of the topics in this section we skimmed the surface and did not make a deep dive &#40;like memory access, profiling to find slow parts in the code, multi GPU programming, multithreaded/distributed computing with GPUs and so forth&#41;. Have a look at the excellent introduction on <a href="https://juliagpu.org/learn/">JuliaGPU</a> to see more about the topic and have a look at the YouTube Videos of Tim Besard for a start. Here it was only possible to give a sound idea on what is happening and how great and easy we can achieve all of it with Julia.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 09, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 10, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
