@@ -75,12 +75,13 @@ Again communication is needed so lets consider the high speed interconnect.
 
 ### High Speed Interconnect
 We could simple wire up the nodes with normal ethernet cables or if we are insane try WiFi. 
-This works fine if we do not have a lot of data that gets send around. It is the same as with the internet connection at home, if you watch two 4K video streams, download the latest data bundles for your new cool project you will see that performance goes down.
+This works fine if we do not have a lot of data that gets send around. 
+It is the same as with the internet connection at home, if we watch two 4K video streams, download the latest data bundles for our new cool project we will see that performance goes down.
 
 This is basically the reason for the high speed interconnect. 
-Mostly glass fiber connections with special dedicated hardware are used.
+Mostly glass fiber connections with special dedicated hardware is used.
 Naturally, having multiple ports is essential in case one fails.
-Each node is connected to others via two different routes to ensure constant communication.
+Each node is connected to others via two different routes to ensure that communication is always possible.
 The faster this system is the faster our computation will be, and again, if we know how it looks we can optimize for it. 
 
 Speaking of data transfer, we probably also need to store and load data from disks.

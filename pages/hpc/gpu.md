@@ -358,7 +358,7 @@ julia> @btime estimate_pi(in_unit_circle_gpu, N);
 ```
 
 We are already faster than the standard Julia implementation but this is not what we were hoping for.
-The used GPU is actually quite powerful and  if we have a look at the [NVIDIA System Management Interface](https://developer.nvidia.com/nvidia-system-management-interface#:~:text=The%20NVIDIA%20System%20Management%20Interface,monitoring%20of%20NVIDIA%20GPU%20devices.) (`nvidia-smi`) on the terminal we see that GPU is not fully utilized.
+The used GPU is actually quite powerful and  if we have a look at the [NVIDIA System Management Interface](https://developer.nvidia.com/nvidia-system-management-interface#:~:text=The%20NVIDIA%20System%20Management%20Interface,monitoring%20of%20NVIDIA%20GPU%20devices.) (`nvidia-smi`) on the terminal we see that the GPU is not fully utilized.
 ```bash
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |

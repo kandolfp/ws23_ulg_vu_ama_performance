@@ -7,7 +7,7 @@
 
 ## Overview
 
-As we can imagine, the idea of an HPC System is to be used as much as possible, usually by a lot of different people. 
+As we can imagine, the idea of HPC Systems is to be used as much as possible, usually by a lot of different people. 
 In order to make sure that we do not interfere with each others' processes (unless wanted) the nodes can not be accessed directly. 
 The actual execution of programs is done by a job scheduler. 
 We need to define a job, with all the resources we need and hand this job over to the job scheduler. 
@@ -196,7 +196,7 @@ Try this and explain the result.
 The following will execute the job with one task but two CPUs
 ```bash
 $ sbatch --cpus-per-task=2 --verbose job.slurm 
-sbatch: error: CPU count per node can not be satisfied
+sbatch: error: CPU count per node caperformancen not be satisfied
 sbatch: error: Batch job submission failed: Requested node configuration is not available
 ```
 As our testcluster only supports one CPU per node.
