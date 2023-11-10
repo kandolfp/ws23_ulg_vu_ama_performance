@@ -79,7 +79,7 @@ This works fine if we do not have a lot of data that gets send around.
 It is the same as with the internet connection at home, if we watch two 4K video streams, download the latest data bundles for our new cool project we will see that performance goes down.
 
 This is basically the reason for the high speed interconnect. 
-Mostly glass fiber connections with special dedicated hardware is used.
+Mostly glass fiber connections with special dedicated hardware are used.
 Naturally, having multiple ports is essential in case one fails.
 Each node is connected to others via two different routes to ensure that communication is always possible.
 The faster this system is the faster our computation will be, and again, if we know how it looks we can optimize for it. 
