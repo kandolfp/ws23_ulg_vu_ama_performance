@@ -51,7 +51,7 @@ Let us dive right in and submit our first job and from there we extend our job t
 
 ### Submitting a job
 
-Let us start by directly handing over a job to slurm
+Let us start by directly handing over a job to Slurm
 ```bash
 $ sbatch --wrap="sleep 10s && /bin/hostname"
 Submitted batch job 1
@@ -94,7 +94,7 @@ echo "running on `/bin/hostname`"
 for i in {1..10}
 do
     sleep 1
-    echo i
+    echo $i
 done
 ```
 Note that the lines starting with `#SBATCH` are comments for the shell script but will be parsed by `sbatch`. 
@@ -218,11 +218,105 @@ If it is not successful we see why.
 
 ### Running parallel jobs
 
+Slurm provides the `srun` command to execute parallel jobs.
+The command will do the resource allocation and launch of the task implicitly.
+```bash
+$ srun --nodes=2 --label /bin/hostname
+1: c2
+0: c1
+```
+Here `--nodes=2` allocated two nodes and `--label` includes the task number for the output.
+
+As we have seen before, we can define multiple tasks in `sbatch` and that is the recommended way to do this.
+Therefore, running a parallel job consists of two phases:
+1. Starting the job script on the main node selected by the job scheduler. In Slurm terms this is the actual job.
+1. Deploy the individual _tasks_ across all of the nodes selected by the job scheduler. In Slurm terms this is called the _job step_. One job might have several job steps. 
+\example{
+
+Rewrite our `job.slum` for two tasks and such that the actual workload is distributed with `srun`.
+
+\solution{
+
+We need split up the code and put the `echo` and the for loop into a separate script, i.e. `task.sh`.
+```bash
+#!/bin/bash
+
+echo "running on `/bin/hostname`"
+for i in {1..10}
+do
+    sleep 1
+    echo $i
+done
+```
+and with this we can rewrite `job.slurm` as
+```bash
+#!/bin/bash
+
+#SBATCH --job-name=peter
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+
+srun --label ./task.sh
+```
+Do not forget to make `task.sh` executable by calling `chmod +x task.sh`.
+```bash
+$ sbatch --ntasks=2 job.slurm
+Submitted batch job 5
+
+$ squeue 
+JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+    5    normal    peter     root  R       0:02      2 c[1-2]
+ cat slurm-5.out 
+0: running on c1
+1: running on c2
+0: 1
+1: 1
+0: 2
+1: 2
+0: 3
+1: 3
+0: 4
+1: 4
+0: 5
+1: 5
+0: 6
+1: 6
+0: 7
+1: 7
+0: 8
+1: 8
+0: 9
+1: 9
+0: 10
+1: 10
+```
+}
+}
+
+**Question 3**: Why does the job see the file `task.sh` on every node?
+
+## Interactive jobs
+
+With `srun` we can also start _interactive jobs_. 
+This gives us access to a node by still obeying to the job scheduler. 
+
+```bash
+[root@slurmctld data]# srun --pty bash
+[root@c1 data]# /bin/hostname
+c1
+[root@c1 data]# exit
+exit
+[root@slurmctld data]# 
+```
+Note how the prompt changes. 
+For the advanced users, with `--x11` you can also forward the DISPLAY and have e.g. a new `xterm` window.
+
 ## Answers to the questions
 1. The command `sleep 10s && /bin/hostname` first sleeps for 10 seconds, afterwards it will output the node (what we usually see in the prompt) where the job is started.
 
 1. Our job only runs on one CPU, therefore it only runs on one of the nodes.
 
+1. The directory is shared over all the nodes. Recall the shared filesystem section in previous sections. 
 
 [^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.
 
