@@ -388,58 +388,60 @@ Stacktrace:
 <h2 id="pi_example_on_the_gpu"><a href="#pi_example_on_the_gpu" class="header-anchor"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example on the GPU</a></h2>
 <p>The main idea is to use the most of the GPU by performing as many operations in parallel as possible, this also means we need to represent <code>M</code> as a vector again. The GPU at hand supports a maximum of <code>1024</code> threads, so let us use all of them.</p>
 <p>There is also one additional thing to keep in mind, that is, a kernel can not return a value. That means we need to give <code>M</code> as an input variable rather than an output variable and in order to stick to the Julia convention we define the kernel as:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel!(n::<span class="hljs-built_in">Int64</span>, M)
-    j =  threadIdx().x 
-    
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> sample_M_kernel!(n::<span class="hljs-built_in">Int64</span>, M::CuDeviceVector)
+    tid =  threadIdx().x
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
         <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
-            <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+            <span class="hljs-meta">@inbounds</span> M[tid] += <span class="hljs-number">1</span>
         <span class="hljs-keyword">end</span>
     <span class="hljs-keyword">end</span>
 
     <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
 <span class="hljs-keyword">end</span></code></pre>
-<p>This looks very similar to our function <a href="../multithreading/#actually_distribute_the_work"><code>in_unit_circle_threaded3</code></a>. Instead of <code>threadid&#40;&#41;</code> as we had it in multithreading, this time the <em>id</em> is queried by <code>threadIdx&#40;&#41;.x</code>. The <code>.x</code> is due to the fact that we could also have two or three dimensional arrays &#40;remember GPUs were designed to work with images&#41;.</p>
-<p>The kernel is now called with the <code>@cuda</code> macro and the number of threads given as an argument. Note, that we also define <code>M</code> to have dimension <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>10</mn></msup><mo>=</mo><mn>1024</mn></mrow><annotation encoding="application/x-tex">2^{10} = 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1024</span></span></span></span> and of type <code>Int8</code>.</p>
-<p>We use <code>Int8</code> as on GPUs the data type has quite a high impact on the performance. With integers this is not that important but if we are not working on a high level server grades GPU the <em>double</em> &#40;<code>Float64</code>&#41; performance will be significantly slower than <em>single</em> &#40;<code>Float32</code>&#41;. Secondly, there is usually less storage on the GPU.</p>
+<p>This looks very similar to our function <a href="../multithreading/#actually_distribute_the_work"><code>sample_M_threaded_tasksafe</code></a>. Instead of <code>threadid&#40;&#41;</code> as we had it in multithreading, this time the <em>id</em> is queried by <code>threadIdx&#40;&#41;.x</code>. The <code>.x</code> is due to the fact that we could also have two or three dimensional arrays &#40;remember GPUs were designed to work with images&#41;.</p>
+<p>The kernel is now called with the <code>@cuda</code> macro and the number of threads given as an argument. Note, that we also define <code>M</code> to have dimension <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>10</mn></msup><mo>=</mo><mn>1024</mn></mrow><annotation encoding="application/x-tex">2^{10} = 1024</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">10</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1024</span></span></span></span> and of type <code>Int32</code>.</p>
+<p>We use <code>Int32</code> as on GPUs the data type has quite a high impact on the performance. With integers this is not that important but if we are not working on a high level server grades GPU the <em>double</em> &#40;<code>Float64</code>&#41; performance will be significantly slower than <em>single</em> &#40;<code>Float32</code>&#41;. Secondly, there is usually less storage on the GPU.</p>
 <p>The resulting <em>host</em> side function looks as follows:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_gpu(N::<span class="hljs-built_in">Int64</span>)
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> sample_M_gpu(N::<span class="hljs-built_in">Int64</span>)
+        nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
+        len, _ = divrem(N, nthreads)
+
+        M = CUDA.zeros(<span class="hljs-built_in">Int32</span>, nthreads)
+
+        <span class="hljs-meta">@cuda</span> threads = nthreads sample_M_kernel!(len, M)
+
+        <span class="hljs-keyword">return</span> sum(M)
+    <span class="hljs-keyword">end</span></code></pre>
+<p>For the sake of overview, we write <em>host</em> and <em>client</em>side function as a nested function:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> sample_M_gpu(N::<span class="hljs-built_in">Int64</span>)
+    <span class="hljs-keyword">function</span> sample_M_kernel!(n::<span class="hljs-built_in">Int64</span>, M::CuDeviceVector)
+        tid =  threadIdx().x
+
+        <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+            <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+                <span class="hljs-meta">@inbounds</span> M[tid] += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">end</span>
+        <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-keyword">end</span>
+
     nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
     len, _ = divrem(N, nthreads)
-    M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, nthreads)
 
-    <span class="hljs-meta">@cuda</span> threads = nthreads in_unit_circle_kernel!(len, M)
+    M = CUDA.zeros(<span class="hljs-built_in">Int32</span>, nthreads)
+
+    <span class="hljs-meta">@cuda</span> threads = nthreads sample_M_kernel!(len, M)
 
     <span class="hljs-keyword">return</span> sum(M)
 <span class="hljs-keyword">end</span></code></pre>
 <p>and the performance:</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu, N)
-</span>  6.65503269949852e-5
-
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu, N);
-</span>  1.740 s (157 allocations: 8.25 KiB)</code></pre>
-<p>We are already faster than the standard Julia implementation but this is not what we were hoping for. The used GPU is actually quite powerful and  if we have a look at the <a href="https://developer.nvidia.com/nvidia-system-management-interface#:~:text&#61;The&#37;20NVIDIA&#37;20System&#37;20Management&#37;20Interface,monitoring&#37;20of&#37;20NVIDIA&#37;20GPU&#37;20devices.">NVIDIA System Management Interface</a> &#40;<code>nvidia-smi</code>&#41; on the terminal we see that the GPU is not fully utilized.</p>
-<pre><code class="bash hljs">+-----------------------------------------------------------------------------+
-| NVIDIA-SMI 510.73.05    Driver Version: 510.73.05    CUDA Version: 11.6     |
-|-------------------------------+----------------------+----------------------+
-| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-|                               |                      |               MIG M. |
-|===============================+======================+======================|
-|   0  NVIDIA GeForce ...  Off  | 00000000:01:00.0 Off |                  N/A |
-| N/A   38C    P5    15W /  N/A |    173MiB /  8192MiB |      0%      Default |
-|                               |                      |                  N/A |
-+-------------------------------+----------------------+----------------------+
-                                                                               
-+-----------------------------------------------------------------------------+
-| Processes:                                                                  |
-|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-|        ID   ID                                                   Usage      |
-|=============================================================================|
-|    0   N/A  N/A      2232      G   /usr/lib/xorg/Xorg                  4MiB |
-|    0   N/A  N/A     46980      C   julia                             165MiB |
-+-----------------------------------------------------------------------------+</code></pre>
-<p>It only provides a snapshot but we still see that the <code>Volatile GPU-Util</code> is low to insignificant. What we did in the above example was to use the maximal number of threads &#40;<code>1024</code>&#41; support by the used GPU and performed our operations with them. This way we only occupied one <em>streaming multiprocessor</em> &#40;SM&#41; but the GPU has several SMs - this is similar to how a CPU has multiple cores.</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> sample_M_gpu(N)
+</span>  1.706 s (110 allocations: 5.38 KiB)
+843311533</code></pre>
+<p>We are already faster than the standard Julia implementation but this is not yet what we were hoping for.</p>
+<p>What we did in the above example was to use the maximal number of threads &#40;<code>1024</code>&#41; support by the used GPU and performed our operations with them. This way we only occupied one <em>streaming multiprocessor</em> &#40;SM&#41; but the GPU has several SMs - this is similar to how a CPU has multiple cores.</p>
 <h3 id="multiple_streaming_multiprocessors"><a href="#multiple_streaming_multiprocessors" class="header-anchor">Multiple Streaming Multiprocessors</a></h3>
 <p>To get the full performance, we need to run our kernel not just with multiple threads, but also with multiple blocks.</p>
 <p>In this technical blog from NVIDIA <a href="https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/">CUDA Refresher: The CUDA Programming Model</a> we can read more about it. The following figure illustrates it quite nicely: 
@@ -448,72 +450,70 @@ Stacktrace:
 <figcaption> Kernel execution on GPU. Original source: <p style="font-size:11px"><a href=" https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/"> https://developer.nvidia.com/blog/cuda-refresher-cuda-programming-model/</a></p></figcaption>
 </figure>
 </p>
-<p>If we use blocks, the computation of our index in <code>M</code> becomes a bit more tricky to compute and we also need to have more storage for <code>M</code>.</p>
+<p>If we use blocks, the computation of our index in <code>M</code> becomes a bit trickier to compute and we also need to have more storage for <code>M</code>.</p>
 <p>Similar as with the <code>threadIdx&#40;&#41;.x</code> we have a <code>blockIdx&#40;&#41;.x</code> and a <code>blockDim&#40;&#41;.x</code> to perform this computation.</p>
 <div class="important">Julia starts with indexing by <code>1</code>. On the GPU this can become a bit confusing as CUDA in general does not. In this case we need to correct the <code>blockIdx&#40;&#41;</code> by <code>1</code>.</div>
 <div class="important">As highlighted in the <a href="https://juliagpu.org/post/2022-01-28-cuda_3.5_3.8/#preserving_array_indices">blog</a>, <code>CUDA.jl</code> introduced optimized index types for CUDA to make sure that no storage is wasted. Therefore, we use <code>0x1</code> instead of <code>1</code> in the kernels in this section, where needed.</div>
 <p>So we end up with the following code:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel2!(M)
-    j = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> sample_M_gpu_with_blocks(N::<span class="hljs-built_in">Int64</span>)
+    <span class="hljs-keyword">function</span> sample_M_kernel!(M::CuDeviceVector)
+        tid = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
 
-    <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
-        <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+            <span class="hljs-meta">@inbounds</span> M[tid] += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
     <span class="hljs-keyword">end</span>
 
-    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
-<span class="hljs-keyword">end</span>
-
-<span class="hljs-keyword">function</span> in_unit_circle_gpu2(N::<span class="hljs-built_in">Int64</span>)
     nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
     nblocks, _ = divrem(N, nthreads)
+
     M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, N)
 
-    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks in_unit_circle_kernel2!(M)
+    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks sample_M_kernel!(M)
 
     <span class="hljs-keyword">return</span> sum(M)
 <span class="hljs-keyword">end</span></code></pre>
-<p>and the performance:</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu2, N)
-</span>  1.79504328450264e-5
-
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu2, N);
-</span>  81.436 ms (156 allocations: 8.16 KiB)</code></pre>
-<p>Now each thread on the GPU is doing exactly one computation &#40;and therefore the loop inside the kernel is not needed and for performance reasons removed&#41;. This is still not the most efficient way to use the GPU and in addition it is rather wasteful on memory.</p>
+<p>Now each thread on the GPU is doing exactly one computation &#40;and therefore the loop inside the kernel is not needed and for performance reasons removed&#41;. Note that we have also switched to <code>Int8</code> since the maximum value to be stored in <code>M</code> is now <code>1</code>.</p>
+<p>This gives a performance boost:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> sample_M_gpu_with_blocks(N)
+</span>  63.285 ms (110 allocations: 5.38 KiB)
+843336153</code></pre>
+<p>This is still not the most efficient way to use the GPU and in addition it is rather wasteful on memory.</p>
 <h3 id="multiple_operations_per_thread"><a href="#multiple_operations_per_thread" class="header-anchor">Multiple operations per thread</a></h3>
 <p>So let us optimize the computation a bit further. Each of the threads should do <code>n</code> iterations. This means we need to define the number of blocks as </p>
 <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>n</mi><mi mathvariant="normal">blocks</mi><mo>⁡</mo></msub><mo>=</mo><mfrac><mi>N</mi><mrow><msub><mi>n</mi><mi mathvariant="normal">threads</mi><mo>⁡</mo></msub><mi>n</mi></mrow></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
  n_{\operatorname{blocks}} = \frac{N}{n_{\operatorname{threads}} n}.
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mord mathrm mtight">blocks</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.1963em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mord mathrm mtight">threads</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span>
-<p>The kernel is a combination of the two previous kernels:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_kernel3!(n::<span class="hljs-built_in">Int64</span>, M)
-    j = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
+<p>The kernel is a combination of the two previous kernels and the calling function needs to compute the values as defined above:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> sample_M_gpu_with_blocks_mult_op_per_thread(N::<span class="hljs-built_in">Int64</span>)
+    <span class="hljs-keyword">function</span> sample_M_kernel!(n::<span class="hljs-built_in">Int64</span>, M::CuDeviceVector)
+        tid = (blockIdx().x - <span class="hljs-number">0x1</span>) * blockDim().x + threadIdx().x
 
-    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
-        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
-            <span class="hljs-meta">@inbounds</span> M[j] += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+            <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+                <span class="hljs-meta">@inbounds</span> M[tid] += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">end</span>
         <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
     <span class="hljs-keyword">end</span>
 
-    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
-<span class="hljs-keyword">end</span></code></pre>
-<p>The calling function needs to compute the values as defined above: </p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_gpu3(N::<span class="hljs-built_in">Int64</span>)
     nthreads = <span class="hljs-number">2</span>^<span class="hljs-number">10</span>
     n = <span class="hljs-number">2</span>^<span class="hljs-number">6</span>
-    
+
     nblocks, _ = divrem(N, n * nthreads)
     M = CUDA.zeros(<span class="hljs-built_in">Int8</span>, nblocks * nthreads)
-    
-    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks in_unit_circle_kernel3!(n, M)
+
+    <span class="hljs-meta">@cuda</span> threads = nthreads blocks = nblocks sample_M_kernel!(n, M)
 
     <span class="hljs-keyword">return</span> sum(M)
 <span class="hljs-keyword">end</span></code></pre>
-<p>and the performance is pretty good</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_gpu2, N)
-</span>  5.6093680210977936e-5
-
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_gpu2, N);
-</span>  45.194 ms (155 allocations: 8.14 KiB)</code></pre>
+<p>Now the performance is pretty good:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> sample_M_gpu_with_blocks_mult_op_per_thread(N)
+</span>  35.493 ms (110 allocations: 5.38 KiB)
+843327130</code></pre>
 <p>One thing we have to keep in mind, is that we have defined <code>M</code> of type <code>Int8</code> to save space and boost performance. If <code>n</code> become larger than <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>7</mn></msup></mrow><annotation encoding="application/x-tex">2^7</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">7</span></span></span></span></span></span></span></span></span></span></span> it might happen that the result is too large and can no longer be stored in an 8-Bit integer &#40;as a result an overflow would occur&#41;.</p>
 <h3 id="additional_notes"><a href="#additional_notes" class="header-anchor">Additional notes</a></h3>
 <p>Like with the rest of the topics in this section we skimmed the surface and did not make a deep dive &#40;like memory access, profiling to find slow parts in the code, multi GPU programming, multithreaded/distributed computing with GPUs and so forth&#41;. Have a look at the excellent introduction on <a href="https://juliagpu.org/learn/">JuliaGPU</a> to see more about the topic and have a look at the YouTube Videos of Tim Besard for a start. Here it was only possible to give a sound idea on what is happening and how great and easy we can achieve all of it with Julia.</p>
