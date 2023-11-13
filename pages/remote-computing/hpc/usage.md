@@ -8,7 +8,7 @@
 ## Overview
 
 The idea of HPC Systems is to be used as much as possible, usually by a lot of different people or programs. 
-In order to make sure that the users and programs do not interfere with each other the nodes can not be accessed directly. 
+In order to make sure that users and programs do not interfere with each other the nodes can not be accessed directly. 
 The actual execution of programs is done by a job scheduler. 
 We need to define a job, with all the resources we need and hand this job over to the job scheduler. 
 The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs.
@@ -16,7 +16,7 @@ The job scheduler will now make sure that all constraints are met and schedule o
 While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard mode of access is still via terminal[^1]. 
 
 Via `ssh` we usually reach one of the login nodes and from here we get access to the job scheduler.
-We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our to the queue (and wait). 
+We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our job to the queue (and wait). 
 
 There are different job schedulers around, the most commonly found is [Slurm](https://www.schedmd.com/). 
 The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® _distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration_[^2].
