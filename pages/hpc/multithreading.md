@@ -123,6 +123,7 @@ julia> @btime estimate_pi(N, :ex1)  # sample_M_non_distributed
 (3.141611408442259, 1.875485246571884e-5)
 ```
 \exercise{
+Using threads:
 1. Complete the function `sample_M_threaded` by duplicating the code from `sample_M_non_distributed_rng` (drop `rng`) and adding the `@threads` macro. 
 1. Test the result as well as the performance.
 \solution{
@@ -148,6 +149,7 @@ All primitive types can be wrapped with `M = Atomic{Int64}(0)` and can only be a
 In order to do the atomic add we use the function `atomic_add!(M, 1)` and we can access the value with `M[]`.
 
 \exercise{
+Using atomic:
 1. Complete the function `sample_M_threaded_atomic` by duplicating the code from `sample_M_threaded` and using an atomic `M`.
 1. Test the result as well as the performance.
 \solution{
@@ -164,6 +166,7 @@ It is possible to access the `threadid()` and the number of threads `nthreads()`
 So why not define `M` as an array of length `nthreads()` and each thread updates the according position within the array by using `threadid()` as index.
 
 \exercise{
+Being tasksafe:
 1. Complete the function `sample_M_threaded_tasksafe` by duplicating the code from `sample_M_threaded_atomic` and replacing `M` by a vector with `nthreads()` entries.
 1. Test the result as well as the performance.
 \solution{
@@ -180,6 +183,7 @@ In a first step we will no longer use a `for` loop over all desired samples `N`,
 whether this already improved our performance.
 
 \exercise{
+Using buckets:
 1. Complete the function `sample_M_threaded_over_buckets` by duplicating the code from `sample_M_threaded_tasksafe` and iterating over the number of threads instead of iterating over the number of samples.
 1. Test the result as well as the performance.
 
@@ -215,6 +219,7 @@ rand(rng)
 in each thread.
 
 \exercise{
+Using separate random number generators:
 1. Complete the function `sample_M_threaded_over_buckets_rng` by duplicating the code from `sample_M_threaded_over_buckets` and using `sample_M_non_distributed_rng` and `Random.default_rng()` in the inner loop.
 1. Test the result as well as the performance. Are we improving?
 1. Try to switch to `Random.MersenneTwister()`. Is it working? Do we improve?

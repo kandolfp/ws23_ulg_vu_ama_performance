@@ -161,6 +161,7 @@ end
 ```
 
 \exercise{
+Using tasks:
 1. Complete the function `sample_M_tasks` by using the `@async` and `@sync` macros.
 1. Split the generation of the `N` samples into 4 parts, same as for threads, and schedule the tasks in a loop.
 1. Test the result as well as the performance.
@@ -273,6 +274,7 @@ julia> @sync @distributed for i in 1:5
 Luckily, our $\pi$ example does not need much data movement.
 
 \exercise{
+Using distribute:
 1. Complete the function `sample_M_distributed` by using the `@distributed` macro and an appropriate *reducer* function (the syntax is `x = @distributed (operator) for ...`).
 1. Start Julia with 4 workers (`julia -p 4 --project`), test the accuracy and measure the performance.
 \solution{
@@ -334,6 +336,7 @@ Now, `pmap` just distributes the map function on workers.
 It has a lot of optional arguments to influence how this is done but we will not need this.
 
 \exercise{
+Using `pmap`:
 1. Complete the function `sample_M_distributed_pmap` by using the `@everywhere` macro and `pmap` function.
 1. Start Julia with 4 workers (`julia -p 4 --project`), test the accuracy and measure the performance.
 
