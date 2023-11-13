@@ -106,7 +106,7 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="distributed_computing_in_julia"><a href="#distributed_computing_in_julia" class="header-anchor">Distributed computing in Julia</a></h1>
-<div class="franklin-toc"><ol><li><a href="#tasks">Tasks</a><ol><li><a href="#the_pi_example_with_tasks">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example with tasks</a></li></ol></li><li><a href="#back_to_distributed_computing">Back to distributed computing</a><ol><li><a href="#the_pi_example_for_distributed_computing">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example for distributed computing</a></li><li><a href="#the_distributed_macro">The <code>@distributed</code> macro</a></li><li><a href="#the_pmap_and_the_everywhere_macro">The <code>pmap</code> and the <code>@everywhere</code> macro</a></li></ol></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#tasks">Tasks</a><ol><li><a href="#the_pi_example_with_tasks">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example with tasks</a></li></ol></li><li><a href="#back_to_distributed_computing">Back to distributed computing</a><ol><li><a href="#the_pi_example_for_distributed_computing">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example for distributed computing</a></li><li><a href="#the_distributed_macro">The <code>@distributed</code> macro</a></li><li><a href="#the_pmap_and_the_everywhere_macro">The <code>pmap</code> and the <code>@everywhere</code> macro</a></li><li><a href="#final_results">Final results</a></li></ol></li></ol></div>
 <p>In Julia we talk about distributed computing when we run Julia processes with separate memory spaces. Julia does not distinguish between processes on the same or on multiple computers. The main idea is to have remote execution.</p>
 <p>Before we start with distributed computing we introduce tasks.</p>
 <h2 id="tasks"><a href="#tasks" class="header-anchor">Tasks</a></h2>
@@ -161,29 +161,80 @@
 </span>  1.047838 seconds (847 allocations: 53.656 KiB, 4.34% compilation time)</code></pre>
 <p></div> </div>
 <h3 id="the_pi_example_with_tasks"><a href="#the_pi_example_with_tasks" class="header-anchor">The <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example with tasks</a></h3>
-<p>Now we apply the task knowledge to our example for computing <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Define a new function <code>in_unit_circle_task</code> with the <code>@async</code> and <code>@sync</code> macros. Split up <code>N</code> into 4 parts, same as for threads, and schedule the tasks in a loop. Define a vector of tasks to catch the results inside the loop.</p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_task(N::<span class="hljs-built_in">Int64</span>)
-    n = nthreads()
-    len, rem = divrem(N, n)
-    t = <span class="hljs-built_in">Vector</span>{<span class="hljs-built_in">Task</span>}(<span class="hljs-literal">undef</span>, n)
-    
-    <span class="hljs-meta">@sync</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
-        t[i] = <span class="hljs-meta">@async</span> in_unit_circle(len)
-    <span class="hljs-keyword">end</span>
-    
-    M = sum(map((x) -&gt; fetch(t[x]), <span class="hljs-number">1</span>:n))
-    
-    <span class="hljs-keyword">return</span> M
-<span class="hljs-keyword">end</span></code></pre>
-<p>and we test it</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_task, N)
-</span>  3.002385561856613e-5
+<p>Now we apply the task knowledge to our example for computing <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>. In this chapter we will use the following stub throughout the exercises:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> Base.Threads
+<span class="hljs-keyword">using</span> BenchmarkTools
+<span class="hljs-keyword">using</span> Distributed
+<span class="hljs-keyword">using</span> Random
 
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_task, N);
-</span>  2.549 s (46 allocations: 2.72 KiB)</code></pre>
-<p></div> </div>
+
+<span class="hljs-keyword">function</span> sample_M_non_distributed_rng(N::<span class="hljs-built_in">Int64</span>, rng::AbstractRNG)
+    M = zero(<span class="hljs-built_in">Int64</span>)
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+        <span class="hljs-keyword">if</span> (rand(rng)^<span class="hljs-number">2</span> + rand(rng)^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+            M += <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> M
+<span class="hljs-keyword">end</span>
+
+
+<span class="hljs-keyword">function</span> estimate_pi_distributed(N::<span class="hljs-built_in">Int64</span>, method::<span class="hljs-built_in">Symbol</span>)
+    <span class="hljs-keyword">function</span> sample_M_non_distributed(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-keyword">return</span> sample_M_non_distributed_rng(N, Random.default_rng())
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_tasks(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 1</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_distributed(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 2</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_distributed_pmap(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 3</span>
+        <span class="hljs-keyword">function</span> sample_M_distributed_pmap_inner(N::<span class="hljs-built_in">Int64</span>)
+            M = zero(eltype(N))
+
+            <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+                <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+                    M += <span class="hljs-number">1</span>
+                <span class="hljs-keyword">end</span>
+            <span class="hljs-keyword">end</span>
+
+            <span class="hljs-keyword">return</span> M
+        <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-keyword">end</span>
+
+     function_mapping = <span class="hljs-built_in">Dict</span>(
+         :ex0 =&gt; sample_M_non_distributed,
+         :ex1 =&gt; sample_M_tasks,
+         :ex2 =&gt; sample_M_distributed,
+         :ex3 =&gt; sample_M_distributed_pmap,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = <span class="hljs-number">4</span> * M / N
+
+    <span class="hljs-keyword">return</span> est_pi, abs(<span class="hljs-literal">pi</span> - est_pi)
+<span class="hljs-keyword">end</span></code></pre>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_tasks</code> by using the <code>@async</code> and <code>@sync</code> macros.</p>
+<ol>
+<li><p>Split the generation of the <code>N</code> samples into 4 parts, same as for threads, and schedule the tasks in a loop.</p>
+</li>
+<li><p>Test the result as well as the performance.</p>
+</li>
+</ol>
+<p>Hints: Define a vector of tasks <code>t &#61; Vector&#123;Task&#125;&#40;undef, n&#41;</code> to catch the results inside the loop. You can use <code>sample_M_non_distributed&#40;&#41;</code> for sampling.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  Have a look at the end of this chapter. </div> </div>
 <h2 id="back_to_distributed_computing"><a href="#back_to_distributed_computing" class="header-anchor">Back to distributed computing</a></h2>
 <p>Now that we know what a task is and how to create one we have no difficulty to define what distributed computing is. It is simply the way to distribute tasks on multiple CPUs or computers. In Julia, this multiprocessing environment is based on message passing. It allows tasks to run on multiple processes in separate memory domains, but all at once. The communication in Julia is not like the one used by <a href="https://www.mpi-forum.org/docs/">MPI</a>. It is <em>one-sided</em>, that is we only need to manage one process in a two-process operation. These management instructions are also not sent/receive messages but calls to functions or something similar. For this, Julia provides two primitives, <em>remote reference</em> and <em>remote calls</em>, the <a href="https://docs.julialang.org/en/v1/manual/distributed-computing/">documentation</a> tells us: </p>
 <blockquote>
@@ -207,6 +258,12 @@
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> rmprocs(<span class="hljs-number">2</span>:<span class="hljs-number">5</span>)
 </span>Task (done) @0x00007fb859fc1430</code></pre>
 <p>and with <code>myid&#40;&#41;</code> we get the id of the process we are on.</p>
+<p>Note that we will often need the same packages on the worker nodes as on the main node. Therefor we need to call julia with the <code>--project</code> flag,</p>
+<pre><code class="julia hljs">$ julia -p <span class="hljs-number">4</span> --project</code></pre>
+<p>or tell so when adding workers:</p>
+<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-keyword">using</span> Distributed
+</span>
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> addprocs(<span class="hljs-number">4</span>, exeflags=<span class="hljs-string">&quot;--process&quot;</span>)</span></code></pre>
 <h3 id="the_distributed_macro"><a href="#the_distributed_macro" class="header-anchor">The <code>@distributed</code> macro</a></h3>
 <p>There is an obvious problem right away. If we define a function or a variable on a process how does another process know about this? </p>
 <p>The easiest concept is to run a parallel <code>for</code> loop. As before we can do this with a macro, namely the <a href="https://docs.julialang.org/en/v1/stdlib/Distributed/#Distributed.@distributed"><code>@distributed</code></a> macro. The general construct is</p>
@@ -237,33 +294,16 @@
                           <span class="hljs-keyword">end</span></span></code></pre>
 <p></div>
 <p>Luckily, our <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example does not need much data movement.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Define a new function <code>in_unit_circle_distributed1</code> with the <code>@distributed</code> macro and an appropriate <em>reducer</em> function &#40;the syntax is <code>x &#61; @distributed &#40;operator&#41; for ...</code>&#41;. Note that we might need to always return a value inside the loop. For comparison start 4 workers and test the accuracy and measure the performance. <div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle_distributed1(N::<span class="hljs-built_in">Int64</span>)
-    M = <span class="hljs-meta">@distributed</span> (+) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
-        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
-            <span class="hljs-number">1</span>
-        <span class="hljs-keyword">else</span>
-            <span class="hljs-number">0</span>
-        <span class="hljs-keyword">end</span>
-    <span class="hljs-keyword">end</span>
-
-    <span class="hljs-keyword">return</span> M
-<span class="hljs-keyword">end</span></code></pre>
-<p>and we test it</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> nprocs()
-</span>1
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> addprocs(<span class="hljs-number">4</span>)
-</span>5
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_distributed1, N)
-</span>  4.179204767140732e-5
-
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_distributed1, N);
-</span>  649.564 ms (289 allocations: 12.27 KiB)</code></pre>
-<p></div> </div>
-<p>We can see that this is a very easy way to parallelize and this time the <code>rand&#40;&#41;</code> function is not causing problems. We are already faster than the basic implementation and close to the optimized four threads implementation.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_distributed</code> by using the <code>@distributed</code> macro and an appropriate <em>reducer</em> function &#40;the syntax is <code>x &#61; @distributed &#40;operator&#41; for ...</code>&#41;.</p>
+<ol>
+<li><p>Start Julia with 4 workers &#40;<code>julia -p 4 --project</code>&#41;, test the accuracy and measure the performance.</p>
+</li>
+</ol>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  Have a look at the end of this chapter. </div> </div>
+<p>We can see that this is a very easy way to parallelize and this time the <code>rand&#40;&#41;</code> function is not causing problems since it is local per task. We are already faster than the basic implementation and close to the optimized four threads implementation.</p>
 <p>The <em>distributed for loop</em> with <code>@distributed</code> is designed to work well for situations where each iteration is tiny &#40;in terms of computational effort/workload&#41;. Of course, there is also the other possibility, that we have a function with a massive workload and work with the results of these calls.</p>
 <h3 id="the_pmap_and_the_everywhere_macro"><a href="#the_pmap_and_the_everywhere_macro" class="header-anchor">The <code>pmap</code> and the <code>@everywhere</code> macro</a></h3>
-<p>As mentioned before, we need to get functions to all the workers, in order to execute them. For distributing a functions or for loading modules we can use the <code>@everywhere</code> macro. As the name suggests, it will make sure that the function is available in the scope of each worker and the main process. We simply prepend a function with <code>@everywhere</code> and nothing more is required. There are some things to note for this case:</p>
+<p>As mentioned before, we need to get functions to all the workers, in order to execute them. For distributing a function or for loading modules we can use the <code>@everywhere</code> macro. As the name suggests, it will make sure that the function is available in the scope of each worker and the main process. We simply prepend a function with <code>@everywhere</code> and nothing more is required. There are some things to note for this case:</p>
 <ul>
 <li><p>the function will be compiled on each worker on the first call.</p>
 </li>
@@ -295,47 +335,139 @@
  6</code></pre>
 <p>The second example also includes an <a href="https://docs.julialang.org/en/v1/manual/functions/#man-anonymous-functions">anonymous function</a>. The idea is simply to have a function that is not needed outside of the scope of a function call. </div>
 <p>Now, <code>pmap</code> just distributes the map function on workers. It has a lot of optional arguments to influence how this is done but we will not need this.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Define a new function <code>in_unit_circle_distributed2</code> with the <code>@everywhere</code> macro and the <code>pmap</code> function.</p>
-<p>Hint: define an inner function that is distributed to all workers via <code>@everywhere</code> and collect the results with <code>pmap</code>. Split up the works similar as for the last example in tasks.</p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
-<pre><code class="julia hljs"><span class="hljs-meta">@everywhere</span> <span class="hljs-keyword">function</span> in_unit_circle_distributed2_inner(N::<span class="hljs-built_in">Int64</span>)
-    M = <span class="hljs-number">0</span>
-    
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
-        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_distributed_pmap</code> by using the <code>@everywhere</code> macro and <code>pmap</code> function.</p>
+<ol>
+<li><p>Start Julia with 4 workers &#40;<code>julia -p 4 --project</code>&#41;, test the accuracy and measure the performance.</p>
+</li>
+</ol>
+<p>Hint: define an inner function <code>sample_M_distributed_pmap_inner</code> that is distributed to all workers via <code>@everywhere</code> and collect the results with <code>pmap</code>. Split up the workers similarly to the tasks example.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  Have a look at the end of this chapter. </div> </div>
+<h3 id="final_results"><a href="#final_results" class="header-anchor">Final results</a></h3>
+<div class="solution"> Solution </div><div class="solutioncollapsible">  Here is the overall solution:</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> Base.Threads
+<span class="hljs-keyword">using</span> BenchmarkTools
+<span class="hljs-keyword">using</span> Distributed
+<span class="hljs-keyword">using</span> Random
+
+
+<span class="hljs-keyword">function</span> sample_M_non_distributed_rng(N::<span class="hljs-built_in">Int64</span>, rng::AbstractRNG)
+    M = zero(<span class="hljs-built_in">Int64</span>)
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+        <span class="hljs-keyword">if</span> (rand(rng)^<span class="hljs-number">2</span> + rand(rng)^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
             M += <span class="hljs-number">1</span>
         <span class="hljs-keyword">end</span>
     <span class="hljs-keyword">end</span>
 
-    <span class="hljs-keyword">return</span> M    
+    <span class="hljs-keyword">return</span> M
 <span class="hljs-keyword">end</span>
 
-<span class="hljs-keyword">function</span> in_unit_circle_distributed2(N::<span class="hljs-built_in">Int64</span>)
-    len, rem = divrem(N, nprocs() - <span class="hljs-number">1</span>)
-    M = sum(
-            pmap(
-            (x) -&gt; in_unit_circle_distributed2_inner(len), <span class="hljs-number">2</span>:nprocs()
-            )
+
+<span class="hljs-keyword">function</span> estimate_pi_distributed(N::<span class="hljs-built_in">Int64</span>, method::<span class="hljs-built_in">Symbol</span>)
+    <span class="hljs-keyword">function</span> sample_M_non_distributed(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-keyword">return</span> sample_M_non_distributed_rng(N, Random.default_rng())
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_tasks(N::<span class="hljs-built_in">Int64</span>)
+        n = nthreads()
+
+        t = <span class="hljs-built_in">Vector</span>{<span class="hljs-built_in">Task</span>}(<span class="hljs-literal">undef</span>, n)
+        len, _ = divrem(N, n)
+
+        <span class="hljs-meta">@sync</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:n
+            t[i] = <span class="hljs-meta">@async</span> sample_M_non_distributed(len)
+        <span class="hljs-keyword">end</span>
+
+        M = sum(fetch.(t))
+
+        <span class="hljs-keyword">return</span> M
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_distributed(N::<span class="hljs-built_in">Int64</span>)
+        M = <span class="hljs-meta">@distributed</span> (+) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+            rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span> &lt; <span class="hljs-number">1</span>
+        <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">return</span> M
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_distributed_pmap(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-meta">@everywhere</span> <span class="hljs-keyword">function</span> sample_M_distributed_pmap_inner(N::<span class="hljs-built_in">Int64</span>)
+            M = zero(eltype(N))
+
+            <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+                <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+                    M += <span class="hljs-number">1</span>
+                <span class="hljs-keyword">end</span>
+            <span class="hljs-keyword">end</span>
+
+            <span class="hljs-keyword">return</span> M
+        <span class="hljs-keyword">end</span>
+
+        len, _ = divrem(N, nprocs() - <span class="hljs-number">1</span>)
+
+        M = sum(
+                pmap(
+                        x -&gt; sample_M_distributed_pmap_inner(len),
+                        <span class="hljs-number">2</span>:nprocs()
+                )
         )
 
-    <span class="hljs-keyword">return</span> M
-<span class="hljs-keyword">end</span></code></pre>
-<p>and we test it</p>
-<pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> nprocs()
-</span>1
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> addprocs(<span class="hljs-number">4</span>)
-</span>5
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> get_accuracy(in_unit_circle_distributed2, N)
-</span>  3.955314820203171e-5
+        <span class="hljs-keyword">return</span> M
+    <span class="hljs-keyword">end</span>
 
-<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(in_unit_circle_distributed2, N);
-</span>  648.168 ms (304 allocations: 13.11 KiB)</code></pre>
-<p></div> </div>
+     function_mapping = <span class="hljs-built_in">Dict</span>(
+         :ex0 =&gt; sample_M_non_distributed,
+         :ex1 =&gt; sample_M_tasks,
+         :ex2 =&gt; sample_M_distributed,
+         :ex3 =&gt; sample_M_distributed_pmap,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = <span class="hljs-number">4</span> * M / N
+
+    <span class="hljs-keyword">return</span> est_pi, abs(<span class="hljs-literal">pi</span> - est_pi)
+<span class="hljs-keyword">end</span></code></pre>
+<p></div>
+<p>For comparison, here are our final results with 4 workers:</p>
+<pre><code class="julia-repl hljs">$ julia -p 4 --project
+  Activating project at `~/dlh/own_lectures/ws23_ulg_vu_ama_performance_prv`
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type &quot;?&quot; for help, &quot;]?&quot; for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.9.3 (2023-08-24)
+ _/ |\__&#x27;_|_|_|\__&#x27;_|  |  Official https://julialang.org/ release
+|__/                   |
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> include(<span class="hljs-string">&quot;pi_example_distributed.jl&quot;</span>)  <span class="hljs-comment"># We stored our solution code here.</span>
+</span>estimate_pi_distributed (generic function with 1 method)
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> N = <span class="hljs-number">2</span>^<span class="hljs-number">30</span>
+</span>1073741824
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi_distributed(N, :ex0)
+</span>  2.578 s (31 allocations: 1.92 KiB)
+(3.1415886618196964, 3.991770096689606e-6)
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi_distributed(N, :ex1)
+</span>  2.578 s (55 allocations: 3.23 KiB)
+(3.141537304967642, 5.5348622151285554e-5)
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi_distributed(N, :ex2)
+</span>  803.336 ms (336 allocations: 14.83 KiB)
+(3.141508888453245, 8.376513654795303e-5)
+
+<span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi_distributed(N, :ex3)
+</span>  680.889 ms (915 allocations: 51.08 KiB)
+(3.141591504216194, 1.149373598963166e-6)</code></pre>
 <h1 id="additional_information_on_distributed_computing"><a href="#additional_information_on_distributed_computing" class="header-anchor">Additional information on distributed computing</a></h1>
 <p>There is a lot more to say about distributed computing. Have a read in the <a href="https://docs.julialang.org/en/v1/manual/distributed-computing/">docs</a> but here are some things we want to mention. For example, Julia is able to define <a href="https://docs.julialang.org/en/v1/manual/distributed-computing/#man-shared-arrays">shared arrays</a>. A shared array means the content can be accessed by each worker and it is consistent over all workers.</p>
 <p>Furthermore, it is possible to have a cluster, e.g. a managed pool of workers. This cluster can be distributed on several machines. We can define various ways of accessing these machines so we can become really flexible about this and maybe start a worker on the laptop of a colleague. For this we have the <a href="https://docs.julialang.org/en/v1/manual/distributed-computing/#ClusterManagers"><code>ClusterManager</code></a> package.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 10, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 13, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

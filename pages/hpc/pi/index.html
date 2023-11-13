@@ -130,21 +130,87 @@
 <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>π</mi><mo>≈</mo><mn>4</mn><mfrac><mi>M</mi><mi>N</mi></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">
 \pi \approx 4  \frac{M}{N}.
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4831em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord">4</span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span>
+<p>For the following Exercises, we will use and complete the following code stub:</p>
+<pre><code class="julia hljs"><span class="hljs-comment"># You will need some Packages. Add them here by using &lt;PACKAGE&gt;.</span>
+
+<span class="hljs-keyword">function</span> sample_M_non_distributed_rng(N::<span class="hljs-built_in">Int64</span>, rng::AbstractRNG)
+    <span class="hljs-comment"># Exercise 1 (pt 1/2)</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-comment"># Exercise 1 end</span>
+<span class="hljs-keyword">end</span>
+
+
+<span class="hljs-keyword">function</span> estimate_pi(N::<span class="hljs-built_in">Int64</span>, method::<span class="hljs-built_in">Symbol</span>)
+    <span class="hljs-keyword">function</span> sample_M_non_distributed(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-keyword">return</span> sample_M_non_distributed_rng(N, Random.default_rng())
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_threaded(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 2</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+        <span class="hljs-comment"># Exercise 2 end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_threaded_atomic(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 3</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+        <span class="hljs-comment"># Exercise 3 end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_threaded_tasksafe(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 4</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+        <span class="hljs-comment"># Exercise 4 end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_threaded_over_buckets(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 5</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+        <span class="hljs-comment"># Exercise 5 end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">function</span> sample_M_threaded_over_buckets_rng(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-comment"># Exercise 6</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+        <span class="hljs-comment"># Exercise 6 end</span>
+    <span class="hljs-keyword">end</span>
+
+     function_mapping = <span class="hljs-built_in">Dict</span>(
+         :ex1 =&gt; sample_M_non_distributed,
+         :ex2 =&gt; sample_M_threaded,
+         :ex3 =&gt; sample_M_threaded_atomic,
+         :ex4 =&gt; sample_M_threaded_tasksafe,
+         :ex5 =&gt; sample_M_threaded_over_buckets,
+         :ex6 =&gt; sample_M_threaded_over_buckets_rng,
+     )
+
+     M = function_mapping[method](N)
+
+    <span class="hljs-comment"># Exercise 1 (pt 2/2)</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
+    <span class="hljs-comment"># Exercise 1 end</span></code></pre>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Implement the above described algorithm to compute <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>.</p>
 <ol>
-<li><p>Define a function that determines <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> for a given integer <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>.</p>
+<li><p>Complete the function <code>sample_M_non_distributed</code> which samples <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> for given <code>N</code> and random number generator <code>rng</code>.</p>
 </li>
-<li><p>Define a function that estimates <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> for a given function <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span></span></span></span> and integer <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>.</p>
+<li><p>At the bottom of <code>estimate_pi</code> use <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> to compute an estimate for <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>. Also compute the absolute error and return both values.</p>
 </li>
-<li><p>Test your code with different values for <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>.</p>
+<li><p>Test your code with different values for <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi></mrow><annotation encoding="application/x-tex">N</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span></span></span></span>. You can run your implementation like this: <code>estimate_pi&#40;N, :ex1&#41;</code> &#40;define <code>N</code> beforehand&#41;.</p>
+</li>
+<li><p>Benchmark your naive implementation &#40;we will keep improving it later&#41;.</p>
 </li>
 </ol>
-<p>Hint: The function <code>rand&#40;&#41;</code> &#40;without additional arguments&#41; generates a random sample from a uniform distribution spanning the interval <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">]</span></span></span></span>. <div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> in_unit_circle(N::<span class="hljs-built_in">Int64</span>)
-    M = <span class="hljs-number">0</span>
-    
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
-        <span class="hljs-keyword">if</span> (rand()^<span class="hljs-number">2</span> + rand()^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
+<p>Hint: The function <code>rand&#40;&#41;</code> &#40;without additional arguments&#41; generates a random sample from a uniform distribution spanning the interval <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo separator="true">,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1</span><span class="mclose">]</span></span></span></span>. You can also pass <code>rng</code> to <code>rand&#40;&#41;</code> for using a specific random number generator.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  </p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
+<span class="hljs-keyword">using</span> Random
+
+
+<span class="hljs-keyword">function</span> sample_M_non_distributed_rng(N::<span class="hljs-built_in">Int64</span>, rng::AbstractRNG)
+    M = zero(<span class="hljs-built_in">Int64</span>)
+
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:N
+        <span class="hljs-keyword">if</span> (rand(rng)^<span class="hljs-number">2</span> + rand(rng)^<span class="hljs-number">2</span>) &lt; <span class="hljs-number">1</span>
             M += <span class="hljs-number">1</span>
         <span class="hljs-keyword">end</span>
     <span class="hljs-keyword">end</span>
@@ -152,21 +218,30 @@
     <span class="hljs-keyword">return</span> M
 <span class="hljs-keyword">end</span>
 
-<span class="hljs-keyword">function</span> estimate_pi(f::<span class="hljs-built_in">Function</span>, N::<span class="hljs-built_in">Int64</span>)
-    <span class="hljs-keyword">return</span> <span class="hljs-number">4</span> * f(N) / N
-<span class="hljs-keyword">end</span>
 
-<span class="hljs-keyword">function</span> get_accuracy(f::<span class="hljs-built_in">Function</span>, N::<span class="hljs-built_in">Int64</span>)
-    <span class="hljs-keyword">return</span> abs(
-        estimate_pi(f, N) - <span class="hljs-literal">pi</span>
-        )
+<span class="hljs-keyword">function</span> estimate_pi(N::<span class="hljs-built_in">Int64</span>, method::<span class="hljs-built_in">Symbol</span>)
+    <span class="hljs-keyword">function</span> sample_M_non_distributed(N::<span class="hljs-built_in">Int64</span>)
+        <span class="hljs-keyword">return</span> sample_M_non_distributed_rng(N, Random.default_rng())
+    <span class="hljs-keyword">end</span>
+
+     function_mapping = <span class="hljs-built_in">Dict</span>(
+         :ex1 =&gt; sample_M_non_distributed,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = <span class="hljs-number">4</span> * M / N
+
+    <span class="hljs-keyword">return</span> est_pi, abs(<span class="hljs-literal">pi</span> - est_pi)
 <span class="hljs-keyword">end</span>
 
 N = <span class="hljs-number">2</span>^<span class="hljs-number">30</span>
-get_accuracy(in_unit_circle, N)</code></pre>
-<p><pre><code class="plaintext hljs">5.7121617249578094e-5</code></pre> </div> </div>
+
+<span class="hljs-meta">@btime</span> estimate_pi(N, :ex1)</code></pre>
+<p><pre><code class="plaintext hljs">  5.715 s (4 allocations: 384 bytes)
+(3.141577433794737, 1.5219795056253815e-5)</code></pre> </div> </div>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 10, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 13, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

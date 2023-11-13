@@ -1,9 +1,13 @@
 # This file was generated, do not modify it. # hide
-function in_unit_circle(N::Int64)
-    M = 0
-    
-    for i in 1:N
-        if (rand()^2 + rand()^2) < 1
+using BenchmarkTools
+using Random
+
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
+    M = zero(Int64)
+
+    for _ in 1:N
+        if (rand(rng)^2 + rand(rng)^2) < 1
             M += 1
         end
     end
@@ -11,15 +15,23 @@ function in_unit_circle(N::Int64)
     return M
 end
 
-function estimate_pi(f::Function, N::Int64)
-    return 4 * f(N) / N
-end
 
-function get_accuracy(f::Function, N::Int64)
-    return abs(
-        estimate_pi(f, N) - pi
-        )
+function estimate_pi(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        return sample_M_non_distributed_rng(N, Random.default_rng())
+    end
+
+     function_mapping = Dict(
+         :ex1 => sample_M_non_distributed,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = 4 * M / N
+
+    return est_pi, abs(pi - est_pi)
 end
 
 N = 2^30
-get_accuracy(in_unit_circle, N)
+
+@btime estimate_pi(N, :ex1)
