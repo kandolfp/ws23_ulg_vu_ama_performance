@@ -107,13 +107,11 @@ Let us try to apply this concept to our $\pi$ example.
 
 ## Multithreaded $\pi$
 
-The obvious first impulse is to just write a `@threads` in front of the loop in our `sample_M` routine, well lets follow this impulse.
+The obvious first impulse is to just write a `@threads` in front of the loop in our `sample_M_*` routine, well lets follow this impulse.
 
 @@important
-We continue working with the draft from the previous section[Not the most efficient way of computing $\pi$](../pi/).
+We continue working with the draft from the previous section, [Not the most efficient way of computing $\pi$](../pi/).
 @@
-
-For reference, all the results in this section are computed with 4 threads and `N = 2^30`.
 
 Using this settings the naive implementation shows the following performance
 ```julia-repl
@@ -177,7 +175,7 @@ Now we are performing a worse again.
 Why is it still not faster?
 
 ### Global states
-Without going into too much detail, `rand()` is thread safe and therefor synchronizes its calls which results in slowdown.
+Without going into too much detail, `rand()` is thread safe and therefore synchronizes its calls which results in a general slowdown.
 In a first step we will no longer use a `for` loop over all desired samples `N`, but a `for` loop over all available threads and see
 whether this already improved our performance.
 
@@ -196,8 +194,8 @@ Great! The performance improved a lot!
 }
 
 Can we still do better?
-Like mentioned previously, `rand()` is thread safe and therefor needs to synchronize.
-Synchronization always comes to a price in terms of performance.
+As mentioned previously, `rand()` is thread safe and therefore needs to synchronize.
+Synchronization always comes at a price in terms of performance.
 Let us get rid of this need to synchronize.
 
 First step is to define a separate random number generator per thread:
