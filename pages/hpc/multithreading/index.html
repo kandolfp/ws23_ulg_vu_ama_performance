@@ -177,8 +177,10 @@
 <span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> <span class="hljs-meta">@btime</span> estimate_pi(N, :ex1)  <span class="hljs-comment"># sample_M_non_distributed</span>
 </span>  2.624 s (37 allocations: 2.33 KiB)
 (3.141611408442259, 1.875485246571884e-5)</code></pre>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_threaded</code> by duplicating the code from <code>sample_M_non_distributed_rng</code> &#40;drop <code>rng</code>&#41; and adding the <code>@threads</code> macro. </p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using threads:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_threaded</code> by duplicating the code from <code>sample_M_non_distributed_rng</code> &#40;drop <code>rng</code>&#41; and adding the <code>@threads</code> macro. </p>
+</li>
 <li><p>Test the result as well as the performance.</p>
 </li>
 </ol>
@@ -186,16 +188,20 @@
 <h3 id="atomic_operations"><a href="#atomic_operations" class="header-anchor">Atomic Operations</a></h3>
 <p>As we could see, in the above example from the docs, the loop is automatically split up per index for the threads available. This means each of the threads is performing the same loop and as the context and memory is shared also access the same storage. This is problematic for our variable <code>M</code>. This means each thread reads and updates the same variable. To be more specific: the same <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> is shared among simultaneously running threads which are not synchronised. In between reading and updating <code>M</code> another thread might already have updated the variable and thus the result gets overridden. In short, the counter will be totally wrong. We call this a <a href="https://en.wikipedia.org/wiki/Race_condition">race condition</a>.</p>
 <p>To solve this issue Julia supports <a href="https://docs.julialang.org/en/v1/manual/multi-threading/#Atomic-Operations">atomic</a> values. This allows us to access a variable in a thread-safe way and avoid race conditions. All primitive types can be wrapped with <code>M &#61; Atomic&#123;Int64&#125;&#40;0&#41;</code> and can only be accessed in a thread safe way. In order to do the atomic add we use the function <code>atomic_add&#33;&#40;M, 1&#41;</code> and we can access the value with <code>M&#91;&#93;</code>.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_threaded_atomic</code> by duplicating the code from <code>sample_M_threaded</code> and using an atomic <code>M</code>.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using atomic:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_threaded_atomic</code> by duplicating the code from <code>sample_M_threaded</code> and using an atomic <code>M</code>.</p>
+</li>
 <li><p>Test the result as well as the performance.</p>
 </li>
 </ol>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  Have a look at the end of this chapter. Now our result is correct, but the performance is still worse than the naive implementation. </div> </div>
 <h3 id="actually_distribute_the_work"><a href="#actually_distribute_the_work" class="header-anchor">Actually distribute the work</a></h3>
 <p>We are still not fast, because each <code>atomic_add&#33;</code> is checking which thread has the current result and needs to add the new value. To avoid this we need to eliminate atomic again. We can actually split up the work quite neatly if we remember the example from the docs. It is possible to access the <code>threadid&#40;&#41;</code> and the number of threads <code>nthreads&#40;&#41;</code>. So why not define <code>M</code> as an array of length <code>nthreads&#40;&#41;</code> and each thread updates the according position within the array by using <code>threadid&#40;&#41;</code> as index.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_threaded_tasksafe</code> by duplicating the code from <code>sample_M_threaded_atomic</code> and replacing <code>M</code> by a vector with <code>nthreads&#40;&#41;</code> entries.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Being tasksafe:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_threaded_tasksafe</code> by duplicating the code from <code>sample_M_threaded_atomic</code> and replacing <code>M</code> by a vector with <code>nthreads&#40;&#41;</code> entries.</p>
+</li>
 <li><p>Test the result as well as the performance.</p>
 </li>
 </ol>
@@ -203,8 +209,10 @@
 <p>Why is it still not faster?</p>
 <h3 id="global_states"><a href="#global_states" class="header-anchor">Global states</a></h3>
 <p>Without going into too much detail, <code>rand&#40;&#41;</code> is thread safe and therefore synchronizes its calls which results in a general slowdown. In a first step we will no longer use a <code>for</code> loop over all desired samples <code>N</code>, but a <code>for</code> loop over all available threads and see whether this already improved our performance.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_threaded_over_buckets</code> by duplicating the code from <code>sample_M_threaded_tasksafe</code> and iterating over the number of threads instead of iterating over the number of samples.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using buckets:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_threaded_over_buckets</code> by duplicating the code from <code>sample_M_threaded_tasksafe</code> and iterating over the number of threads instead of iterating over the number of samples.</p>
+</li>
 <li><p>Test the result as well as the performance.</p>
 </li>
 </ol>
@@ -221,8 +229,10 @@
 <pre><code class="julia hljs">rng = ThreadRNG[threadid()]
 rand(rng)</code></pre>
 <p>in each thread.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_threaded_over_buckets_rng</code> by duplicating the code from <code>sample_M_threaded_over_buckets</code> and using <code>sample_M_non_distributed_rng</code> and <code>Random.default_rng&#40;&#41;</code> in the inner loop.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using separate random number generators:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_threaded_over_buckets_rng</code> by duplicating the code from <code>sample_M_threaded_over_buckets</code> and using <code>sample_M_non_distributed_rng</code> and <code>Random.default_rng&#40;&#41;</code> in the inner loop.</p>
+</li>
 <li><p>Test the result as well as the performance. Are we improving?</p>
 </li>
 <li><p>Try to switch to <code>Random.MersenneTwister&#40;&#41;</code>. Is it working? Do we improve?</p>

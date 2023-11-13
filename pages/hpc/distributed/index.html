@@ -226,8 +226,10 @@
 
     <span class="hljs-keyword">return</span> est_pi, abs(<span class="hljs-literal">pi</span> - est_pi)
 <span class="hljs-keyword">end</span></code></pre>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_tasks</code> by using the <code>@async</code> and <code>@sync</code> macros.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using tasks:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_tasks</code> by using the <code>@async</code> and <code>@sync</code> macros.</p>
+</li>
 <li><p>Split the generation of the <code>N</code> samples into 4 parts, same as for threads, and schedule the tasks in a loop.</p>
 </li>
 <li><p>Test the result as well as the performance.</p>
@@ -294,8 +296,10 @@
                           <span class="hljs-keyword">end</span></span></code></pre>
 <p></div>
 <p>Luckily, our <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> example does not need much data movement.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_distributed</code> by using the <code>@distributed</code> macro and an appropriate <em>reducer</em> function &#40;the syntax is <code>x &#61; @distributed &#40;operator&#41; for ...</code>&#41;.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using distribute:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_distributed</code> by using the <code>@distributed</code> macro and an appropriate <em>reducer</em> function &#40;the syntax is <code>x &#61; @distributed &#40;operator&#41; for ...</code>&#41;.</p>
+</li>
 <li><p>Start Julia with 4 workers &#40;<code>julia -p 4 --project</code>&#41;, test the accuracy and measure the performance.</p>
 </li>
 </ol>
@@ -335,8 +339,10 @@
  6</code></pre>
 <p>The second example also includes an <a href="https://docs.julialang.org/en/v1/manual/functions/#man-anonymous-functions">anonymous function</a>. The idea is simply to have a function that is not needed outside of the scope of a function call. </div>
 <p>Now, <code>pmap</code> just distributes the map function on workers. It has a lot of optional arguments to influence how this is done but we will not need this.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  1. Complete the function <code>sample_M_distributed_pmap</code> by using the <code>@everywhere</code> macro and <code>pmap</code> function.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Using <code>pmap</code>:</p>
 <ol>
+<li><p>Complete the function <code>sample_M_distributed_pmap</code> by using the <code>@everywhere</code> macro and <code>pmap</code> function.</p>
+</li>
 <li><p>Start Julia with 4 workers &#40;<code>julia -p 4 --project</code>&#41;, test the accuracy and measure the performance.</p>
 </li>
 </ol>

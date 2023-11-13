@@ -1,19 +1,19 @@
 Simple sum
-mySum(a) = 50003.30498190346
-  103.800 μs (0 allocations: 0 bytes)
+mySum(a) = 49887.92769897094
+  92.582 μs (0 allocations: 0 bytes)
 
 Built-in sum
-sum(a) = 50003.304981903486
-  28.300 μs (0 allocations: 0 bytes)
+sum(a) = 49887.927698970954
+  10.990 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD
-mySumSIMD(a) = 50003.30498190345
-  26.900 μs (0 allocations: 0 bytes)
+mySumSIMD(a) = 49887.927698970954
+  9.718 μs (0 allocations: 0 bytes)
 
 Simple mySum with direct element access
-mySum2(a) = 50003.30498190346
-  100.300 μs (0 allocations: 0 bytes)
+mySum2(a) = 49887.92769897094
+  92.582 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD and direct element access
-mySumSIMD2(a) = 50003.30498190345
-  26.900 μs (0 allocations: 0 bytes)
+mySumSIMD2(a) = 49887.927698970954
+  9.798 μs (0 allocations: 0 bytes)
