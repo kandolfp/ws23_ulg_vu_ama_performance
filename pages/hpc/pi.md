@@ -37,20 +37,88 @@ $$
 \pi \approx 4  \frac{M}{N}.
 $$
 
+For the following Exercises, we will use and complete the following code stub:
+```julia
+# You will need some Packages. Add them here by using <PACKAGE>.
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
+    # Exercise 1 (pt 1/2)
+    return nothing
+    # Exercise 1 end
+end
+
+
+function estimate_pi(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        return sample_M_non_distributed_rng(N, Random.default_rng())
+    end
+
+    function sample_M_threaded(N::Int64)
+        # Exercise 2
+        return nothing
+        # Exercise 2 end
+    end
+
+    function sample_M_threaded_atomic(N::Int64)
+        # Exercise 3
+        return nothing
+        # Exercise 3 end
+    end
+
+    function sample_M_threaded_tasksafe(N::Int64)
+        # Exercise 4
+        return nothing
+        # Exercise 4 end
+    end
+
+    function sample_M_threaded_over_buckets(N::Int64)
+        # Exercise 5
+        return nothing
+        # Exercise 5 end
+    end
+
+    function sample_M_threaded_over_buckets_rng(N::Int64)
+        # Exercise 6
+        return nothing
+        # Exercise 6 end
+    end
+
+     function_mapping = Dict(
+         :ex1 => sample_M_non_distributed,
+         :ex2 => sample_M_threaded,
+         :ex3 => sample_M_threaded_atomic,
+         :ex4 => sample_M_threaded_tasksafe,
+         :ex5 => sample_M_threaded_over_buckets,
+         :ex6 => sample_M_threaded_over_buckets_rng,
+     )
+
+     M = function_mapping[method](N)
+
+    # Exercise 1 (pt 2/2)
+    return nothing
+    # Exercise 1 end
+```
+
 \exercise{
 Implement the above described algorithm to compute $\pi$.
-1. Define a function that determines $M$ for a given integer $N$.
-1. Define a function that estimates $\pi$ for a given function $f$ and integer $N$.
-1. Test your code with different values for $N$.
+1. Complete the function `sample_M_non_distributed` which samples $M$ for given `N` and random number generator `rng`.
+1. At the bottom of `estimate_pi` use $M$ to compute an estimate for $\pi$. Also compute the absolute error and return both values.
+1. Test your code with different values for $N$. You can run your implementation like this: `estimate_pi(N, :ex1)` (define `N` beforehand).
+1. Benchmark your naive implementation (we will keep improving it later).
 
-Hint: The function `rand()` (without additional arguments) generates a random sample from a uniform distribution spanning the interval $[0,1]$.
+Hint: The function `rand()` (without additional arguments) generates a random sample from a uniform distribution spanning the interval $[0,1]$. You can also pass `rng` to `rand()` for using a specific random number generator.
+
 \solution{
 ```julia:./code/pi.jl
-function in_unit_circle(N::Int64)
-    M = 0
-    
-    for i in 1:N
-        if (rand()^2 + rand()^2) < 1
+using BenchmarkTools
+using Random
+
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
+    M = zero(Int64)
+
+    for _ in 1:N
+        if (rand(rng)^2 + rand(rng)^2) < 1
             M += 1
         end
     end
@@ -58,18 +126,26 @@ function in_unit_circle(N::Int64)
     return M
 end
 
-function estimate_pi(f::Function, N::Int64)
-    return 4 * f(N) / N
-end
 
-function get_accuracy(f::Function, N::Int64)
-    return abs(
-        estimate_pi(f, N) - pi
-        )
+function estimate_pi(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        return sample_M_non_distributed_rng(N, Random.default_rng())
+    end
+
+     function_mapping = Dict(
+         :ex1 => sample_M_non_distributed,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = 4 * M / N
+
+    return est_pi, abs(pi - est_pi)
 end
 
 N = 2^30
-get_accuracy(in_unit_circle, N)
+
+@btime estimate_pi(N, :ex1)
 ```
 \show{./code/pi.jl}
 }

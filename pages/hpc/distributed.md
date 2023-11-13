@@ -92,36 +92,84 @@ julia> @time @sync for i in 1:10
 ### The $\pi$ example with tasks
 
 Now we apply the task knowledge to our example for computing $\pi$.
-
-\exercise{
-Define a new function `in_unit_circle_task` with the `@async` and `@sync` macros.
-Split up `N` into 4 parts, same as for threads, and schedule the tasks in a loop.
-Define a vector of tasks to catch the results inside the loop.
-
-\solution{
+In this chapter we will use the following stub throughout the exercises:
 ```julia
-function in_unit_circle_task(N::Int64)
-    n = nthreads()
-    len, rem = divrem(N, n)
-    t = Vector{Task}(undef, n)
-    
-    @sync for i in 1:n
-        t[i] = @async in_unit_circle(len)
+using Base.Threads
+using BenchmarkTools
+using Distributed
+using Random
+
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
+    M = zero(Int64)
+
+    for _ in 1:N
+        if (rand(rng)^2 + rand(rng)^2) < 1
+            M += 1
+        end
     end
-    
-    M = sum(map((x) -> fetch(t[x]), 1:n))
-    
+
     return M
 end
-```
-and we test it
-```julia-repl
-julia> get_accuracy(in_unit_circle_task, N)
-  3.002385561856613e-5
 
-julia> @btime estimate_pi(in_unit_circle_task, N);
-  2.549 s (46 allocations: 2.72 KiB)
+
+function estimate_pi_distributed(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        return sample_M_non_distributed_rng(N, Random.default_rng())
+    end
+
+    function sample_M_tasks(N::Int64)
+        # Exercise 1
+        return nothing
+    end
+
+    function sample_M_distributed(N::Int64)
+        # Exercise 2
+        return nothing
+    end
+
+    function sample_M_distributed_pmap(N::Int64)
+        # Exercise 3
+        function sample_M_distributed_pmap_inner(N::Int64)
+            M = zero(eltype(N))
+
+            for _ in 1:N
+                if (rand()^2 + rand()^2) < 1
+                    M += 1
+                end
+            end
+
+            return M
+        end
+
+        return nothing
+    end
+
+     function_mapping = Dict(
+         :ex0 => sample_M_non_distributed,
+         :ex1 => sample_M_tasks,
+         :ex2 => sample_M_distributed,
+         :ex3 => sample_M_distributed_pmap,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = 4 * M / N
+
+    return est_pi, abs(pi - est_pi)
+end
 ```
+
+\exercise{
+1. Complete the function `sample_M_tasks` by using the `@async` and `@sync` macros.
+1. Split the generation of the `N` samples into 4 parts, same as for threads, and schedule the tasks in a loop.
+1. Test the result as well as the performance.
+
+Hints: Define a vector of tasks `t = Vector{Task}(undef, n)` to catch the results inside the loop.
+You can use `sample_M_non_distributed()` for sampling.
+
+\solution{
+Have a look at the end of this chapter.
 }
 }
 
@@ -172,6 +220,17 @@ Task (done) @0x00007fb859fc1430
 ```
 and with `myid()` we get the id of the process we are on.
 
+Note that we will often need the same packages on the worker nodes as on the main node. Therefor we need to call julia with the `--project` flag,
+```julia
+$ julia -p 4 --project
+```
+or tell so when adding workers:
+```julia-repl
+julia> using Distributed
+
+julia> addprocs(4, exeflags="--process")
+```
+
 ### The `@distributed` macro
 There is an obvious problem right away.
 If we define a function or a variable on a process how does another process know about this? 
@@ -214,39 +273,14 @@ julia> @sync @distributed for i in 1:5
 Luckily, our $\pi$ example does not need much data movement.
 
 \exercise{
-Define a new function `in_unit_circle_distributed1` with the `@distributed` macro and an appropriate *reducer* function (the syntax is `x = @distributed (operator) for ...`).
-Note that we might need to always return a value inside the loop.
-For comparison start 4 workers and test the accuracy and measure the performance.
+1. Complete the function `sample_M_distributed` by using the `@distributed` macro and an appropriate *reducer* function (the syntax is `x = @distributed (operator) for ...`).
+1. Start Julia with 4 workers (`julia -p 4 --project`), test the accuracy and measure the performance.
 \solution{
-```julia
-function in_unit_circle_distributed1(N::Int64)
-    M = @distributed (+) for i in 1:N
-        if (rand()^2 + rand()^2) < 1
-            1
-        else
-            0
-        end
-    end
-
-    return M
-end
-```
-and we test it
-```julia-repl
-julia> nprocs()
-1
-julia> addprocs(4)
-5
-julia> get_accuracy(in_unit_circle_distributed1, N)
-  4.179204767140732e-5
-
-julia> @btime estimate_pi(in_unit_circle_distributed1, N);
-  649.564 ms (289 allocations: 12.27 KiB)
-```
+Have a look at the end of this chapter.
 }
 }
 
-We can see that this is a very easy way to parallelize and this time the `rand()` function is not causing problems.
+We can see that this is a very easy way to parallelize and this time the `rand()` function is not causing problems since it is local per task.
 We are already faster than the basic implementation and close to the optimized four threads implementation.
 
 The *distributed for loop* with `@distributed` is designed to work well for situations where each iteration is tiny (in terms of computational effort/workload).
@@ -255,7 +289,7 @@ Of course, there is also the other possibility, that we have a function with a m
 ### The `pmap` and the `@everywhere` macro
 
 As mentioned before, we need to get functions to all the workers, in order to execute them.
-For distributing a functions or for loading modules we can use the `@everywhere` macro.
+For distributing a function or for loading modules we can use the `@everywhere` macro.
 As the name suggests, it will make sure that the function is available in the scope of each worker and the main process.
 We simply prepend a function with `@everywhere` and nothing more is required.
 There are some things to note for this case:
@@ -300,50 +334,144 @@ Now, `pmap` just distributes the map function on workers.
 It has a lot of optional arguments to influence how this is done but we will not need this.
 
 \exercise{
-Define a new function `in_unit_circle_distributed2` with the `@everywhere` macro and the `pmap` function.
+1. Complete the function `sample_M_distributed_pmap` by using the `@everywhere` macro and `pmap` function.
+1. Start Julia with 4 workers (`julia -p 4 --project`), test the accuracy and measure the performance.
 
-Hint: define an inner function that is distributed to all workers via `@everywhere` and collect the results with `pmap`.
-Split up the works similar as for the last example in tasks.
+Hint: define an inner function `sample_M_distributed_pmap_inner` that is distributed to all workers via `@everywhere` and collect the results with `pmap`.
+Split up the workers similarly to the tasks example.
 
 \solution{
+Have a look at the end of this chapter.
+}
+}
+
+### Final results
+\solution{
+Here is the overall solution:
 ```julia
-@everywhere function in_unit_circle_distributed2_inner(N::Int64)
-    M = 0
-    
-    for i in 1:N
-        if (rand()^2 + rand()^2) < 1
+using Base.Threads
+using BenchmarkTools
+using Distributed
+using Random
+
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
+    M = zero(Int64)
+
+    for _ in 1:N
+        if (rand(rng)^2 + rand(rng)^2) < 1
             M += 1
         end
     end
 
-    return M    
-end
-
-function in_unit_circle_distributed2(N::Int64)
-    len, rem = divrem(N, nprocs() - 1)
-    M = sum(
-            pmap(
-            (x) -> in_unit_circle_distributed2_inner(len), 2:nprocs()
-            )
-        )
-
     return M
 end
-```
-and we test it
-```julia-repl
-julia> nprocs()
-1
-julia> addprocs(4)
-5
-julia> get_accuracy(in_unit_circle_distributed2, N)
-  3.955314820203171e-5
 
-julia> @btime estimate_pi(in_unit_circle_distributed2, N);
-  648.168 ms (304 allocations: 13.11 KiB)
+
+function estimate_pi_distributed(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        return sample_M_non_distributed_rng(N, Random.default_rng())
+    end
+
+    function sample_M_tasks(N::Int64)
+        n = nthreads()
+
+        t = Vector{Task}(undef, n)
+        len, _ = divrem(N, n)
+
+        @sync for i in 1:n
+            t[i] = @async sample_M_non_distributed(len)
+        end
+
+        M = sum(fetch.(t))
+
+        return M
+    end
+
+    function sample_M_distributed(N::Int64)
+        M = @distributed (+) for _ in 1:N
+            rand()^2 + rand()^2 < 1
+        end
+
+        return M
+    end
+
+    function sample_M_distributed_pmap(N::Int64)
+        @everywhere function sample_M_distributed_pmap_inner(N::Int64)
+            M = zero(eltype(N))
+
+            for _ in 1:N
+                if (rand()^2 + rand()^2) < 1
+                    M += 1
+                end
+            end
+
+            return M
+        end
+
+        len, _ = divrem(N, nprocs() - 1)
+
+        M = sum(
+                pmap(
+                        x -> sample_M_distributed_pmap_inner(len),
+                        2:nprocs()
+                )
+        )
+
+        return M
+    end
+
+     function_mapping = Dict(
+         :ex0 => sample_M_non_distributed,
+         :ex1 => sample_M_tasks,
+         :ex2 => sample_M_distributed,
+         :ex3 => sample_M_distributed_pmap,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = 4 * M / N
+
+    return est_pi, abs(pi - est_pi)
+end
 ```
 }
-}
+
+For comparison, here are our final results with 4 workers:
+```julia-repl
+$ julia -p 4 --project
+  Activating project at `~/dlh/own_lectures/ws23_ulg_vu_ama_performance_prv`
+               _
+   _       _ _(_)_     |  Documentation: https://docs.julialang.org
+  (_)     | (_) (_)    |
+   _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 1.9.3 (2023-08-24)
+ _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
+|__/                   |
+
+julia> include("pi_example_distributed.jl")  # We stored our solution code here.
+estimate_pi_distributed (generic function with 1 method)
+
+julia> N = 2^30
+1073741824
+
+julia> @btime estimate_pi_distributed(N, :ex0)
+  2.578 s (31 allocations: 1.92 KiB)
+(3.1415886618196964, 3.991770096689606e-6)
+
+julia> @btime estimate_pi_distributed(N, :ex1)
+  2.578 s (55 allocations: 3.23 KiB)
+(3.141537304967642, 5.5348622151285554e-5)
+
+julia> @btime estimate_pi_distributed(N, :ex2)
+  803.336 ms (336 allocations: 14.83 KiB)
+(3.141508888453245, 8.376513654795303e-5)
+
+julia> @btime estimate_pi_distributed(N, :ex3)
+  680.889 ms (915 allocations: 51.08 KiB)
+(3.141591504216194, 1.149373598963166e-6)
+```
 
 # Additional information on distributed computing
 

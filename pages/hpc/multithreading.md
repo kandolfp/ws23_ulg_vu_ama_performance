@@ -65,7 +65,7 @@ By default, the Julia REPL, or the main Julia process for that matter, will alwa
 We do not have the time for a deep dive into all the dirty details on how to do proper multithreaded programming (race conditions, locks, atomic operations, thread safe programming, ...), therefore we keep it light and simple with the `@threads` macro and introduce the needed concepts when we need them along the way.
 
 @@important
-For comparison, all the benchmarks and computations are performed with `4` threads.
+For comparison, all the benchmarks and computations are performed with `4` threads and `N = 2^30`.
 @@
 
 Like all the other macros it gives us the possibility to bring something rather complex in our code by still staying very readable as the following example shows.
@@ -107,47 +107,30 @@ Let us try to apply this concept to our $\pi$ example.
 
 ## Multithreaded $\pi$
 
-The obvious first impulse is to just write a `@threads` in front of the loop in our `in_unit_circle` routine, well lets follow this impulse.
+The obvious first impulse is to just write a `@threads` in front of the loop in our `sample_M` routine, well lets follow this impulse.
 
 @@important
-We assume the functions and variables from the [Not the most efficient way of computing $\pi$](../pi/) section are defined and we write some new in addition.
+We continue working with the draft from the previous section[Not the most efficient way of computing $\pi$](../pi/).
 @@
 
-For reference, the results in this section are computed with 4 threads and the original code has the following performance
+For reference, all the results in this section are computed with 4 threads and `N = 2^30`.
+
+Using this settings the naive implementation shows the following performance
 ```julia-repl
-julia> @btime estimate_pi(in_unit_circle, N)
-  235.643 ms (0 allocations: 0 bytes)
-3.14141152
+julia> N = 2^30
+1073741824
+
+julia> @btime estimate_pi(N, :ex1)  # sample_M_non_distributed
+  2.624 s (37 allocations: 2.33 KiB)
+(3.141611408442259, 1.875485246571884e-5)
 ```
 \exercise{
-Define a new function `in_unit_circle_threaded1` with the `@threads` macro and test the result as well as the timing.
+1. Complete the function `sample_M_threaded` by duplicating the code from `sample_M_non_distributed_rng` (drop `rng`) and adding the `@threads` macro. 
+1. Test the result as well as the performance.
 \solution{
-```julia
-using BenchmarkTools
-
-function in_unit_circle_threaded1(N::Int64)
-    M = 0
-    
-    @threads for i in 1:N
-        if (rand()^2 + rand()^2) < 1
-            M += 1
-        end
-    end
-
-    return M
-end
-```
-and we test it
-```julia-repl
-julia> get_accuracy(in_unit_circle_threaded1, N)
-  2.2828585264557084
-
-julia> @btime estimate_pi(in_unit_circle_threaded1, N);
-  21.899 s (843326330 allocations: 12.57 GiB)
-```
-Well that is underwhelming.
-The result is wrong and it is slower.
-So what happened?
+Have a look at the end of this chapter.
+The performance is slower than the naive implementation and the result is even wrong.
+In the next section we will see what went wrong.
 }
 }
 
@@ -156,10 +139,10 @@ So what happened?
 As we could see, in the above example from the docs, the loop is automatically split up per index for the threads available.
 This means each of the threads is performing the same loop and as the context and memory is shared also access the same storage.
 This is problematic for our variable `M`.
-This means each thread reads and writes into the same variable but this also means the result is not correct.
-It might override the results of other threads or they all read at the same time but only one result will be written in the end.
-In short the counter is totally wrong.
-We call this [race condition](https://en.wikipedia.org/wiki/Race_condition).
+This means each thread reads and updates the same variable. To be more specific: the same $M$ is shared among simultaneously running threads which are not synchronised.
+In between reading and updating `M` another thread might already have updated the variable and thus the result gets overridden.
+In short, the counter will be totally wrong.
+We call this a [race condition](https://en.wikipedia.org/wiki/Race_condition).
 
 To solve this issue Julia supports [atomic](https://docs.julialang.org/en/v1/manual/multi-threading/#Atomic-Operations) values.
 This allows us to access a variable in a thread-safe way and avoid race conditions.
@@ -167,92 +150,65 @@ All primitive types can be wrapped with `M = Atomic{Int64}(0)` and can only be a
 In order to do the atomic add we use the function `atomic_add!(M, 1)` and we can access the value with `M[]`.
 
 \exercise{
-Define a new function `in_unit_circle_threaded2` with the `@threads` macro, an atomic `M` and test the result as well as the timing.
+1. Complete the function `sample_M_threaded_atomic` by duplicating the code from `sample_M_threaded` and using an atomic `M`.
+1. Test the result as well as the performance.
 \solution{
-```julia
-function in_unit_circle_threaded2(N::Int64)
-    M = Atomic{Int64}(0);
-    
-    @threads for i in 1:N
-        if (rand()^2 + rand()^2) < 1
-            atomic_add!(M, 1)
-        end
-    end
-
-    return M[]
-end
-```
-and we test it
-```julia-repl
-julia> get_accuracy(in_unit_circle_threaded2, N)
-  2.729346091356888e-5
-
-julia> @btime estimate_pi(in_unit_circle_threaded2, N);
-  10.487 s (24 allocations: 2.03 KiB)
-```
-Now our result is correct, but the time is still not better but worse.
+Have a look at the end of this chapter.
+Now our result is correct, but the performance is still worse than the naive implementation.
 }
 }
 
 ### Actually distribute the work
-We are still not fast, because each `attomic_add!` is checking which thread has the current result and needs to add the new value.
+We are still not fast, because each `atomic_add!` is checking which thread has the current result and needs to add the new value.
 To avoid this we need to eliminate atomic again.
 We can actually split up the work quite neatly if we remember the example from the docs.
 It is possible to access the `threadid()` and the number of threads `nthreads()`.
-So why not define `M` as an array of length `nthreads()` and in each thread write to separate values in the array by using `threadid()` as index.
+So why not define `M` as an array of length `nthreads()` and each thread updates the according position within the array by using `threadid()` as index.
 
 \exercise{
-Define a new function `in_unit_circle_threaded3` with the `@threads`, `M` as array and test the result as well as the timing.
+1. Complete the function `sample_M_threaded_tasksafe` by duplicating the code from `sample_M_threaded_atomic` and replacing `M` by a vector with `nthreads()` entries.
+1. Test the result as well as the performance.
 \solution{
-```julia
-function in_unit_circle_threaded3(N::Int64)
-    M = zeros(Int64, nthreads());
-    
-    @threads :static for i in 1:N
-        if (rand()^2 + rand()^2) < 1
-            @inbounds M[threadid()] += 1
-        end
-    end
-
-    return sum(M)
-end
-```
-and we test it
-```julia-repl
-julia> get_accuracy(in_unit_circle_threaded3, N)
-  1.7652409621149445e-5
-
-julia> @btime estimate_pi(in_unit_circle_threaded3, N);
-  2.857 s (23 allocations: 2.08 KiB)
-```
-Now our result is correct, and the time is okay.
+Have a look at the end of this chapter.
+Now we are performing a worse again.
 }
 }
 
-Now we are faster, but still not faster than the serial version.
-Why is it still not working?
+Why is it still not faster?
 
 ### Global states
+Without going into too much detail, `rand()` is thread safe and therefor synchronizes its calls which results in slowdown.
+In a first step we will no longer use a `for` loop over all desired samples `N`, but a `for` loop over all available threads and see
+whether this already improved our performance.
 
-Without going into too much detail, `rand()` is not thread safe.
-It does manipulate and read from some global state and that causes our slowdown
- In fact, as the random numbers are not correctly distributed any more, the accuracy is also decaying.
+\exercise{
+1. Complete the function `sample_M_threaded_over_buckets` by duplicating the code from `sample_M_threaded_tasksafe` and iterating over the number of threads instead of iterating over the number of samples.
+1. Test the result as well as the performance.
 
-To avoid this we need to exchange the random number generator and make the call to `rand` thread safe.
-This solution is inspired by the section *Multithreading* of the [Parallel Computing Class on JuliaAcademy.com](https://juliaacademy.com/p/parallel-computing) and slightly adapted for the setup we have.
+Hints: In order for this to work we need to figure out how many iterations each thread needs to perform. 
+We can use `divrem()` to get this number (for the sake of simplicity, ignore that we might have a remainder due to division).
+Within the loop you can directly call `sample_M_non_distributed()`.
+
+\solution{
+Have a look at the end of this chapter.
+Great! The performance improved a lot!
+}
+}
+
+Can we still do better?
+Like mentioned previously, `rand()` is thread safe and therefor needs to synchronize.
+Synchronization always comes to a price in terms of performance.
+Let us get rid of this need to synchronize.
 
 First step is to define a separate random number generator per thread:
 ```julia
-using Random
-
-const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
-@threads for i in 1:nthreads()
-       ThreadRNG[i] = Random.MersenneTwister(i)
+RNG = Vector{AbstractRNG}(undef, nthreads())
+for i in 1:nthreads()
+    RNG[i] = Random.TaskLocalRNG()
 end
 ```
-What we do in the third line is define a [`const`](https://docs.julialang.org/en/v1/base/base/#const) variable.
-That is a global variable whose type will not change.
-In fact we define a Vector of size `nthreads()` and fill it with distinct [`Random.MersenneTwister`](https://docs.julialang.org/en/v1/stdlib/Random/#Random.MersenneTwister).
+In fact we define a Vector of size `nthreads()` and fill it with distinct random number generators.
+
 This allows us to have a different random number generator for each thread by using
 ```julia
 rng = ThreadRNG[threadid()]
@@ -260,26 +216,69 @@ rand(rng)
 ```
 in each thread.
 
-Now for our final version of the code, the basic idea is to not have a threaded loop over the integer `N` but over the number of threads.
-In order for this to work we need to figure out how many iterations each thread needs to perform.
-Hint: We can use `divrem()` for this task.
-
 \exercise{
-Define a new function `in_unit_circle_threaded4` with the `@threads` macro, `M` as array, the above code snippets and test the result as well as the timing.
-Extra points if you ensure that we do not loose any iterations due to the split.
+1. Complete the function `sample_M_threaded_over_buckets_rng` by duplicating the code from `sample_M_threaded_over_buckets` and using `sample_M_non_distributed_rng` and `Random.default_rng()` in the inner loop.
+1. Test the result as well as the performance. Are we improving?
+1. Try to switch to `Random.MersenneTwister()`. Is it working? Do we improve?
+1. Use a different random number generator in each thread by switching to `RNG`. Do we improve?
+1. Try to switch to `Random.MersenneTwister(i)` within `RNG`. Is it working? Do we improve?
 \solution{
+Have a look at the end of this chapter.
+As long as we are using `Random.default_rng()` / `TaskLocalRNG()` we are not improving, since they still synchronize.
+Switching to `MersenneTwister` is not thread safe, so it crashes when not every thread is having its own instantiation.
+Using a separate `MersenneTwister` for each thread improves the performance.
+}
+}
+
+### Final results
+
+For comparison, here are our final results for 4 computational threads:
 ```julia
+julia> N = 2^30
+1073741824
+
+julia> @btime estimate_pi(N, :ex1)  # sample_M_non_distributed
+  2.624 s (37 allocations: 2.33 KiB)
+(3.141611408442259, 1.875485246571884e-5)
+
+julia> @btime estimate_pi(N, :ex2)  # sample_M_threaded
+  12.658 s (843299112 allocations: 12.57 GiB)
+(0.8049417361617088, 2.3366509174280843)
+
+julia> @btime estimate_pi(N, :ex3)  # sample_M_threaded_atomic
+  7.668 s (64 allocations: 4.69 KiB)
+(3.1415357775986195, 5.687599117365494e-5)
+
+julia> @btime estimate_pi(N, :ex4)  # sample_M_threaded_tasksafe
+  17.425 s (1686609766 allocations: 25.13 GiB)
+(3.1415630020201206, 2.965156967249527e-5)
+
+julia> @btime estimate_pi(N, :ex5)  # sample_M_threaded_over_buckets
+  674.323 ms (68 allocations: 4.83 KiB)
+(3.141591425985098, 1.2276046952308661e-6)
+
+julia> @btime estimate_pi(N, :ex6)  # sample_M_threaded_over_buckets_rng
+  444.370 ms (71 allocations: 4.86 KiB)
+(3.1416383907198906, 4.5737130097478484e-5)
+```
+
+\solution{
+Here is the overall solution code for this chapter:
+```julia
+using Base.Threads
+using BenchmarkTools
 using Random
 
-const ThreadRNG = Vector{Random.MersenneTwister}(undef, nthreads())
-@threads :static for i in 1:nthreads()
-       ThreadRNG[i] = Random.MersenneTwister(i)
+RNG = Vector{AbstractRNG}(undef, nthreads())
+for i in 1:nthreads()
+    RNG[i] = Random.MersenneTwister(i)
 end
 
-function in_unit_circle(N::Int64, rng)
+
+function sample_M_non_distributed_rng(N::Int64, rng::AbstractRNG)
     M = zero(Int64)
 
-    for j in 1:N
+    for _ in 1:N
         if (rand(rng)^2 + rand(rng)^2) < 1
             M += 1
         end
@@ -288,53 +287,87 @@ function in_unit_circle(N::Int64, rng)
     return M
 end
 
-function in_unit_circle_threaded4(N::Int64)
-    M = zeros(Int64, nthreads())
-    len, rem = divrem(N, nthreads())
 
-    @threads for i in 1:nthreads()
-      M[i] = in_unit_circle(len, ThreadRNG[i])
+function estimate_pi(N::Int64, method::Symbol)
+    function sample_M_non_distributed(N::Int64)
+        sample_M_non_distributed_rng(N, Random.default_rng())
     end
 
-    return sum(M)
-end 
+    function sample_M_threaded(N::Int64)
+        M = 0
 
-```
-and we test it
-```julia-repl
-julia> get_accuracy(in_unit_circle_threaded4, N)
-  3.955314820203171e-5
+        @threads for _ in 1:N
+            if (rand()^2 + rand()^2) < 1
+                M += 1
+            end
+        end
 
-julia> @btime estimate_pi(in_unit_circle_threaded4, N);
-  504.697 ms (22 allocations: 2.06 KiB)
+        return M
+    end
+
+    function sample_M_threaded_atomic(N::Int64)
+        M = Atomic{Int64}(0);
+
+        @threads for _ in 1:N
+            if (rand()^2 + rand()^2) < 1
+                atomic_add!(M, 1)
+            end
+        end
+
+        return M[]
+    end
+
+    function sample_M_threaded_tasksafe(N::Int64)
+        M = zeros(Int64, nthreads());
+
+        @threads :static for _ in 1:N
+            if (rand()^2 + rand()^2) < 1
+                @inbounds M[threadid()] += 1
+            end
+        end
+
+        return sum(M)
+    end
+
+    function sample_M_threaded_over_buckets(N::Int64)
+        M = zeros(Int64, nthreads())
+        len, _ = divrem(N, nthreads())
+
+        @threads for i in 1:nthreads()
+            M[i] = sample_M_non_distributed(len)
+        end
+
+        return sum(M)
+    end
+
+    function sample_M_threaded_over_buckets_rng(N::Int64)
+        M = zeros(Int64, nthreads())
+        len, _ = divrem(N, nthreads())
+
+        @threads for i in 1:nthreads()
+          M[i] = sample_M_non_distributed_rng(len, RNG[i])
+        end
+
+        return sum(M)
+    end
+
+     function_mapping = Dict(
+         :ex1 => sample_M_non_distributed,
+         :ex2 => sample_M_threaded,  # executable but wrong result
+         :ex3 => sample_M_threaded_atomic,
+         :ex4 => sample_M_threaded_tasksafe,
+         :ex5 => sample_M_threaded_over_buckets,
+         :ex6 => sample_M_threaded_over_buckets_rng,
+     )
+
+     M = function_mapping[method](N)
+
+     est_pi = 4 * M / N
+
+    return est_pi, abs(pi - est_pi)
+end
 ```
 }
-}
-
-### Final results
-
-For comparison, here are our final results for 4 computational threads:
-```julia
-Accuracy of in_unit_circle: 9.43186408797203e-5
-Performance:
-  2.531 s (0 allocations: 0 bytes)
-
-Accuracy of in_unit_circle_threaded1: 2.2828585264557084
-Performance:
-  21.899 s (843326330 allocations: 12.57 GiB)
-
-Accuracy of in_unit_circle_threaded2: 2.729346091356888e-5
-Performance:
-  10.487 s (24 allocations: 2.03 KiB)
-
-Accuracy of in_unit_circle_threaded3: 1.7652409621149445e-5
-Performance:
-  2.857 s (23 allocations: 2.08 KiB)
-
-Accuracy of in_unit_circle_threaded4: 3.955314820203171e-5
-Performance:
-  504.697 ms (22 allocations: 2.06 KiB)
-```
 
 ### Other pitfalls
 
