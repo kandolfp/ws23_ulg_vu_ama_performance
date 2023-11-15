@@ -38,9 +38,7 @@ In order to use the BenchmarkTools we need to include it with `using BenchmarkTo
 Benchmark our `mySum` function with the following macros:
 1. `@benchmark`
 1. `@btime` 
-1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run
-and compare the output and results.
-
+1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run and compare the output and results.
 1. Duplicate `mySum()`, name it `mySumNoInBounds()`, remove the `@inbounds` macro and compare the performance to that of `mySum()`.
 \solution{
 To measure the performance of the above code we do the following:
