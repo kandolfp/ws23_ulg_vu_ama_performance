@@ -51,7 +51,7 @@
   }
 </style>
 
-   <title>Remote Computing - History</title>  
+   <title>Remote Computing - Cloud Computing - Setup vhpc</title>  
 </head>
 <body>                      <!-- closed in foot.html -->
 <div class="page-wrap">   <!-- closed in foot.html -->
@@ -78,16 +78,16 @@
           </ul>
           <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remote computing</a>
             <ul class="menu-list-child-list ">
-              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link active">History</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link ">High Performance Computing</a>
               <ul class="menu-list-child-list ">
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/basics" class="menu-list-link ">Basics</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link ">Architecture</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
               </ul>
-              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link active">Cloud Computing</a>
                 <ul class="menu-list-child-list ">
-                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link active">Setup vHPC</a>
                 </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
             </ul>
@@ -107,19 +107,93 @@
 
 
 <!-- Content appended here (in class franklin-content) -->
-<div class="franklin-content"><h1 id="history"><a href="#history" class="header-anchor">History</a></h1>
-<p>While it would be worth while and fun to got through the entire list of </p>
+<div class="franklin-content"><h1 id="setup_vhpc"><a href="#setup_vhpc" class="header-anchor">Setup vHPC</a></h1>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#cloud_provider">Cloud provider</a></li><li><a href="#setup_of_the_provider">Setup of the provider</a></li><li><a href="#create_your_infrastructure">Create your infrastructure</a></li><li><a href="#configure_the_infrastructure">Configure the infrastructure</a></li></ol></div>
+<h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
+<p>We use the setup of the vHPC es used in the other section for testing as one aspect of how some aspects of working with <em>the cloud</em> looks like. </p>
+<h2 id="cloud_provider"><a href="#cloud_provider" class="header-anchor">Cloud provider</a></h2>
+<p>The cloud is managed my some system this can be one of the public clouds like</p>
 <ul>
-<li><p><a href="https://en.wikipedia.org/wiki/Timeline_of_computing_hardware_before_1950">computing hardware before 1950</a></p>
+<li><p>Amazone  <a href="https://aws.amazon.com/">aws</a></p>
 </li>
-<li><p><a href="https://en.wikipedia.org/wiki/History_of_computing_hardware_&#40;1960s&#37;E2&#37;80&#37;93present&#41;">computing hardware after 1960</a></p>
+<li><p>Microsoft <a href="https://azure.microsoft.com/">Azure</a></p>
+</li>
+<li><p>Google <a href="https://cloud.google.com/gcp/">GCP</a></p>
 </li>
 </ul>
-<p>on Wikipedia, we need to limit ourself. </p>
-<p>We are only briefly describing the main steps in computing hardware, limiting ourself to <em>modern</em> computing hardware, i.e. digital computers, and focus on how they can/could be accessed and used. </p>
-<p>Before we start, <a href="https://www.computerhistory.org/timeline/computers/">computer history museum</a> has an excellent timeline starting in 1937 with a relay based adder and ending in 2015 with the Apple Watch - <a href="https://www.smbc-comics.com/comic/2011-02-17">you can for sure run doom on it</a>. </p>
-<div class="note"><div class="title">⚠ Note</div>
-<div class="content">An error in a program or <strong>bug</strong> is named after the common problem that bugs would prevent relays from switching. So yes it used to be actual 🐛 that caused errors, <a href="https://education.nationalgeographic.org/resource/worlds-first-computer-bug/">reference</a>.</div></div>
+<p>or on premises </p>
+<ul>
+<li><p><a href="https://www.openstack.org/">openstack</a></p>
+</li>
+</ul>
+<p>Now we do not have such an infrastructure at our disposal but we can still simulate one. We do this with a somewhat powerful server and <a href="https://libvirt.org/">libvirt</a>, this is going to be our cloud provider. </p>
+<h2 id="setup_of_the_provider"><a href="#setup_of_the_provider" class="header-anchor">Setup of the provider</a></h2>
+<p>The cloud needs to be created as so many other things. Of on premise clouds this means installing the cloud software &#40;openstack&#41; and adding servers, storage, ... to the managed resources.  In our case we install libvirt on Ubuntu.</p>
+<h2 id="create_your_infrastructure"><a href="#create_your_infrastructure" class="header-anchor">Create your infrastructure</a></h2>
+<p>Now we need to define our infrastructure.  In our case we would like to have</p>
+<ul>
+<li><p>one Slurm management node</p>
+</li>
+<li><p>three Slurm worker nodes</p>
+</li>
+<li><p>storage for each virtual machine</p>
+</li>
+<li><p>a operating system on each machine - we use Rocky Linux 8</p>
+</li>
+<li><p>initial setup of the nodes to allow further configuration &#40;service account&#41;</p>
+</li>
+<li><p>a network for all of the machines</p>
+</li>
+</ul>
+<p>We describe all of this in <a href="https://www.terraform.io/">Terraform</a> a descriptive language that is often used to define infrastructure.  Luckily for us, there is a Terraform provider for libvirt. </p>
+<p>The actual code is <code>yml</code>, e.g. below you see the final part of defining the worker nodes.</p>
+<pre><code class="language-terraform">resource &quot;libvirt_domain&quot; &quot;worker&quot; &#123;
+  count      &#61; var.count_worker_nodes
+  name       &#61; &quot;&#36;&#123;format&#40;&quot;&#36;&#123;var.os_prefix&#125;-&#36;&#123;var.w_short&#125;-&#37;02d&quot;, count.index &#43; 1&#41;&#125;.&#36;&#123;var.domain&#125;&quot;
+  memory     &#61; var.memory
+  vcpu       &#61; var.vcpu
+  cloudinit  &#61; element&#40;libvirt_cloudinit_disk.commoninit_worker&#91;*&#93;.id, count.index&#41;
+  disk &#123;
+    volume_id &#61; element&#40;libvirt_volume.worker&#91;*&#93;.id, count.index&#41;
+  &#125;
+  network_interface &#123;
+    network_name &#61; var.network
+    wait_for_lease &#61; true
+  &#125;
+  console &#123;
+    type        &#61; &quot;pty&quot;
+    target_port &#61; &quot;0&quot;
+    target_type &#61; &quot;serial&quot;
+  &#125;
+  console &#123;
+    type        &#61; &quot;pty&quot;
+    target_type &#61; &quot;virtio&quot;
+    target_port &#61; &quot;1&quot;
+  &#125;
+  graphics &#123;
+    type        &#61; &quot;spice&quot;
+    listen_type &#61; &quot;address&quot;
+    autoport    &#61; true
+  &#125;
+
+  connection &#123;
+    type        &#61; &quot;ssh&quot;
+    private_key &#61; file&#40;&quot;~/.ssh/id_rsa&quot;&#41;
+    user        &#61; var.user_name
+    timeout     &#61; &quot;2m&quot;
+    host        &#61; format&#40;&quot;&#36;&#123;var.os_prefix&#125;-&#36;&#123;var.w_short&#125;-&#37;02d&quot;, count.index &#43; 1&#41;
+  &#125;
+  cpu &#123;
+    mode &#61; &quot;host-passthrough&quot;
+  &#125;
+&#125;</code></pre>
+<p>With our <em>Infrastructure as Code</em> we can use Terraform to deploy it and with that we have our machines.  The minimal configuration to have a service account for the next step is done via <code>cloud-init</code>.</p>
+<p>This can easily be automated and is often called <strong>Infrastructure as a Service</strong></p>
+<h2 id="configure_the_infrastructure"><a href="#configure_the_infrastructure" class="header-anchor">Configure the infrastructure</a></h2>
+<p>All we have now is 4 virtual machines that have a Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. </p>
+<p>For this we use <a href="https://www.ansible.com/">Ansible</a>.</p>
+<p>Again we write some <code>yml</code> files that do the actual configuration. More precisely we used the excellent ansible scripts provided by the <a href="https://github.com/elasticluster/elasticluster">elasticluster</a> project.  Unfortunately, this project is already a bit stale but with some adaptations it works for our setup. </p>
+<p>The main idea </p>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 16, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -130,8 +204,8 @@
     </div> <!-- end of class page-wrap-->
     
     
-      
-
+      <script src="/ws23_ulg_vu_ama_performance/libs/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
 
       <script>
     (function(){

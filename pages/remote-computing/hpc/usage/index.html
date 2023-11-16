@@ -86,6 +86,9 @@
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link active">Usage</a>
               </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
+                <ul class="menu-list-child-list ">
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
+                </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
             </ul>
       </ul>
@@ -105,15 +108,21 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="usage"><a href="#usage" class="header-anchor">Usage</a></h1>
-<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#testsetup">Testsetup</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
 <p>The idea of HPC Systems is to be used as much as possible, usually by a lot of different people or programs.  In order to make sure that users and programs do not interfere with each other the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs.</p>
 <p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard mode of access is still via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
 <p>Via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our job to the queue &#40;and wait&#41;. </p>
 <p>There are different job schedulers around, the most commonly found is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
+<h2 id="testsetup"><a href="#testsetup" class="header-anchor">Testsetup</a></h2>
+<p>If you do this class at home or to another time you can still use a test setup.  E.g. use the excellent docker-compose setup of <a href="https://github.com/giovtorres">Giocanni Torres</a> that you can find <a href="https://github.com/giovtorres/slurm-docker-cluster">here</a>.</p>
+<p>At the time of the creation of this notes the following sequence of commands will start a cluster and give you access to the nodes. </p>
+<pre><code class="bash hljs">SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose build
+SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose up -d
+docker <span class="hljs-built_in">exec</span> -it slurmctld bash</code></pre>
+<p>For the live session of this class we created an virtual cluster with 3 nodes.  How this was done is described further in the cloud section. </p>
+<div class="important">How to get access to the live setup is not in the notes.</div>
 <h2 id="slurm_-_as_a_job_scheduler"><a href="#slurm_-_as_a_job_scheduler" class="header-anchor">Slurm - as a job scheduler</a></h2>
-<div class="important"><p>HAVE A CLUSTER ON ONE OF THE WORKSTATIONS OR DOCKER-COMPOSE</p>
-<p>Describe the setup</p></div>
 <p>The inner workings of the Slurm can be found in the <a href="https://slurm.schedmd.com/">documentation</a>, we discuss some of the most important commands<sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup></p>
 <ul>
 <li><p><code>sbatch</code> is used so submit a job script </p>
@@ -136,7 +145,7 @@
 <div class="content">The following notes are a combination from various sources <sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup> <sup id="fnref:4"><a href="#fndef:4" class="fnref">[4]</a></sup>.</div></div>
 <h3 id="submitting_a_job"><a href="#submitting_a_job" class="header-anchor">Submitting a job</a></h3>
 <p>Let us start by directly handing over a job to Slurm</p>
-<pre><code class="bash hljs">$ sbatch --wrap=<span class="hljs-string">&quot;sleep 10s &amp;&amp; /bin/hostname&quot;</span>
+<pre><code class="bash hljs">$ sbatch --wrap=<span class="hljs-string">&quot;sleep 100s &amp;&amp; /bin/hostname&quot;</span>
 Submitted batch job 1</code></pre>
 <p>the <code>--wrap</code> option allows us to wrap a command string into a shell script and submit this script to the job scheduler. </p>
 <p><strong>Question 1</strong>: What does the command <code>sleep 10s &amp;&amp; /bin/hostname</code> do? </p>
@@ -172,9 +181,8 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
     2    normal    peter     root  R       0:03      1 c1</code></pre>
 <p>Of course it is possible to have options in the job file and provide them during the call in the command line.  In this case, the ones provide to the command line will have precedence and this can be used to override our default settings. </p>
 <p>We are not running on a production cluster but of course it is always a good idea to limit the resources that we use as much as possible. In our case we know how long the job runs so let us include this information.</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Have a look at the <code>sbatch</code> options and provide a maximal &#40;wallclock&#41; time for the job, e.g. 11 seconds. </p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Have a look at the <code>sbatch</code> options and provide a maximal &#40;wallclock&#41; time for the job, e.g. 1 minute. </p>
 <p>What happens if this time is shorter than the runtime of our job?</p>
-<p><strong>Important</strong>: for some reason on the test cluster you can not specify seconds, so change the example from above to <code>sleep 10</code> and work with one minute. </p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  We just show how to include this via a command line argument</p>
 <pre><code class="bash hljs">sbatch --time=0:1 job.slurm</code></pre>
 <p>If the time is smaller than the actual execution time, the job is killed before it finishes. </p>
@@ -249,7 +257,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 <li><p>Deploy the individual <em>tasks</em> across all of the nodes selected by the job scheduler. In Slurm terms this is called the <em>job step</em>. One job might have several job steps. </p>
 </li>
 </ol>
-<button type="button" class="collapsible" style="background-color:#caffa5"> Example </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks and such that the actual workload is distributed with <code>srun</code>.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks and such that the actual workload is distributed with <code>srun</code>.</p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need to split up the code and put the <code>echo</code> and the <code>for</code> loop into a separate script, i.e. <code>task.sh</code>.</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
@@ -320,18 +328,17 @@ c1
 </ul>
 <div class="important">In particular we can use <code>squeue</code> to look up our <code>JobID</code> that is needed for a lot of the following commands.</div>
 <p>In order to get information about past jobs we can use <code>sacct</code> or <code>sacct -X</code> to skip the information about the individual job steps.</p>
-<div class="important">NEEDS TO BE REPLACED</div>
 <pre><code class="bash hljs">sacct -X
 JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
 ------------ ---------- ---------- ---------- ---------- ---------- -------- 
-49             hostname     normal       root          2  COMPLETED      0:0 
-50             hostname     normal       root          2  COMPLETED      0:0 
-52                peter     normal       root          1     FAILED     13:0 
-53                peter     normal       root          1  COMPLETED      0:0 
-54                peter     normal       root          1  COMPLETED      0:0 
-55                peter     normal       root          1  COMPLETED      0:0 
-56                peter     normal       root          2  COMPLETED      0:0 
-57                 bash     normal       root          1  COMPLETED      0:0</code></pre>
+1              hostname     normal       root          2  COMPLETED      0:0 
+2              hostname     normal       root          2  COMPLETED      0:0 
+3                 peter     normal       root          1    TIMEOUT     13:0 
+4                 peter     normal       root          1  COMPLETED      0:0 
+5                 peter     normal       root          1  COMPLETED      0:0 
+6                 peter     normal       root          1     FAILED      1:0 
+7                 peter     normal       root          2  COMPLETED      0:0 
+8                  bash     normal       root          1  COMPLETED      0:0</code></pre>
 <h3 id="altering_jobs"><a href="#altering_jobs" class="header-anchor">Altering jobs</a></h3>
 <p>While our job is in a <em>pending</em> state we can change its configuration.  This is done via <code>scontrol</code> so for example we can change the maximal runtime with</p>
 <pre><code class="bash hljs">scontrol update job JobID TimeLimit=2</code></pre>
@@ -373,7 +380,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 15, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 16, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
