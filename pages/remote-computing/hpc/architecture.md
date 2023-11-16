@@ -29,6 +29,8 @@ This includes various high performance parallel storage systems for different us
 
 \figenv{Architecture 2 - Partitions and the support components.}{/assets/pages/remote-computing/hpc/parts2.svg}{}
 
+### Real world examples
+
 Leonardo (#4 on the TOP500) has a nice animated video that shows the different sections nicely:
 
 ~~~
