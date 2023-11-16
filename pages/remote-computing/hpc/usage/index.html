@@ -117,12 +117,12 @@
 <p>Via <code>ssh</code> we usually reach one of the login nodes and from here we get access to the job scheduler. We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our job to the queue &#40;and wait&#41;. </p>
 <p>There are different job schedulers around, the most commonly found is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
 <h2 id="testsetup"><a href="#testsetup" class="header-anchor">Testsetup</a></h2>
-<p>If you do this class at home or to another time you can still use a test setup.  E.g. use the excellent docker-compose setup of <a href="https://github.com/giovtorres">Giocanni Torres</a> that you can find <a href="https://github.com/giovtorres/slurm-docker-cluster">here</a>.</p>
-<p>At the time of the creation of this notes the following sequence of commands will start a cluster and give you access to the nodes. </p>
+<p>If you do this class at home or at another time you can still use a test setup.  E.g. use the excellent docker-compose setup of <a href="https://github.com/giovtorres">Giocanni Torres</a> that you can find <a href="https://github.com/giovtorres/slurm-docker-cluster">here</a>.</p>
+<p>At the time of creation of these notes the following sequence of commands will start a cluster and give you access to the nodes. </p>
 <pre><code class="bash hljs">SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose build
 SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose up -d
 docker <span class="hljs-built_in">exec</span> -it slurmctld bash</code></pre>
-<p>For the live session of this class we created an virtual cluster with 3 nodes.  How this was done is described further in the cloud section. </p>
+<p>For the live session of this class we created a virtual HPC with 3 nodes.  How this was done is described further in the cloud section. </p>
 <div class="important">How to get access to the live setup is not in the notes.</div>
 <h2 id="slurm_-_as_a_job_scheduler"><a href="#slurm_-_as_a_job_scheduler" class="header-anchor">Slurm - as a job scheduler</a></h2>
 <p>The inner workings of the Slurm can be found in the <a href="https://slurm.schedmd.com/">documentation</a>, we discuss some of the most important commands<sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup></p>
