@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
+   
+    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
   
   
   <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
@@ -48,7 +51,7 @@
   }
 </style>
 
-   <title>404</title>  
+   <title>Remote Computing - Cloud Computing - Architecture</title>  
 </head>
 <body>                      <!-- closed in foot.html -->
 <div class="page-wrap">   <!-- closed in foot.html -->
@@ -73,7 +76,7 @@
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
           </ul>
-          <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link ">Remote computing</a>
+          <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remote computing</a>
             <ul class="menu-list-child-list ">
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link ">High Performance Computing</a>
@@ -82,10 +85,10 @@
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link ">Architecture</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
               </ul>
-              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link active">Cloud Computing</a>
                 <ul class="menu-list-child-list ">
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link ">Basics</a>
-                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link ">Architecture</a>
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link active">Architecture</a>
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
                 </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
@@ -106,31 +109,13 @@
 
 
 <!-- Content appended here (in class franklin-content) -->
-<div class="franklin-content">
-<div style="margin-top: 40px; font-size: 40px; text-align: center;">
-
-  <br>
-
-  <div style="font-weight: bold;">
-    404
-  </div>
-
-  <br>
-  <br>
-
-    The requested page was not found
-
-  <br>
-  <br>
-  <br>
-  <br>
-
-  <div style="margin-bottom: 300px; font-size: 24px">
-    <a href="/ws23_ulg_vu_ama_performance/">Click here</a> to go back to the homepage.
-  </div>
-
-</div>
-
+<div class="franklin-content"><h1 id="architecture"><a href="#architecture" class="header-anchor">Architecture</a></h1>
+<p>We just briefly touch the subject of architecture for cloud systems, mainly to give a counterpoint to the same <a href="../../hpc/architecture">section</a> in high performance computing. As such, this is just a rough overview to give the concept some shape, it relies on the concepts from the <a href="../../hpc/architecture">HPC architecture section</a>.</p>
+<p>A cloud infrastructure looks very similar to the one of a HPC. It consists of a collection of individual nodes combine to a rack, multiple racks form a partition and with the support infrastructure like storage and the configuration layer it forms the cloud infrastructure. </p>
+<p>Usually there are two separate networks. On for the configuration layer, the so called <em>under cloud</em>, and one for the actual connection of the nodes.</p>
+<p>The under cloud is where the cloud software &#40;e.g. openstack&#41; is running and doing its job of managing the various VMs, storage accounts, network traffic, and much more. </p>
+<p>Again a high capacity and performance storage comes into play to support all of the various storage needs &#40;VM discs, application storage,... &#41;.</p>
+<p>No when you request a virtual machine form this infrastructure you do not get a <strong>bare metal</strong> machine but rather a virtual machine. That is an abstraction layer on top of the hardware. You might get four cores and 16GB of RAM and some other user gets the 8 cores with 32GB of RAM on the same node, actually quite similar to the job scheduler we saw for HPC Systems.</p>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 16, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -140,6 +125,69 @@
     </div> <!-- end of class main-content-wrap -->
     </div> <!-- end of class page-wrap-->
     
+    
+      
+
+
+      <script>
+    (function(){
+    
+      // Get the elements.
+      // - the 'pre' element.
+      // - the 'div' with the 'paste-content' id.
+    
+      var pre = document.getElementsByTagName('pre');
+    
+      // Add a copy button in the 'pre' element.
+      // which only has the className of 'language-'.
+    
+      for (var i = 0; i < pre.length; i++) {
+        var isLanguage = pre[i].children[0].tagName == 'CODE';
+    
+        if ( isLanguage ) {
+          var button           = document.createElement('button');
+              button.className = 'copy-button';
+              button.textContent = 'Copy';
+    
+              pre[i].appendChild(button);
+        }
+      };
+    
+      // Run Clipboard
+    
+      var copyCode = new Clipboard('.copy-button', {
+        target: function(trigger) {
+          return trigger.previousElementSibling;
+        }
+      });
+    
+      // On success:
+      // - Change the "Copy" text to "Copied".
+      // - Swap it to "Copy" in 2s.
+      // - Lead user to the "contenteditable" area with Velocity scroll.
+    
+      copyCode.on('success', function(event) {
+        event.clearSelection();
+        event.trigger.textContent = 'Copied';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 2000);
+    
+      });
+    
+      // On error (Safari):
+      // - Change the  "Press Ctrl+C to copy"
+      // - Swap it to "Copy" in 2s.
+    
+      copyCode.on('error', function(event) {
+        event.trigger.textContent = 'Press "Ctrl + C" to copy';
+        window.setTimeout(function() {
+          event.trigger.textContent = 'Copy';
+        }, 5000);
+      });
+    
+    })();
+</script>
     
   </body>
 </html>

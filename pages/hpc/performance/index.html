@@ -87,6 +87,8 @@
               </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
                 <ul class="menu-list-child-list ">
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link ">Basics</a>
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link ">Architecture</a>
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
                 </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
@@ -122,9 +124,9 @@
 V = rand(<span class="hljs-number">100_000</span>)
 <span class="hljs-meta">@time</span> mySum(V)
 <span class="hljs-meta">@time</span> mySum(V)</code></pre>
-<pre><code class="plaintext hljs">  0.005641 seconds (2.22 k allocations: 154.116 KiB, 98.16% compilation time)
+<pre><code class="plaintext hljs">  0.005804 seconds (2.22 k allocations: 154.116 KiB, 98.17% compilation time)
   0.000097 seconds (1 allocation: 16 bytes)
-50037.215539135825</code></pre>
+50017.482469706156</code></pre>
 <div class="important">In order to optimize the loop call we use the <a href="https://docs.julialang.org/en/v1/devdocs/boundscheck/"><code>@inbounds</code></a> macro to eliminate inbound checks for the array access and thus improve performance. It is challenging and probably even not possible to prove the safety of methods using <code>@inbounds</code>, so it is essential to consider the trade-off between performance gains and the potential for unnoticed errors. Rule of thumb: Do not use it, unless you really need this performance gain.</div>
 <p>The downside with the <code>@time</code> macro is, that it really just measures the execution time of what is given to it. This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate.</p>
 <p>Therefore, if we are serious about measuring performance we should stick to the <a href="https://juliaci.github.io/BenchmarkTools.jl/stable/"><code>BenchmarkTools</code></a>. It comes with a couple of macros that we should test out:</p>
@@ -144,12 +146,12 @@ V = rand(<span class="hljs-number">100_000</span>)
 
 <span class="hljs-meta">@benchmark</span> mySum($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.583 μs … 117.441 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.644 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   92.952 μs ±   1.680 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.582 μs … 128.809 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.662 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   93.135 μs ±   2.066 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █▁   ▁                                                       ▁
-  ██▄▅▆█▅▃▃▁▄▄▄█▇▇▅▅▄▁▁▁▁▄▄▄▃▄▄▄▄▄▁▁▁▁▃▃▁▃▁▄▁▃▄▃▃▃▄▁▁▃▄▃▄▄▇██▇ █
+  █    ▁                                                       ▁
+  ██▄▄▄█▄▁▄▄▃▄▄▇█▇▆▅▄▄▁▄▃▄▄▃▄▄▃▃▄▄▁▃▃▁▅▅▅▅▇▆▅▄▅▅▆▆▆▇▆▆▆▆▆███▇▆ █
   92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> the full details with </p>
@@ -165,14 +167,14 @@ dump(t)</code></pre>
     gcsample: Bool false
     time_tolerance: Float64 0.05
     memory_tolerance: Float64 0.01
-  times: Array{Float64}((10000,)) [95409.0, 93225.0, 93465.0, 93155.0, 93366.0, 93025.0, 92965.0, 92874.0, 93135.0, 92765.0  …  92674.0, 92623.0, 92664.0, 92633.0, 92624.0, 92665.0, 92624.0, 92674.0, 92624.0, 92674.0]
+  times: Array{Float64}((10000,)) [94706.0, 92603.0, 92642.0, 92603.0, 92683.0, 101389.0, 92643.0, 92683.0, 92643.0, 92642.0  …  92673.0, 92593.0, 92632.0, 92642.0, 92683.0, 92633.0, 92673.0, 92632.0, 92643.0, 92673.0]
   gctimes: Array{Float64}((10000,)) [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   memory: Int64 0
   allocs: Int64 0
 </code></pre> and the often used sanity check, that actually also shows you the output of your code.</p>
 <pre><code class="julia hljs"><span class="hljs-meta">@btime</span> mySum($V)</code></pre>
 <pre><code class="plaintext hljs">  92.583 μs (0 allocations: 0 bytes)
-50037.215539135825</code></pre>
+50017.482469706156</code></pre>
 <p>Skipping the <code>inbound</code> check only gives a minor improvement as you can see when you compare the results to the following version which performs the check:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> mySumNoInbounds(V)
     s = zero(eltype(V))
@@ -186,12 +188,12 @@ dump(t)</code></pre>
 
 <span class="hljs-meta">@benchmark</span> mySumNoInbounds($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.574 μs … 113.143 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.634 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   92.928 μs ±   1.606 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.582 μs … 118.520 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.672 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   93.142 μs ±   2.017 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █    ▁                                                       ▁
-  █▆▅▅▅█▁▃▄▄▁▄▄█▇▆▅▄▄▁▃▁▃▄▄▄▄▄▄▄▄▃▃▁▁▁▃▁▁▁▄▁▄▁▁▄▃▃▁▄▃▁▄▄▄▃▆██▇ █
+  █    ▁   ▁                                                   ▁
+  █▇▆▆▇█▆▆▆█▇▆▅▇██▅▅▅▅▅▅▄▄▁▄▃▁▄▁▃▃▃▁▃▃▃▄▄▅▄▆▄▆▄▆▅▆▆▆▆▆▆▇▇██▇▆▅ █
   92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> </div> </div>

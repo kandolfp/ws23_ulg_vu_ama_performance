@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
    <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
    
     <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
@@ -87,6 +88,8 @@
               </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link active">Cloud Computing</a>
                 <ul class="menu-list-child-list ">
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link ">Basics</a>
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link ">Architecture</a>
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link active">Setup vHPC</a>
                 </ul>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
@@ -108,7 +111,7 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="setup_vhpc"><a href="#setup_vhpc" class="header-anchor">Setup vHPC</a></h1>
-<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#cloud_provider">Cloud provider</a></li><li><a href="#setup_of_the_provider">Setup of the provider</a></li><li><a href="#create_your_infrastructure">Create your infrastructure</a></li><li><a href="#configure_the_infrastructure">Configure the infrastructure</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#cloud_provider">Cloud provider</a></li><li><a href="#setup_of_the_provider">Setup of the provider</a></li><li><a href="#create_your_infrastructure">Create your infrastructure</a></li><li><a href="#configure_the_infrastructure">Configure the infrastructure</a></li><li><a href="#use_the_infrastructure">Use the infrastructure</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
 <p>We use the setup of the vHPC es used in the other section for testing as one aspect of how some aspects of working with <em>the cloud</em> looks like. </p>
 <h2 id="cloud_provider"><a href="#cloud_provider" class="header-anchor">Cloud provider</a></h2>
@@ -147,53 +150,112 @@
 </ul>
 <p>We describe all of this in <a href="https://www.terraform.io/">Terraform</a> a descriptive language that is often used to define infrastructure.  Luckily for us, there is a Terraform provider for libvirt. </p>
 <p>The actual code is <code>yml</code>, e.g. below you see the final part of defining the worker nodes.</p>
-<pre><code class="language-terraform">resource &quot;libvirt_domain&quot; &quot;worker&quot; &#123;
-  count      &#61; var.count_worker_nodes
-  name       &#61; &quot;&#36;&#123;format&#40;&quot;&#36;&#123;var.os_prefix&#125;-&#36;&#123;var.w_short&#125;-&#37;02d&quot;, count.index &#43; 1&#41;&#125;.&#36;&#123;var.domain&#125;&quot;
-  memory     &#61; var.memory
-  vcpu       &#61; var.vcpu
-  cloudinit  &#61; element&#40;libvirt_cloudinit_disk.commoninit_worker&#91;*&#93;.id, count.index&#41;
-  disk &#123;
-    volume_id &#61; element&#40;libvirt_volume.worker&#91;*&#93;.id, count.index&#41;
-  &#125;
-  network_interface &#123;
-    network_name &#61; var.network
-    wait_for_lease &#61; true
-  &#125;
-  console &#123;
-    type        &#61; &quot;pty&quot;
-    target_port &#61; &quot;0&quot;
-    target_type &#61; &quot;serial&quot;
-  &#125;
-  console &#123;
-    type        &#61; &quot;pty&quot;
-    target_type &#61; &quot;virtio&quot;
-    target_port &#61; &quot;1&quot;
-  &#125;
-  graphics &#123;
-    type        &#61; &quot;spice&quot;
-    listen_type &#61; &quot;address&quot;
-    autoport    &#61; true
-  &#125;
+<pre><code class="yml hljs"><span class="hljs-string">resource</span> <span class="hljs-string">&quot;libvirt_domain&quot;</span> <span class="hljs-string">&quot;worker&quot;</span> {
+  <span class="hljs-string">count</span>      <span class="hljs-string">=</span> <span class="hljs-string">var.count_worker_nodes</span>
+  <span class="hljs-string">name</span>       <span class="hljs-string">=</span> <span class="hljs-string">&quot;${format(&quot;</span><span class="hljs-string">$</span>{<span class="hljs-string">var.os_prefix</span>}<span class="hljs-string">-$</span>{<span class="hljs-string">var.w_short</span>}<span class="hljs-string">-%02d&quot;</span>, <span class="hljs-string">count.index</span> <span class="hljs-string">+</span> <span class="hljs-number">1</span><span class="hljs-string">)</span>}<span class="hljs-string">.${var.domain}&quot;</span>
+  <span class="hljs-string">memory</span>     <span class="hljs-string">=</span> <span class="hljs-string">var.memory</span>
+  <span class="hljs-string">vcpu</span>       <span class="hljs-string">=</span> <span class="hljs-string">var.vcpu</span>
+  <span class="hljs-string">cloudinit</span>  <span class="hljs-string">=</span> <span class="hljs-string">element(libvirt_cloudinit_disk.commoninit_worker[*].id,</span> <span class="hljs-string">count.index)</span>
+  <span class="hljs-string">disk</span> {
+    <span class="hljs-string">volume_id</span> <span class="hljs-string">=</span> <span class="hljs-string">element(libvirt_volume.worker</span>[<span class="hljs-string">*</span>]<span class="hljs-string">.id</span>, <span class="hljs-string">count.index)</span>
+  }
+  <span class="hljs-string">network_interface</span> {
+    <span class="hljs-string">network_name</span> <span class="hljs-string">=</span> <span class="hljs-string">var.network</span>
+    <span class="hljs-string">wait_for_lease</span> <span class="hljs-string">=</span> <span class="hljs-literal">true</span>
+  }
+  <span class="hljs-string">console</span> {
+    <span class="hljs-string">type</span>        <span class="hljs-string">=</span> <span class="hljs-string">&quot;pty&quot;</span>
+    <span class="hljs-string">target_port</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;0&quot;</span>
+    <span class="hljs-string">target_type</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;serial&quot;</span>
+  }
+  <span class="hljs-string">console</span> {
+    <span class="hljs-string">type</span>        <span class="hljs-string">=</span> <span class="hljs-string">&quot;pty&quot;</span>
+    <span class="hljs-string">target_type</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;virtio&quot;</span>
+    <span class="hljs-string">target_port</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;1&quot;</span>
+  }
+  <span class="hljs-string">graphics</span> {
+    <span class="hljs-string">type</span>        <span class="hljs-string">=</span> <span class="hljs-string">&quot;spice&quot;</span>
+    <span class="hljs-string">listen_type</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;address&quot;</span>
+    <span class="hljs-string">autoport</span>    <span class="hljs-string">=</span> <span class="hljs-literal">true</span>
+  }
 
-  connection &#123;
-    type        &#61; &quot;ssh&quot;
-    private_key &#61; file&#40;&quot;~/.ssh/id_rsa&quot;&#41;
-    user        &#61; var.user_name
-    timeout     &#61; &quot;2m&quot;
-    host        &#61; format&#40;&quot;&#36;&#123;var.os_prefix&#125;-&#36;&#123;var.w_short&#125;-&#37;02d&quot;, count.index &#43; 1&#41;
-  &#125;
-  cpu &#123;
-    mode &#61; &quot;host-passthrough&quot;
-  &#125;
-&#125;</code></pre>
+  <span class="hljs-string">connection</span> {
+    <span class="hljs-string">type</span>        <span class="hljs-string">=</span> <span class="hljs-string">&quot;ssh&quot;</span>
+    <span class="hljs-string">private_key</span> <span class="hljs-string">=</span> <span class="hljs-string">file(&quot;~/.ssh/id_rsa&quot;)</span>
+    <span class="hljs-string">user</span>        <span class="hljs-string">=</span> <span class="hljs-string">var.user_name</span>
+    <span class="hljs-string">timeout</span>     <span class="hljs-string">=</span> <span class="hljs-string">&quot;2m&quot;</span>
+    <span class="hljs-string">host</span>        <span class="hljs-string">=</span> <span class="hljs-string">format(&quot;$</span>{<span class="hljs-string">var.os_prefix</span>}<span class="hljs-string">-$</span>{<span class="hljs-string">var.w_short</span>}<span class="hljs-string">-%02d&quot;</span>, <span class="hljs-string">count.index</span> <span class="hljs-string">+</span> <span class="hljs-number">1</span><span class="hljs-string">)</span>
+  }
+  <span class="hljs-string">cpu</span> {
+    <span class="hljs-string">mode</span> <span class="hljs-string">=</span> <span class="hljs-string">&quot;host-passthrough&quot;</span>
+  }
+<span class="hljs-string">}</span></code></pre>
 <p>With our <em>Infrastructure as Code</em> we can use Terraform to deploy it and with that we have our machines.  The minimal configuration to have a service account for the next step is done via <code>cloud-init</code>.</p>
 <p>This can easily be automated and is often called <strong>Infrastructure as a Service</strong></p>
 <h2 id="configure_the_infrastructure"><a href="#configure_the_infrastructure" class="header-anchor">Configure the infrastructure</a></h2>
 <p>All we have now is 4 virtual machines that have a Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. </p>
-<p>For this we use <a href="https://www.ansible.com/">Ansible</a>.</p>
+<p>For this we use <a href="https://www.ansible.com/">Ansible</a> from RedHat.</p>
 <p>Again we write some <code>yml</code> files that do the actual configuration. More precisely we used the excellent ansible scripts provided by the <a href="https://github.com/elasticluster/elasticluster">elasticluster</a> project.  Unfortunately, this project is already a bit stale but with some adaptations it works for our setup. </p>
-<p>The main idea </p>
+<p>The main idea is to define playbooks.  A playbook usually makes sure to configure a certain service, in our case the vHPC. The service has different roles so we subdivide down to roles.  For example the Slurm playbook is split in three parts:</p>
+<ul>
+<li><p>slurm-common <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>→</mo></mrow><annotation encoding="application/x-tex">\to</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span></span></span></span> needed for both machines</p>
+</li>
+<li><p>slurm-master <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>→</mo></mrow><annotation encoding="application/x-tex">\to</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span></span></span></span> just for the management node</p>
+</li>
+<li><p>slurm-worker <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>→</mo></mrow><annotation encoding="application/x-tex">\to</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span></span></span></span> just for the worker nodes</p>
+</li>
+</ul>
+<p>We can cluster the different VMs per role and run the playbook for each role.  The entire elasticluster is much bigger and to allow reuse we further subdivide down to more specific services and tasks.  It is also possible to provide different ways for different platforms, e.g. RHEL or Debian based Linux distributions.</p>
+<p>This is an excerpt of the <code>slurm.yml</code> playbook<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup></p>
+<pre><code class="yml hljs"><span class="hljs-meta">---
+</span>
+<span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Slurm</span> <span class="hljs-string">master</span> <span class="hljs-string">Playbook</span>
+  <span class="hljs-attr">hosts:</span> <span class="hljs-string">slurm_master</span>
+  <span class="hljs-attr">roles:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">role:</span> <span class="hljs-string">&#x27;nis&#x27;</span>
+      <span class="hljs-attr">NIS_MASTER:</span> <span class="hljs-string">&quot;<span class="hljs-template-variable">{{groups.slurm_master[0]}}</span>&quot;</span>
+      <span class="hljs-attr">when:</span> <span class="hljs-string">&#x27;multiuser_cluster|default(&quot;true&quot;)|bool&#x27;</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">role:</span> <span class="hljs-string">&#x27;nfs-server&#x27;</span>
+      <span class="hljs-attr">NFS_EXPORTS:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">path:</span> <span class="hljs-string">&#x27;/home&#x27;</span>
+          <span class="hljs-attr">clients:</span> <span class="hljs-string">&quot;<span class="hljs-template-variable">{{groups.slurm_worker + groups.slurm_submit|default([])}}</span>&quot;</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">slurm-master</span>
+
+
+<span class="hljs-bullet">-</span> <span class="hljs-attr">name:</span> <span class="hljs-string">Slurm</span> <span class="hljs-string">worker</span> <span class="hljs-string">nodes</span> <span class="hljs-string">Playbook</span>
+  <span class="hljs-attr">hosts:</span> <span class="hljs-string">slurm_worker</span>
+  <span class="hljs-attr">roles:</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">role:</span> <span class="hljs-string">&#x27;nis&#x27;</span>
+      <span class="hljs-attr">NIS_MASTER:</span> <span class="hljs-string">&quot;<span class="hljs-template-variable">{{groups.slurm_master[0]}}</span>&quot;</span>
+      <span class="hljs-attr">when:</span> <span class="hljs-string">&#x27;multiuser_cluster|default(&quot;true&quot;)|bool&#x27;</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-attr">role:</span> <span class="hljs-string">&#x27;nfs-client&#x27;</span>
+      <span class="hljs-attr">NFS_MOUNTS:</span>
+        <span class="hljs-bullet">-</span> <span class="hljs-attr">fs:</span> <span class="hljs-string">&#x27;<span class="hljs-template-variable">{{groups.slurm_master[0]}}</span>:/home&#x27;</span>
+          <span class="hljs-attr">mountpoint:</span> <span class="hljs-string">&#x27;/home&#x27;</span>
+    <span class="hljs-bullet">-</span> <span class="hljs-string">slurm-worker</span></code></pre>
+<p>Ansible itself runs on the client and connects to the nodes via the service account and <code>ssh</code>. Here the different tasks are executed on the nodes and after they are finished ansible removes the tasks again, leaving a configured system, more details<sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
+<p>This part is often summarized under the umbrella of <strong>Platform as a Service</strong>.</p>
+<h2 id="use_the_infrastructure"><a href="#use_the_infrastructure" class="header-anchor">Use the infrastructure</a></h2>
+<p>Now that we have <strong>deployed</strong> and <strong>configured</strong> configured our service we can use it. </p>
+<p>Once all pieces work together the virtual HPC can be brought to life with the following sequence of commands:</p>
+<pre><code class="bash hljs">terraform plan -out planfile
+terraform apply -auto-approve planfile
+ansible-playbook --inventory inventory.yml --become --key-file id_rsa main.yml</code></pre>
+<p>and destroyed with</p>
+<pre><code class="bash hljs">terraform destroy -auto-approve</code></pre>
+<p><table class="fndef" id="fndef:1">
+    <tr>
+        <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
+        <td class="fndef-content">Original source on <a href="https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/playbooks/roles/slurm.yml">github</a></td>
+    </tr>
+</table>
+ <table class="fndef" id="fndef:2">
+    <tr>
+        <td class="fndef-backref"><a href="#fnref:2">[2]</a></td>
+        <td class="fndef-content"><a href="https://www.redhat.com/en/topics/automation/learning-ansible-tutorial#:~:text&#61;Ansible&#37;20works&#37;20by&#37;20connecting&#37;20to,and&#37;20removes&#37;20them&#37;20when&#37;20finished">How does Ansible work?</a></td>
+    </tr>
+</table>
+</p>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 16, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -203,9 +265,14 @@
     </div> <!-- end of class main-content-wrap -->
     </div> <!-- end of class page-wrap-->
     
+      
+
+
+
     
-      <script src="/ws23_ulg_vu_ama_performance/libs/highlight/highlight.pack.js"></script>
-<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
+    
+      
+
 
       <script>
     (function(){

@@ -2,6 +2,12 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
 <url>
+    <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture/index.html</loc>
+    <lastmod>2023-11-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture/index.html</loc>
     <lastmod>2023-11-16</lastmod>
     <changefreq>monthly</changefreq>
@@ -45,6 +51,12 @@
 </url>
 <url>
     <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/hpc/distributed/index.html</loc>
+    <lastmod>2023-11-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics/index.html</loc>
     <lastmod>2023-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
