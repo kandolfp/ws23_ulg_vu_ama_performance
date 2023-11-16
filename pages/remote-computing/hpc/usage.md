@@ -21,8 +21,22 @@ We can prepare our job script, maybe compile some sources, sort out data and whe
 There are different job schedulers around, the most commonly found is [Slurm](https://www.schedmd.com/). 
 The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® _distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration_[^2].
 
+## Testsetup
+If you do this class at home or to another time you can still use a test setup. 
+E.g. use the excellent docker-compose setup of [Giocanni Torres](https://github.com/giovtorres) that you can find [here](https://github.com/giovtorres/slurm-docker-cluster).
+
+At the time of the creation of this notes the following sequence of commands will start a cluster and give you access to the nodes. 
+```bash
+SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose build
+SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose up -d
+docker exec -it slurmctld bash
+```
+
+For the live session of this class we created an virtual cluster with 3 nodes. 
+How this was done is described further in the cloud section. 
+
 @@important
-Description of test setup and getting access is not in the notes and done live.
+How to get access to the live setup is not in the notes.
 @@
 
 ## Slurm - as a job scheduler
