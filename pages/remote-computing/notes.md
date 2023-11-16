@@ -74,6 +74,12 @@ An HPC storage should allow high I/O throughput to not slow down the application
 
 Also here, they are build for different purposes in mind and perform bad for the other system.
 
+### A hybrid
+
+That does not mean it can not work.
+Something like [JuliaHub](https://juliahub.com/) can be considered a cloud for HPC workloads.
+Also the big cloud providers will offer something called **burst computing** where you move your HPC workload ot the cloud when you need more and have it local otherwise.
+
 ## Just run to code on an HPC system and it is faster
 
 As we have seen in the [parallel computing](../../hpc/) there is more to it than one might think.
