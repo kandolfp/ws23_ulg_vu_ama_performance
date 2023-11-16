@@ -42,7 +42,7 @@ We describe all of this in [Terraform](https://www.terraform.io/) a descriptive 
 Luckily for us, there is a Terraform provider for libvirt. 
 
 The actual code is `yml`, e.g. below you see the final part of defining the worker nodes.
-```terraform
+```yml
 resource "libvirt_domain" "worker" {
   count      = var.count_worker_nodes
   name       = "${format("${var.os_prefix}-${var.w_short}-%02d", count.index + 1)}.${var.domain}"
@@ -96,11 +96,75 @@ This can easily be automated and is often called **Infrastructure as a Service**
 All we have now is 4 virtual machines that have a Linux on them and an account that can be accessed via `ssh`.
 The next step is to actually configure them into a working HPC cluster. 
 
-For this we use [Ansible](https://www.ansible.com/).
+For this we use [Ansible](https://www.ansible.com/) from RedHat.
 
 Again we write some `yml` files that do the actual configuration.
 More precisely we used the excellent ansible scripts provided by the [elasticluster](https://github.com/elasticluster/elasticluster) project. 
 Unfortunately, this project is already a bit stale but with some adaptations it works for our setup. 
 
-The main idea 
+The main idea is to define playbooks. 
+A playbook usually makes sure to configure a certain service, in our case the vHPC.
+The service has different roles so we subdivide down to roles. 
+For example the Slurm playbook is split in three parts:
+- slurm-common $\to$ needed for both machines
+- slurm-master $\to$ just for the management node
+- slurm-worker $\to$ just for the worker nodes
+We can cluster the different VMs per role and run the playbook for each role. 
+The entire elasticluster is much bigger and to allow reuse we further subdivide down to more specific services and tasks. 
+It is also possible to provide different ways for different platforms, e.g. RHEL or Debian based Linux distributions.
 
+This is an excerpt of the `slurm.yml` playbook[^1]
+```yml
+---
+
+- name: Slurm master Playbook
+  hosts: slurm_master
+  roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: 'multiuser_cluster|default("true")|bool'
+    - role: 'nfs-server'
+      NFS_EXPORTS:
+        - path: '/home'
+          clients: "{{groups.slurm_worker + groups.slurm_submit|default([])}}"
+    - slurm-master
+
+
+- name: Slurm worker nodes Playbook
+  hosts: slurm_worker
+  roles:
+    - role: 'nis'
+      NIS_MASTER: "{{groups.slurm_master[0]}}"
+      when: 'multiuser_cluster|default("true")|bool'
+    - role: 'nfs-client'
+      NFS_MOUNTS:
+        - fs: '{{groups.slurm_master[0]}}:/home'
+          mountpoint: '/home'
+    - slurm-worker
+
+```
+
+Ansible itself runs on the client and connects to the nodes via the service account and `ssh`.
+Here the different tasks are executed on the nodes and after they are finished ansible removes the tasks again, leaving a configured system, more details[^2].
+
+This part is often summarized under the umbrella of **Platform as a Service**.
+
+## Use the infrastructure
+
+Now that we have **deployed** and **configured** configured our service we can use it. 
+
+Once all pieces work together the virtual HPC can be brought to life with the following sequence of commands:
+
+```bash
+terraform plan -out planfile
+terraform apply -auto-approve planfile
+ansible-playbook --inventory inventory.yml --become --key-file id_rsa main.yml 
+```
+and destroyed with
+```bash
+terraform destroy -auto-approve
+```
+
+[^1]: Original source on [github](https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/playbooks/roles/slurm.yml)
+
+[^2]: [How does Ansible work?](https://www.redhat.com/en/topics/automation/learning-ansible-tutorial#:~:text=Ansible%20works%20by%20connecting%20to,and%20removes%20them%20when%20finished)
