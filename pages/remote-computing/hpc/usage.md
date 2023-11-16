@@ -21,13 +21,11 @@ We can prepare our job script, maybe compile some sources, sort out data and whe
 There are different job schedulers around, the most commonly found is [Slurm](https://www.schedmd.com/). 
 The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® _distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration_[^2].
 
-## Slurm - as a job scheduler
-
 @@important
-HAVE A CLUSTER ON ONE OF THE WORKSTATIONS OR DOCKER-COMPOSE
-
-Describe the setup
+Description of test setup and getting access is not in the notes and done live.
 @@
+
+## Slurm - as a job scheduler
 
 The inner workings of the Slurm can be found in the [documentation](https://slurm.schedmd.com/),
 we discuss some of the most important commands[^3]
@@ -52,7 +50,7 @@ Let us dive right in and submit our first job and from there we extend our job t
 
 Let us start by directly handing over a job to Slurm
 ```bash
-$ sbatch --wrap="sleep 10s && /bin/hostname"
+$ sbatch --wrap="sleep 100s && /bin/hostname"
 Submitted batch job 1
 ```
 the `--wrap` option allows us to wrap a command string into a shell script and submit this script to the job scheduler. 
@@ -115,11 +113,10 @@ In our case we know how long the job runs so let us include this information.
 
 \exercise{
 
-Have a look at the `sbatch` options and provide a maximal (wallclock) time for the job, e.g. 11 seconds. 
+Have a look at the `sbatch` options and provide a maximal (wallclock) time for the job, e.g. 1 minute. 
 
 What happens if this time is shorter than the runtime of our job?
 
-**Important**: for some reason on the test cluster you can not specify seconds, so change the example from above to `sleep 10` and work with one minute. 
 
 \solution{
 
@@ -231,7 +228,7 @@ As we have seen before, we can define multiple tasks in `sbatch` and that is the
 Therefore, running a parallel job consists of two phases:
 1. Starting the job script on the main node selected by the job scheduler. In Slurm terms this is the actual job.
 1. Deploy the individual _tasks_ across all of the nodes selected by the job scheduler. In Slurm terms this is called the _job step_. One job might have several job steps. 
-\example{
+\exercise{
 
 Rewrite our `job.slum` for two tasks and such that the actual workload is distributed with `srun`.
 
@@ -325,21 +322,18 @@ In particular we can use `squeue` to look up our `JobID` that is needed for a lo
 
 In order to get information about past jobs we can use `sacct` or `sacct -X` to skip the information about the individual job steps.
 
-@@important
-NEEDS TO BE REPLACED
-@@
 ```bash
  sacct -X
 JobID           JobName  Partition    Account  AllocCPUS      State ExitCode 
 ------------ ---------- ---------- ---------- ---------- ---------- -------- 
-49             hostname     normal       root          2  COMPLETED      0:0 
-50             hostname     normal       root          2  COMPLETED      0:0 
-52                peter     normal       root          1     FAILED     13:0 
-53                peter     normal       root          1  COMPLETED      0:0 
-54                peter     normal       root          1  COMPLETED      0:0 
-55                peter     normal       root          1  COMPLETED      0:0 
-56                peter     normal       root          2  COMPLETED      0:0 
-57                 bash     normal       root          1  COMPLETED      0:0 
+1              hostname     normal       root          2  COMPLETED      0:0 
+2              hostname     normal       root          2  COMPLETED      0:0 
+3                 peter     normal       root          1    TIMEOUT     13:0 
+4                 peter     normal       root          1  COMPLETED      0:0 
+5                 peter     normal       root          1  COMPLETED      0:0 
+6                 peter     normal       root          1     FAILED      1:0 
+7                 peter     normal       root          2  COMPLETED      0:0 
+8                  bash     normal       root          1  COMPLETED      0:0 
 ```
 
 ### Altering jobs
