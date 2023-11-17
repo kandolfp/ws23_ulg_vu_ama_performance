@@ -49,7 +49,7 @@ If you have difficulties please let us know and we will update the contents of t
 @@
 
 @@important
-This lecture was prepared with Julia v1.9.3
+This lecture was prepared with Julia v1.9.4
 @@
 
 Follow the setup in this section to install everything that is required to get started.
@@ -74,13 +74,13 @@ To install this tool, simply call the following command from your terminal:
 curl -fsSL https://install.julialang.org | sh
 ```
 
-Once installed, simply reopen your terminal and call `juliaup add 1.9.3` to add the very version used for this course.
+Once installed, simply reopen your terminal and call `juliaup add 1.9.4` to add the very version used for this course.
 In case you installed Julia just for this course, you could then set
 ```bash
-juliaup default 1.9.3
+juliaup default 1.9.4
 ```
-to pin your default version to `1.9.3` whenever you start `julia`.
-Alternatively you can launch this specific version by calling `julia +1.9.3`.
+to pin your default version to `1.9.4` whenever you start `julia`.
+Alternatively you can launch this specific version by calling `julia +1.9.4`.
 
 
 ### Visual Studio Code

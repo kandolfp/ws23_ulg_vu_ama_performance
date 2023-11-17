@@ -449,7 +449,7 @@ $ julia -p 4 --project
   (_)     | (_) (_)    |
    _ _   _| |_  __ _   |  Type "?" for help, "]?" for Pkg help.
   | | | | | | |/ _` |  |
-  | | |_| | | | (_| |  |  Version 1.9.3 (2023-08-24)
+  | | |_| | | | (_| |  |  Version 1.9.4 (2023-11-14)
  _/ |\__'_|_|_|\__'_|  |  Official https://julialang.org/ release
 |__/                   |
 
