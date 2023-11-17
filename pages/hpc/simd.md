@@ -48,7 +48,7 @@ As we already know how to do benchmarking, let us try to figure out if our sum f
 ```julia:./code/simd1.jl
 using BenchmarkTools
 
-function mySum(V)
+function my_sum(V)
     result = zero(eltype(V))
 
     for i in eachindex(V)
@@ -60,7 +60,7 @@ end
 
 a = rand(100_000)
 println("Simple sum:")
-@btime mySum(a)
+@btime my_sum(a)
 
 println()
 println("Built-in sum:")
@@ -73,7 +73,7 @@ In order to enable SIMD in a program (if it is not done by library calls anyway)
 ```julia:./code/simd2.jl
 using BenchmarkTools
 
-function mySum(V)
+function my_sum(V)
     result = zero(eltype(V))
 
     for i in eachindex(V)
@@ -84,7 +84,7 @@ function mySum(V)
 end
 
 
-function mySumSIMD(V)
+function my_sum_simd(V)
     result = zero(eltype(V))
 
     @simd for i in eachindex(V)
@@ -95,7 +95,7 @@ function mySumSIMD(V)
 end
 
 
-function mySum2(V)
+function my_sum_elem_access(V)
     s = zero(eltype(V))
 
     for v in V
@@ -106,7 +106,7 @@ function mySum2(V)
 end
 
 
-function mySumSIMD2(V)
+function my_sum_simd_elem_access(V)
     s = zero(eltype(V))
 
     @simd for v in V
@@ -119,8 +119,8 @@ end
 a = rand(100_000)
 
 println("Simple sum")
-@show mySum(a)
-@btime mySum($a)
+@show my_sum(a)
+@btime my_sum($a)
 
 println()
 println("Built-in sum")
@@ -129,18 +129,18 @@ println("Built-in sum")
 
 println()
 println("Simple sum with SIMD")
-@show mySumSIMD(a)
-@btime mySumSIMD($a)
+@show my_sum_simd(a)
+@btime my_sum_simd($a)
 
 println()
-println("Simple mySum with direct element access")
-@show mySum2(a)
-@btime mySum2($a)
+println("Simple my_sum with direct element access")
+@show my_sum_elem_access(a)
+@btime my_sum_elem_access($a)
 
 println()
 println("Simple sum with SIMD and direct element access")
-@show mySumSIMD2(a)
-@btime mySumSIMD2($a)
+@show my_sum_simd_elem_access(a)
+@btime my_sum_simd_elem_access($a)
 ```
 \show{./code/simd2.jl}
 We can see a massive speed up (that will depend on the CPU architecture you are running your code on).
@@ -157,15 +157,15 @@ If you are not sure if something is vectorized, you can check out the LLVM code 
 ```julia:./code/simd3.jl
 using InteractiveUtils
 
-@code_llvm mySum(a)
+@code_llvm my_sum(a)
 printstyled("\n------Separator-------\n\n"; color = :red)
-@code_llvm mySumSIMD(a)
+@code_llvm my_sum_simd(a)
 ```
 \show{./code/simd3.jl}
 
 The [LLVM](https://llvm.org/) project is the compiler toolchain technology that Julia uses for its *Just in Time* (JIT) compilation.
 Basically, it translates the Julia code into a machine language close to Assembler (but quite readable, if you get used to it) and this is compiled when needed.
-We could see JIT doing its magic in the beginning of the [Benchmark](#how-to-measure-performance-in-julia) section, as the function `mySum` was compiled on its first run.
+We could see JIT doing its magic in the beginning of the [Benchmark](#how-to-measure-performance-in-julia) section, as the function `my_sum` was compiled on its first run.
 Note: in general packages get precompiled before they are used to gain performance.
 
 # Multiple dispatch
@@ -183,12 +183,12 @@ This time a bit more compact but most important, all the type information of the
 
 For an array of `Int64` we get:
 ```julia:./code/simd4.jl
-@code_typed optimize=false mySum([1, 2, 3])
+@code_typed optimize=false my_sum([1, 2, 3])
 ```
 \show{./code/simd4.jl}
 and for `Float64`:
 ```julia:./code/simd5.jl
-@code_typed optimize=false mySum([1.0, 2.0, 3.0])
+@code_typed optimize=false my_sum([1.0, 2.0, 3.0])
 ```
 \show{./code/simd5.jl}
 We can see, that in the first output everything is of type `Int64`, including the result.

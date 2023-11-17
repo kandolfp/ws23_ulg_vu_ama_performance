@@ -7,7 +7,7 @@
 
 For that, we have a look at a simple vector summation function and include the simple `@time` macro.
 ```julia:./code/performance_time_mysum.jl
-function mySum(V)
+function my_sum(V)
     s = zero(eltype(V))
 
     for i in eachindex(V)
@@ -18,8 +18,8 @@ function mySum(V)
 end
 
 V = rand(100_000)
-@time mySum(V)
-@time mySum(V)
+@time my_sum(V)
+@time my_sum(V)
 ```
 \show{./code/performance_time_mysum.jl}
 
@@ -35,35 +35,35 @@ It comes with a couple of macros that we should test out:
 
 \exercise{
 In order to use the BenchmarkTools we need to include it with `using BenchmarkTools`, as any other package.
-Benchmark our `mySum` function with the following macros:
+Benchmark our `my_sum` function with the following macros:
 1. `@benchmark`
 1. `@btime` 
 1. Look at the detailed output of your benchmark with `dump(t)`, where `t` is the output result of a `@benchmark` run and compare the output and results.
-1. Duplicate `mySum()`, name it `mySumNoInBounds()`, remove the `@inbounds` macro and compare the performance to that of `mySum()`.
+1. Duplicate `my_sum()`, name it `my_sum_no_inbounds()`, remove the `@inbounds` macro and compare the performance to that of `my_sum()`.
 \solution{
 To measure the performance of the above code we do the following:
 ```julia:./code/performance_benchmark_mysum.jl
 using BenchmarkTools
 
-@benchmark mySum($V)
+@benchmark my_sum($V)
 ```
 \show{./code/performance_benchmark_mysum.jl}
 the full details with 
 ```julia:./code/performance_dump_benchmark_mysum.jl
-t = @benchmark mySum($V)
+t = @benchmark my_sum($V)
 dump(t)
 ```
 \show{./code/performance_dump_benchmark_mysum.jl}
 and the often used sanity check, that actually also shows you the output of your code.
 ```julia:./code/performance_btime_mysum.jl
-@btime mySum($V)
+@btime my_sum($V)
 ```
 \show{./code/performance_btime_mysum.jl}
 
 Skipping the `inbound` check only gives a minor improvement as you can see when you compare the results to the following version which performs the check:
 
 ```julia:./code/performance_btime_mysumnoinbounds.jl
-function mySumNoInbounds(V)
+function my_sum_no_inbounds(V)
     s = zero(eltype(V))
 
     for i in eachindex(V)
@@ -73,7 +73,7 @@ function mySumNoInbounds(V)
     return s
 end
 
-@benchmark mySumNoInbounds($V)
+@benchmark my_sum_no_inbounds($V)
 ```
 \show{./code/performance_btime_mysumnoinbounds.jl}
 }
@@ -89,7 +89,7 @@ We can also use the [`Profiler`](https://docs.julialang.org/en/v1/manual/profile
 using Profile
 
 Profile.clear()
-@profile for _ in 1:100_000; mySum(V); end
+@profile for _ in 1:100_000; my_sum(V); end
 Profile.print(maxdepth=15)
 ```
 ```bash
@@ -109,9 +109,9 @@ Overhead ╎ [+additional indent] Count File:Line; Function
     ╎    ╎    ╎ 8281  @Base/boot.jl:373; eval
     ╎    ╎    ╎  8281  .../package_linux64/build/usr/share/julia/stdlib/v1.7/Profile/src/Profile.jl:28; top-level scope
    1╎    ╎    ╎   8281  REPL[18]:1; macro expansion
-    ╎    ╎    ╎    1     REPL[7]:3; mySum(V::Vector{Float64})
+    ╎    ╎    ╎    1     REPL[7]:3; my_sum(V::Vector{Float64})
     ╎    ╎    ╎     1     @Base/abstractarray.jl:279; eachindex
-    ╎    ╎    ╎    8279  REPL[7]:4; mySum(V::Vector{Float64})
+    ╎    ╎    ╎    8279  REPL[7]:4; my_sum(V::Vector{Float64})
     ╎    ╎    ╎     8279  @Base/range.jl:837; iterate
 Total snapshots: 16562
 ```
