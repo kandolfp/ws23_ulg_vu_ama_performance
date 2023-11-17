@@ -1,5 +1,5 @@
 # This file was generated, do not modify it. # hide
-function mySum(V)
+function my_sum(V)
     s = zero(eltype(V))
 
     for i in eachindex(V)
@@ -10,5 +10,5 @@ function mySum(V)
 end
 
 V = rand(100_000)
-@time mySum(V)
-@time mySum(V)
+@time my_sum(V)
+@time my_sum(V)

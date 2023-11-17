@@ -1,7 +1,7 @@
 # This file was generated, do not modify it. # hide
 using BenchmarkTools
 
-function mySum(V)
+function my_sum(V)
     result = zero(eltype(V))
 
     for i in eachindex(V)
@@ -12,7 +12,7 @@ function mySum(V)
 end
 
 
-function mySumSIMD(V)
+function my_sum_simd(V)
     result = zero(eltype(V))
 
     @simd for i in eachindex(V)
@@ -23,7 +23,7 @@ function mySumSIMD(V)
 end
 
 
-function mySum2(V)
+function my_sum_elem_access(V)
     s = zero(eltype(V))
 
     for v in V
@@ -34,7 +34,7 @@ function mySum2(V)
 end
 
 
-function mySumSIMD2(V)
+function my_sum_simd_elem_access(V)
     s = zero(eltype(V))
 
     @simd for v in V
@@ -47,8 +47,8 @@ end
 a = rand(100_000)
 
 println("Simple sum")
-@show mySum(a)
-@btime mySum($a)
+@show my_sum(a)
+@btime my_sum($a)
 
 println()
 println("Built-in sum")
@@ -57,15 +57,15 @@ println("Built-in sum")
 
 println()
 println("Simple sum with SIMD")
-@show mySumSIMD(a)
-@btime mySumSIMD($a)
+@show my_sum_simd(a)
+@btime my_sum_simd($a)
 
 println()
-println("Simple mySum with direct element access")
-@show mySum2(a)
-@btime mySum2($a)
+println("Simple my_sum with direct element access")
+@show my_sum_elem_access(a)
+@btime my_sum_elem_access($a)
 
 println()
 println("Simple sum with SIMD and direct element access")
-@show mySumSIMD2(a)
-@btime mySumSIMD2($a)
+@show my_sum_simd_elem_access(a)
+@btime my_sum_simd_elem_access($a)

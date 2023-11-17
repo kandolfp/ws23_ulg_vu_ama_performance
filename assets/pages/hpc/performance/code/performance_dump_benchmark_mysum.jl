@@ -1,3 +1,3 @@
 # This file was generated, do not modify it. # hide
-t = @benchmark mySum($V)
+t = @benchmark my_sum($V)
 dump(t)

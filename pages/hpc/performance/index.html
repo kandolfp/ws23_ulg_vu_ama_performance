@@ -111,7 +111,7 @@
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="how_to_measure_performance_in_julia"><a href="#how_to_measure_performance_in_julia" class="header-anchor">How to measure performance in Julia</a></h1>
 <p>For that, we have a look at a simple vector summation function and include the simple <code>@time</code> macro.</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> mySum(V)
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> my_sum(V)
     s = zero(eltype(V))
 
     <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> eachindex(V)
@@ -122,15 +122,15 @@
 <span class="hljs-keyword">end</span>
 
 V = rand(<span class="hljs-number">100_000</span>)
-<span class="hljs-meta">@time</span> mySum(V)
-<span class="hljs-meta">@time</span> mySum(V)</code></pre>
-<pre><code class="plaintext hljs">  0.005860 seconds (2.22 k allocations: 154.116 KiB, 98.12% compilation time)
-  0.000098 seconds (1 allocation: 16 bytes)
-50100.54437021286</code></pre>
+<span class="hljs-meta">@time</span> my_sum(V)
+<span class="hljs-meta">@time</span> my_sum(V)</code></pre>
+<pre><code class="plaintext hljs">  0.005501 seconds (2.22 k allocations: 154.116 KiB, 98.13% compilation time)
+  0.000096 seconds (1 allocation: 16 bytes)
+49956.99436508269</code></pre>
 <div class="important">In order to optimize the loop call we use the <a href="https://docs.julialang.org/en/v1/devdocs/boundscheck/"><code>@inbounds</code></a> macro to eliminate inbound checks for the array access and thus improve performance. It is challenging and probably even not possible to prove the safety of methods using <code>@inbounds</code>, so it is essential to consider the trade-off between performance gains and the potential for unnoticed errors. Rule of thumb: Do not use it, unless you really need this performance gain.</div>
 <p>The downside with the <code>@time</code> macro is, that it really just measures the execution time of what is given to it. This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate.</p>
 <p>Therefore, if we are serious about measuring performance we should stick to the <a href="https://juliaci.github.io/BenchmarkTools.jl/stable/"><code>BenchmarkTools</code></a>. It comes with a couple of macros that we should test out:</p>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  In order to use the BenchmarkTools we need to include it with <code>using BenchmarkTools</code>, as any other package. Benchmark our <code>mySum</code> function with the following macros:</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  In order to use the BenchmarkTools we need to include it with <code>using BenchmarkTools</code>, as any other package. Benchmark our <code>my_sum</code> function with the following macros:</p>
 <ol>
 <li><p><code>@benchmark</code></p>
 </li>
@@ -138,24 +138,24 @@ V = rand(<span class="hljs-number">100_000</span>)
 </li>
 <li><p>Look at the detailed output of your benchmark with <code>dump&#40;t&#41;</code>, where <code>t</code> is the output result of a <code>@benchmark</code> run and compare the output and results.</p>
 </li>
-<li><p>Duplicate <code>mySum&#40;&#41;</code>, name it <code>mySumNoInBounds&#40;&#41;</code>, remove the <code>@inbounds</code> macro and compare the performance to that of <code>mySum&#40;&#41;</code>.</p>
+<li><p>Duplicate <code>my_sum&#40;&#41;</code>, name it <code>my_sum_no_inbounds&#40;&#41;</code>, remove the <code>@inbounds</code> macro and compare the performance to that of <code>my_sum&#40;&#41;</code>.</p>
 </li>
 </ol>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  To measure the performance of the above code we do the following:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
 
-<span class="hljs-meta">@benchmark</span> mySum($V)</code></pre>
+<span class="hljs-meta">@benchmark</span> my_sum($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.592 μs … 123.549 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.672 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   93.284 μs ±   2.193 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.583 μs … 121.056 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.634 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   93.111 μs ±   2.028 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █    ▂                                                       ▁
-  █▇▃▅██▄▅▆▆▅▆▆█▇▅▅▅▅▄▄▅▄▅▄▄▄▄▅▄▅▅▅▅▅▅▅▅▅▆▆▅▆▆▆▆▆▆▆▆▆▅▆▇█▇▅▅▅▅ █
+  █   ▁▁                                                       ▁
+  █▆▅▃██▄▄▅▄▅▄██▆▄▁▃▄▄▁▄▃▄▅▅▅▅▃▄▄▄▅▅▅▅▆▅▄▅▅▄▆▆▅▆▆▆▆▆▆▇███▆▅▆▅▅ █
   92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> the full details with </p>
-<pre><code class="julia hljs">t = <span class="hljs-meta">@benchmark</span> mySum($V)
+<pre><code class="julia hljs">t = <span class="hljs-meta">@benchmark</span> my_sum($V)
 dump(t)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial
   params: BenchmarkTools.Parameters
@@ -167,16 +167,16 @@ dump(t)</code></pre>
     gcsample: Bool false
     time_tolerance: Float64 0.05
     memory_tolerance: Float64 0.01
-  times: Array{Float64}((10000,)) [94385.0, 92673.0, 92642.0, 112358.0, 92662.0, 98953.0, 92673.0, 92622.0, 92782.0, 92632.0  …  92672.0, 92632.0, 92682.0, 92612.0, 92672.0, 92622.0, 92662.0, 92662.0, 92632.0, 92642.0]
+  times: Array{Float64}((10000,)) [93415.0, 93144.0, 92965.0, 92964.0, 93045.0, 95489.0, 93877.0, 92804.0, 101952.0, 92954.0  …  92664.0, 92634.0, 92683.0, 92634.0, 92633.0, 92634.0, 92663.0, 92634.0, 92674.0, 94828.0]
   gctimes: Array{Float64}((10000,)) [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   memory: Int64 0
   allocs: Int64 0
 </code></pre> and the often used sanity check, that actually also shows you the output of your code.</p>
-<pre><code class="julia hljs"><span class="hljs-meta">@btime</span> mySum($V)</code></pre>
-<pre><code class="plaintext hljs">  92.581 μs (0 allocations: 0 bytes)
-50100.54437021286</code></pre>
+<pre><code class="julia hljs"><span class="hljs-meta">@btime</span> my_sum($V)</code></pre>
+<pre><code class="plaintext hljs">  92.583 μs (0 allocations: 0 bytes)
+49956.99436508269</code></pre>
 <p>Skipping the <code>inbound</code> check only gives a minor improvement as you can see when you compare the results to the following version which performs the check:</p>
-<pre><code class="julia hljs"><span class="hljs-keyword">function</span> mySumNoInbounds(V)
+<pre><code class="julia hljs"><span class="hljs-keyword">function</span> my_sum_no_inbounds(V)
     s = zero(eltype(V))
 
     <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> eachindex(V)
@@ -186,15 +186,15 @@ dump(t)</code></pre>
     <span class="hljs-keyword">return</span> s
 <span class="hljs-keyword">end</span>
 
-<span class="hljs-meta">@benchmark</span> mySumNoInbounds($V)</code></pre>
+<span class="hljs-meta">@benchmark</span> my_sum_no_inbounds($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.581 μs … 121.726 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.641 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   93.106 μs ±   1.946 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.583 μs … 131.757 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.644 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   93.107 μs ±   2.107 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █    ▂                                                       ▁
-  █▅▃▅██▄▅▆▅▄▅▅▇▇▇▆▅▅▅▄▄▄▄▅▃▄▄▄▅▃▄▄▄▃▄▃▃▄▄▄▃▅▄▄▅▂▄▅▅▅▅▅▅▇▇█▆▆▅ █
-  92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
+  █                                                            ▁
+  █▇▅▅▆▅▄▄▄▄▃▆▇█▆▆▄▄▁▄▁▁▄▅▄▄▄▅▄▄▃▄▄▄▅▅▆▅▆▄▅▅▆▆▆▅▅▅▆▇██▇▆▅▅▅▅▅▅ █
+  92.6 μs       Histogram: log(frequency) by time       103 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> </div> </div>
 <div class="important">Note that for benchmarking we often use the <code>&#36;</code> literal for variables to tell the Julia interpreter to use interpolation. This will make sure that the variable is not allocated inside the function and the measurement is more accurate, or more likely what we actually want to know.</div>
@@ -202,7 +202,7 @@ dump(t)</code></pre>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> Profile
 
 Profile.clear()
-<span class="hljs-meta">@profile</span> <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:<span class="hljs-number">100_000</span>; mySum(V); <span class="hljs-keyword">end</span>
+<span class="hljs-meta">@profile</span> <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:<span class="hljs-number">100_000</span>; my_sum(V); <span class="hljs-keyword">end</span>
 Profile.print(maxdepth=<span class="hljs-number">15</span>)</code></pre>
 <pre><code class="bash hljs">Overhead ╎ [+additional indent] Count File:Line; Function
 =========================================================
@@ -220,13 +220,13 @@ Profile.print(maxdepth=<span class="hljs-number">15</span>)</code></pre>
     ╎    ╎    ╎ 8281  @Base/boot.jl:373; <span class="hljs-built_in">eval</span>
     ╎    ╎    ╎  8281  .../package_linux64/build/usr/share/julia/stdlib/v1.7/Profile/src/Profile.jl:28; top-level scope
    1╎    ╎    ╎   8281  REPL[18]:1; macro expansion
-    ╎    ╎    ╎    1     REPL[7]:3; mySum(V::Vector{Float64})
+    ╎    ╎    ╎    1     REPL[7]:3; my_sum(V::Vector{Float64})
     ╎    ╎    ╎     1     @Base/abstractarray.jl:279; eachindex
-    ╎    ╎    ╎    8279  REPL[7]:4; mySum(V::Vector{Float64})
+    ╎    ╎    ╎    8279  REPL[7]:4; my_sum(V::Vector{Float64})
     ╎    ╎    ╎     8279  @Base/range.jl:837; iterate
 Total snapshots: 16562</code></pre>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 16, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 17, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

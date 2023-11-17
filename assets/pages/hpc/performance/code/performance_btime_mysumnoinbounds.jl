@@ -1,5 +1,5 @@
 # This file was generated, do not modify it. # hide
-function mySumNoInbounds(V)
+function my_sum_no_inbounds(V)
     s = zero(eltype(V))
 
     for i in eachindex(V)
@@ -9,4 +9,4 @@ function mySumNoInbounds(V)
     return s
 end
 
-@benchmark mySumNoInbounds($V)
+@benchmark my_sum_no_inbounds($V)

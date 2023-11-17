@@ -1,7 +1,7 @@
 # This file was generated, do not modify it. # hide
 using BenchmarkTools
 
-function mySum(V)
+function my_sum(V)
     result = zero(eltype(V))
 
     for i in eachindex(V)
@@ -13,7 +13,7 @@ end
 
 a = rand(100_000)
 println("Simple sum:")
-@btime mySum(a)
+@btime my_sum(a)
 
 println()
 println("Built-in sum:")
