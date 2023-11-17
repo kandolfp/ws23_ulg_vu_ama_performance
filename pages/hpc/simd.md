@@ -203,7 +203,7 @@ methods(+)
 \show{./code/md.jl}
 
 This shows us two things.
-First, we did not think anybody will print this workshop out or we would have gone for shorter outputs.
+First, we did not think anybody will print this workshop on paper or we would have gone for shorter outputs.
 Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best.
 As a result we can write optimized code for different types and in general this is one key stone in the excellent performance of Julia.
 
