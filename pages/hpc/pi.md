@@ -97,6 +97,7 @@ function estimate_pi(N::Int64, method::Symbol)
     # Exercise 1 (pt 2/2)
     return nothing
     # Exercise 1 end
+end
 ```
 
 \exercise{
