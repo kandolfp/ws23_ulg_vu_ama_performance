@@ -193,7 +193,8 @@
 
     <span class="hljs-comment"># Exercise 1 (pt 2/2)</span>
     <span class="hljs-keyword">return</span> <span class="hljs-literal">nothing</span>
-    <span class="hljs-comment"># Exercise 1 end</span></code></pre>
+    <span class="hljs-comment"># Exercise 1 end</span>
+<span class="hljs-keyword">end</span></code></pre>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Implement the above described algorithm to compute <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span>.</p>
 <ol>
 <li><p>Complete the function <code>sample_M_non_distributed</code> which samples <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi></mrow><annotation encoding="application/x-tex">M</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">M</span></span></span></span> for given <code>N</code> and random number generator <code>rng</code>.</p>
@@ -243,10 +244,10 @@
 N = <span class="hljs-number">2</span>^<span class="hljs-number">30</span>
 
 <span class="hljs-meta">@btime</span> estimate_pi(N, :ex1)</code></pre>
-<p><pre><code class="plaintext hljs">  3.856 s (4 allocations: 384 bytes)
-(3.1416160613298416, 2.340774004849777e-5)</code></pre> </div> </div>
+<p><pre><code class="plaintext hljs">  3.863 s (4 allocations: 384 bytes)
+(3.1415778771042824, 1.4776485510736848e-5)</code></pre> </div> </div>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 17, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 20, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

@@ -114,7 +114,7 @@
 <div class="franklin-toc"><ol><li><a href="#what_is_multithreading">What is multithreading?</a></li><li><a href="#back_to_julia">Back to Julia</a></li><li><a href="#multithreaded_pi">Multithreaded <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span></a><ol><li><a href="#atomic_operations">Atomic Operations</a></li><li><a href="#actually_distribute_the_work">Actually distribute the work</a></li><li><a href="#global_states">Global states</a></li><li><a href="#final_results">Final results</a></li><li><a href="#other_pitfalls">Other pitfalls</a></li></ol></li></ol></div>
 <p>Before we have a look at how <a href="https://docs.julialang.org/en/v1/manual/multi-threading/">Julia deals with the concept of multithreading</a>, let us make clear what we are talking about.</p>
 <h2 id="what_is_multithreading"><a href="#what_is_multithreading" class="header-anchor">What is multithreading?</a></h2>
-<p>In the terminology of computer science a thread is the smallest sequence of instructions that can be managed by the scheduler of the operating system. It is often also called a light weight process and is most of the time considered to exist inside the context of a process. Consequently, multithreading is the ability to mange multiple concurrently executed threads. Multiple threads share their resources, this makes this quite a powerful tool. The threads run on a single CPU or on multiple CPUs and give us the opportunity to leverage the full force of our computer &#40;or cell phone for that matter&#41;.</p>
+<p>In the terminology of computer science a thread is the smallest sequence of instructions that can be managed by the scheduler of the operating system. It is often also called a light weight process and is most of the time considered to exist inside the context of a process. Consequently, multithreading is the ability to manage multiple concurrently executed threads. Multiple threads share their resources, this makes this quite a powerful tool. The threads run on a single CPU or on multiple CPUs and give us the opportunity to leverage the full force of our computer &#40;or cell phone for that matter&#41;.</p>
 <h2 id="back_to_julia"><a href="#back_to_julia" class="header-anchor">Back to Julia</a></h2>
 <p>By default, Julia will start with a single computational thread of execution:</p>
 <pre><code class="julia-repl hljs"><span class="hljs-meta prompt_">julia&gt;</span><span class="language-julia"> Threads.nthreads()
@@ -205,7 +205,7 @@
 <p>We are still not fast, because each <code>atomic_add&#33;</code> is checking which thread has the current result and needs to add the new value. To avoid this we need to eliminate atomic again. We can actually split up the work quite neatly if we remember the example from the docs. It is possible to access the <code>threadid&#40;&#41;</code> and the number of threads <code>nthreads&#40;&#41;</code>. So why not define <code>M</code> as an array of length <code>nthreads&#40;&#41;</code> and each thread updates the according position within the array by using <code>threadid&#40;&#41;</code> as index.</p>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Being tasksafe:</p>
 <ol>
-<li><p>Complete the function <code>sample_M_threaded_tasksafe</code> by duplicating the code from <code>sample_M_threaded_atomic</code> and replacing <code>M</code> by a vector with <code>nthreads&#40;&#41;</code> entries.</p>
+<li><p>Complete the function <code>sample_M_threaded_tasksafe</code> by duplicating the code from <code>sample_M_threaded</code> and replacing <code>M</code> by a vector with <code>nthreads&#40;&#41;</code> entries.</p>
 </li>
 <li><p>Test the result as well as the performance.</p>
 </li>
@@ -392,7 +392,7 @@ RNG = <span class="hljs-built_in">Vector</span>{AbstractRNG}(<span class="hljs-l
 </ul>
 <p>Usually, L3 is shared by all cores but not L2 and L1. This can result in <em>false</em> sharing and reduce the performance if one CPU accesses the data from a cache of another CPU.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 17, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 20, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
