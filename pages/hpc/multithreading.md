@@ -12,7 +12,7 @@ Before we have a look at how [Julia deals with the concept of multithreading](ht
 
 In the terminology of computer science a thread is the smallest sequence of instructions that can be managed by the scheduler of the operating system.
 It is often also called a light weight process and is most of the time considered to exist inside the context of a process.
-Consequently, multithreading is the ability to mange multiple concurrently executed threads.
+Consequently, multithreading is the ability to manage multiple concurrently executed threads.
 Multiple threads share their resources, this makes this quite a powerful tool.
 The threads run on a single CPU or on multiple CPUs and give us the opportunity to leverage the full force of our computer (or cell phone for that matter).
 
@@ -167,7 +167,7 @@ So why not define `M` as an array of length `nthreads()` and each thread updates
 
 \exercise{
 Being tasksafe:
-1. Complete the function `sample_M_threaded_tasksafe` by duplicating the code from `sample_M_threaded_atomic` and replacing `M` by a vector with `nthreads()` entries.
+1. Complete the function `sample_M_threaded_tasksafe` by duplicating the code from `sample_M_threaded` and replacing `M` by a vector with `nthreads()` entries.
 1. Test the result as well as the performance.
 \solution{
 Have a look at the end of this chapter.
