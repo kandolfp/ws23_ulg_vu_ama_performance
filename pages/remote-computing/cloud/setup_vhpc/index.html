@@ -113,9 +113,9 @@
 <div class="franklin-content"><h1 id="setup_vhpc"><a href="#setup_vhpc" class="header-anchor">Setup vHPC</a></h1>
 <div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#cloud_provider">Cloud provider</a></li><li><a href="#setup_of_the_provider">Setup of the provider</a></li><li><a href="#create_your_infrastructure">Create your infrastructure</a></li><li><a href="#configure_the_infrastructure">Configure the infrastructure</a></li><li><a href="#use_the_infrastructure">Use the infrastructure</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
-<p>We use the setup of the vHPC es used in the other section for testing as one aspect of how some aspects of working with <em>the cloud</em> looks like. </p>
+<p>We use the setup of the vHPC as used in the other section for testing as one aspect of how some aspects of working with <em>the cloud</em> looks like. </p>
 <h2 id="cloud_provider"><a href="#cloud_provider" class="header-anchor">Cloud provider</a></h2>
-<p>The cloud is managed my some system this can be one of the public clouds like</p>
+<p>In order to access resources in <em>the cloud</em> some kind of management software is needed. There are several options available, the big public clouds providers</p>
 <ul>
 <li><p>Amazone  <a href="https://aws.amazon.com/">aws</a></p>
 </li>
@@ -124,14 +124,14 @@
 <li><p>Google <a href="https://cloud.google.com/gcp/">GCP</a></p>
 </li>
 </ul>
-<p>or on premises </p>
+<p>or an example for on premises &#40;private&#41;</p>
 <ul>
 <li><p><a href="https://www.openstack.org/">openstack</a></p>
 </li>
 </ul>
-<p>Now we do not have such an infrastructure at our disposal but we can still simulate one. We do this with a somewhat powerful server and <a href="https://libvirt.org/">libvirt</a>, this is going to be our cloud provider. </p>
+<p>Now we do not have such an infrastructure at our disposal but we can still simulate one. We do this with a somewhat powerful server and <a href="https://libvirt.org/">libvirt</a>, this will be our <em>cloud provider</em>. </p>
 <h2 id="setup_of_the_provider"><a href="#setup_of_the_provider" class="header-anchor">Setup of the provider</a></h2>
-<p>The cloud needs to be created as so many other things. Of on premise clouds this means installing the cloud software &#40;openstack&#41; and adding servers, storage, ... to the managed resources.  In our case we install libvirt on Ubuntu.</p>
+<p>As mentioned before there is a management layer present and that needs to be installed. For on premise clouds this includes installing the cloud software &#40;openstack&#41; and adding servers, storage, ... to the managed resources.  In our case we install <code>libvirt</code> on Ubuntu.</p>
 <h2 id="create_your_infrastructure"><a href="#create_your_infrastructure" class="header-anchor">Create your infrastructure</a></h2>
 <p>Now we need to define our infrastructure.  In our case we would like to have</p>
 <ul>
@@ -141,14 +141,14 @@
 </li>
 <li><p>storage for each virtual machine</p>
 </li>
-<li><p>a operating system on each machine - we use Rocky Linux 8</p>
+<li><p>an operating system on each machine - we use Rocky Linux 8</p>
 </li>
 <li><p>initial setup of the nodes to allow further configuration &#40;service account&#41;</p>
 </li>
-<li><p>a network for all of the machines</p>
+<li><p>a network for all the machines</p>
 </li>
 </ul>
-<p>We describe all of this in <a href="https://www.terraform.io/">Terraform</a> a descriptive language that is often used to define infrastructure.  Luckily for us, there is a Terraform provider for libvirt. </p>
+<p>We describe all of this using the descriptive language <a href="https://www.terraform.io/">Terraform</a> that is often used to define infrastructure.  Luckily for us, there is a Terraform provider for <code>libvirt</code>. </p>
 <p>The actual code is <code>yml</code>, e.g. below you see the final part of defining the worker nodes.</p>
 <pre><code class="yml hljs"><span class="hljs-string">resource</span> <span class="hljs-string">&quot;libvirt_domain&quot;</span> <span class="hljs-string">&quot;worker&quot;</span> {
   <span class="hljs-string">count</span>      <span class="hljs-string">=</span> <span class="hljs-string">var.count_worker_nodes</span>
@@ -191,12 +191,12 @@
   }
 <span class="hljs-string">}</span></code></pre>
 <p>With our <em>Infrastructure as Code</em> we can use Terraform to deploy it and with that we have our machines.  The minimal configuration to have a service account for the next step is done via <code>cloud-init</code>.</p>
-<p>This can easily be automated and is often called <strong>Infrastructure as a Service</strong></p>
+<p>This can easily be automated and is often called <strong>Infrastructure as a Service</strong> or <strong>IaaS</strong>.</p>
 <h2 id="configure_the_infrastructure"><a href="#configure_the_infrastructure" class="header-anchor">Configure the infrastructure</a></h2>
-<p>All we have now is 4 virtual machines that have a Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. </p>
+<p>All we have now is 4 virtual machines &#40;VMs&#41; running Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. </p>
 <p>For this we use <a href="https://www.ansible.com/">Ansible</a> from RedHat.</p>
 <p>Again we write some <code>yml</code> files that do the actual configuration. More precisely we used the excellent ansible scripts provided by the <a href="https://github.com/elasticluster/elasticluster">elasticluster</a> project.  Unfortunately, this project is already a bit stale but with some adaptations it works for our setup. </p>
-<p>The main idea is to define playbooks.  A playbook usually makes sure to configure a certain service, in our case the vHPC. The service has different roles so we subdivide down to roles.  For example the Slurm playbook is split in three parts:</p>
+<p>The main idea is to define playbooks.  A playbook usually makes sure to configure a certain service, in our case the vHPC. The service has different roles so we subdivide down to roles.  For example the Slurm playbook is split into three parts:</p>
 <ul>
 <li><p>slurm-common <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>→</mo></mrow><annotation encoding="application/x-tex">\to</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span></span></span></span> needed for both machines</p>
 </li>
@@ -205,7 +205,7 @@
 <li><p>slurm-worker <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>→</mo></mrow><annotation encoding="application/x-tex">\to</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.3669em;"></span><span class="mrel">→</span></span></span></span> just for the worker nodes</p>
 </li>
 </ul>
-<p>We can cluster the different VMs per role and run the playbook for each role.  The entire elasticluster is much bigger and to allow reuse we further subdivide down to more specific services and tasks.  It is also possible to provide different ways for different platforms, e.g. RHEL or Debian based Linux distributions.</p>
+<p>We can cluster the different VMs per role and run the playbook for each role.  The entire <code>elasticluster</code> is much bigger. To allow reuse we further subdivide into more specific services and tasks.  It is also possible to provide different ways for different platforms, e.g. RHEL or Debian based Linux distributions.</p>
 <p>This is an excerpt of the <code>slurm.yml</code> playbook<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup></p>
 <pre><code class="yml hljs"><span class="hljs-meta">---
 </span>
@@ -236,13 +236,15 @@
 <p>Ansible itself runs on the client and connects to the nodes via the service account and <code>ssh</code>. Here the different tasks are executed on the nodes and after they are finished ansible removes the tasks again, leaving a configured system, more details<sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
 <p>This part is often summarized under the umbrella of <strong>Platform as a Service</strong>.</p>
 <h2 id="use_the_infrastructure"><a href="#use_the_infrastructure" class="header-anchor">Use the infrastructure</a></h2>
-<p>Now that we have <strong>deployed</strong> and <strong>configured</strong> configured our service we can use it. </p>
+<p>Now that we have <strong>deployed</strong> and <strong>configured</strong> our service we can use it. </p>
 <p>Once all pieces work together the virtual HPC can be brought to life with the following sequence of commands:</p>
 <pre><code class="bash hljs">terraform plan -out planfile
 terraform apply -auto-approve planfile
 ansible-playbook --inventory inventory.yml --become --key-file id_rsa main.yml</code></pre>
 <p>and destroyed with</p>
 <pre><code class="bash hljs">terraform destroy -auto-approve</code></pre>
+<div class="note"><div class="title">⚠ Note</div>
+<div class="content">This virtual HPC will not make the Top500 ;&#41;. We will not see performance gains in comparison to running code locally, but we can get experience in how to work with a &#40;Slurm&#41; cluster.</div></div>
 <p><table class="fndef" id="fndef:1">
     <tr>
         <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
@@ -257,7 +259,7 @@ ansible-playbook --inventory inventory.yml --become --key-file id_rsa main.yml</
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 20, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 23, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

@@ -169,11 +169,11 @@ println()
 println(<span class="hljs-string">&quot;Built-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum(a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum:
-  92.632 μs (1 allocation: 16 bytes)
+  92.624 μs (1 allocation: 16 bytes)
 
 Built-in sum:
-  11.201 μs (1 allocation: 16 bytes)
-50005.20402506839</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
+  10.910 μs (1 allocation: 16 bytes)
+50016.67190852599</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there.</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
 
@@ -246,25 +246,25 @@ println(<span class="hljs-string">&quot;Simple sum with SIMD and direct element 
 <span class="hljs-meta">@show</span> my_sum_simd_elem_access(a)
 <span class="hljs-meta">@btime</span> my_sum_simd_elem_access($a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum
-my_sum(a) = 49975.75351012394
-  92.572 μs (0 allocations: 0 bytes)
+my_sum(a) = 49979.8246360964
+  92.574 μs (0 allocations: 0 bytes)
 
 Built-in sum
-sum(a) = 49975.75351012482
-  11.261 μs (0 allocations: 0 bytes)
+sum(a) = 49979.824636096855
+  10.840 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD
-my_sum_simd(a) = 49975.75351012482
-  9.788 μs (0 allocations: 0 bytes)
+my_sum_simd(a) = 49979.82463609682
+  9.708 μs (0 allocations: 0 bytes)
 
 Simple my_sum with direct element access
-my_sum_elem_access(a) = 49975.75351012394
-  92.562 μs (0 allocations: 0 bytes)
+my_sum_elem_access(a) = 49979.8246360964
+  92.573 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD and direct element access
-my_sum_simd_elem_access(a) = 49975.75351012482
-  9.838 μs (0 allocations: 0 bytes)
-49975.75351012482</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
+my_sum_simd_elem_access(a) = 49979.82463609682
+  9.698 μs (0 allocations: 0 bytes)
+49979.82463609682</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
 <p>This is due to the fact that the numerics involved are a bit tricky. In short, when adding floating point numbers you lose accuracy when adding a large number to a small number. This is exactly what is happening for our first example as we add all the numbers in one long sequence.</p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
@@ -274,7 +274,7 @@ my_sum_simd_elem_access(a) = 49975.75351012482
 printstyled(<span class="hljs-string">&quot;\n------Separator-------\n\n&quot;</span>; color = :red)
 <span class="hljs-meta">@code_llvm</span> my_sum_simd(a)</code></pre>
 <pre><code class="plaintext hljs">;  @ none:2 within `my_sum`
-define double @julia_my_sum_1887({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_my_sum_1891({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:5 within `my_sum`
 ; ┌ @ abstractarray.jl:314 within `eachindex`
@@ -329,7 +329,7 @@ L29:                                              ; preds = %L13, %top
 ------Separator-------
 
 ;  @ none:3 within `my_sum_simd`
-define double @julia_my_sum_simd_1896({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+define double @julia_my_sum_simd_1900({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
 ;  @ none:6 within `my_sum_simd`
 ; ┌ @ simdloop.jl:69 within `macro expansion`
@@ -800,62 +800,62 @@ L30:                                              ; preds = %L13, %middle.block,
      @ Base.GMP gmp.jl:666
  [150] +(c::BigInt, x::BigFloat)
      @ Base.MPFR mpfr.jl:431
- [151] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
-     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
- [152] +(x::Bool)
+ [151] +(x::Bool)
      @ bool.jl:163
- [153] +(x::Integer, y::Ptr)
+ [152] +(x::Integer, y::Ptr)
      @ pointer.jl:169
- [154] +(y::Integer, x::Rational)
+ [153] +(y::Integer, x::Rational)
      @ rational.jl:334
- [155] +(x::Integer, y::AbstractChar)
+ [154] +(x::Integer, y::AbstractChar)
      @ char.jl:247
- [156] +(x::Bool, y::T) where T&lt;:AbstractFloat
+ [155] +(x::Bool, y::T) where T&lt;:AbstractFloat
      @ bool.jl:173
- [157] +(x::Bool, y::Bool)
+ [156] +(x::Bool, y::Bool)
      @ bool.jl:166
- [158] +(a::Integer, b::Integer)
+ [157] +(a::Integer, b::Integer)
      @ int.jl:1038
- [159] +(x::Bool, z::Complex{Bool})
+ [158] +(x::Bool, z::Complex{Bool})
      @ complex.jl:302
- [160] +(x::Bool, z::Complex)
+ [159] +(x::Bool, z::Complex)
      @ complex.jl:309
- [161] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
+ [160] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
      @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:151
- [162] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
+ [161] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
      @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:214
- [163] +(x::AbstractArray{&lt;:Number})
+ [162] +(x::AbstractArray{&lt;:Number})
      @ abstractarraymath.jl:220
- [164] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
+ [163] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
      @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/fieldvalues.jl:43
- [165] +(::Missing)
+ [164] +(::Missing)
      @ missing.jl:101
- [166] +(::Missing, ::Number)
+ [165] +(::Missing, ::Number)
      @ missing.jl:123
- [167] +(x::Missing, y::Dates.AbstractTime)
+ [166] +(x::Missing, y::Dates.AbstractTime)
      @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:89
- [168] +(::Missing, ::Missing)
+ [167] +(::Missing, ::Missing)
      @ missing.jl:122
- [169] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
+ [168] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
      @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/versionweights.jl:22
- [170] +(x::Dates.CompoundPeriod, y::Dates.Period)
+ [169] +(x::Dates.CompoundPeriod, y::Dates.Period)
      @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:332
- [171] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
+ [170] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
      @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:362
- [172] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
+ [171] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
      @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:334
- [173] +(level::Base.CoreLogging.LogLevel, inc::Integer)
+ [172] +(level::Base.CoreLogging.LogLevel, inc::Integer)
      @ Base.CoreLogging logging.jl:131
- [174] +(x::Rational{BigInt}, y::Rational{BigInt})
+ [173] +(x::Rational{BigInt}, y::Rational{BigInt})
      @ Base.GMP.MPQ gmp.jl:1027
- [175] +(x::Rational)
+ [174] +(x::Rational)
      @ rational.jl:284
- [176] +(x::Real, z::Complex{Bool})
+ [175] +(x::Real, z::Complex{Bool})
      @ complex.jl:316
- [177] +(x::Real, z::Complex)
+ [176] +(x::Real, z::Complex)
      @ complex.jl:328
- [178] +(x::Rational, y::Rational)
+ [177] +(x::Rational, y::Rational)
      @ rational.jl:298
+ [178] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
+     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
  [179] +(dt::Dates.DateTime, y::Dates.Year)
      @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:23
  [180] +(dt::Dates.DateTime, z::Dates.Month)
@@ -919,7 +919,7 @@ L30:                                              ; preds = %L13, %middle.block,
 <p>This shows us two things. First, we did not think anybody will print this workshop on paper or we would have gone for shorter outputs. Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best. As a result we can write optimized code for different types and in general this is one key stone in the excellent performance of Julia.</p>
 <p>Before we continue to the other parallel computation concepts, we introduce an <a href="../pi/">example</a> that will help us along, same as the sum did for the beginning of this section.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 20, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 23, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
