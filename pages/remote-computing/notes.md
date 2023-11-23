@@ -14,7 +14,7 @@ Now there are some insights and notes that do not perfectly fit in either of the
 **A short disclaimer:**
 
 The authors have some experience with HPC systems, private and public clouds.
-By no measure are they experts and this are just some insights after a lot of time spent in this often conflicting fields.
+By no measure are they experts and these are just some insights after a lot of time spent in these often conflicting fields.
 @@
 
 ## Why do HPC and cloud computing exist as separate entities instead of being a unified concept?
@@ -32,7 +32,7 @@ So here are some reasons for these two separated worlds.
 The two systems are designed for different purposes. 
 
 An HPC system is designed for one purpose and one only, to have as much performance as possible.
-All components are fine-tuned to squeeze out the most flops as possible.
+All components are fine-tuned to squeeze out the most flops possible.
 The software that is run is also fine-tuned, the specific architecture of the CPU is known to optimize the compiler, the code knows the architecture and relative positions of various sub programs on other nodes to optimize communication, I/O is layered with computation calls to save time and so forth. 
 
 On the other hand, a cloud system is more general purpose.

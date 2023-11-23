@@ -17,7 +17,7 @@ The under cloud is where the cloud software (e.g. openstack) is running and doin
 
 Again a high capacity and performance storage comes into play to support all of the various storage needs (VM discs, application storage,... ).
 
-Now when you request a _compute instance/resource from this infrastructure you do not get a **bare metal** machine but rather a virtual machine.
+Now when you request a _compute instance/resource_ from this infrastructure you do not get a **bare metal** machine but rather a virtual machine.
 That is an abstraction layer on top of the hardware.
 You might get four cores and 16GB of RAM and some other user gets their 8 cores with 32GB of RAM on the same node.
 This is actually quite similar to the job scheduler we saw for HPC systems.

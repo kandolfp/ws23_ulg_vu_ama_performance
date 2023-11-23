@@ -9,7 +9,7 @@
 ## History
 
 Cloud computing has gained a lot of traction over the last couple of years but it has been around for quite a long time.
-Shortly after the internet came around the first _cloud services_ where born.
+Shortly after the internet came around the first _cloud services_ were born.
 Nobody called it that but there is not much difference.
 
 A web server that does some computation before we get the result, the email client, video editing on some platform, uploading snippets of information to some platform and so forth. 
@@ -19,7 +19,7 @@ The modern way of cloud computing that we usually think about is rightly connect
 The legend goes as follows:
 
 When Amazon started it just needed a couple of servers to run, the more the site got used the more servers it required.
-Soon it gotten so bit that it built its on compute centers.
+Soon it gotten so big that it built its on compute centers.
 They had a problem, during christmas there where so many request that they needed a massive infrastructure to cope.
 The worst you can do is to have the customer waiting before he/she can order and maybe decide that it is not worth it, user experience above everything else.
 The rest of the time the compute center had resources unused.
