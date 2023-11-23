@@ -94,7 +94,7 @@ This can easily be automated and is often called **Infrastructure as a Service**
 
 ## Configure the infrastructure
 
-All we have now is 4 virtual machines running Linux on them and an account that can be accessed via `ssh`.
+All we have now is 4 virtual machines (VMs) running Linux on them and an account that can be accessed via `ssh`.
 The next step is to actually configure them into a working HPC cluster. 
 
 For this we use [Ansible](https://www.ansible.com/) from RedHat.
@@ -106,12 +106,13 @@ Unfortunately, this project is already a bit stale but with some adaptations it 
 The main idea is to define playbooks. 
 A playbook usually makes sure to configure a certain service, in our case the vHPC.
 The service has different roles so we subdivide down to roles. 
-For example the Slurm playbook is split in three parts:
+For example the Slurm playbook is split into three parts:
 - slurm-common $\to$ needed for both machines
 - slurm-master $\to$ just for the management node
 - slurm-worker $\to$ just for the worker nodes
 We can cluster the different VMs per role and run the playbook for each role. 
-The entire elasticluster is much bigger and to allow reuse we further subdivide down to more specific services and tasks. 
+The entire `elasticluster` is much bigger.
+To allow reuse we further subdivide into more specific services and tasks. 
 It is also possible to provide different ways for different platforms, e.g. RHEL or Debian based Linux distributions.
 
 This is an excerpt of the `slurm.yml` playbook[^1]
@@ -152,7 +153,7 @@ This part is often summarized under the umbrella of **Platform as a Service**.
 
 ## Use the infrastructure
 
-Now that we have **deployed** and **configured** configured our service we can use it. 
+Now that we have **deployed** and **configured** our service we can use it. 
 
 Once all pieces work together the virtual HPC can be brought to life with the following sequence of commands:
 
@@ -165,6 +166,11 @@ and destroyed with
 ```bash
 terraform destroy -auto-approve
 ```
+
+\note{
+This virtual HPC will not make the Top500 ;).
+We will not see performance gains in comparison to running code locally, but we can get experience in how to work with a (Slurm) cluster.
+}
 
 [^1]: Original source on [github](https://github.com/elasticluster/elasticluster/blob/master/elasticluster/share/playbooks/roles/slurm.yml)
 
