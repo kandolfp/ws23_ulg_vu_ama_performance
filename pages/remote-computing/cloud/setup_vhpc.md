@@ -8,24 +8,25 @@
 
 ## Overview
 
-We use the setup of the vHPC es used in the other section for testing as one aspect of how some aspects of working with _the cloud_ looks like. 
+We use the setup of the vHPC as used in the other section for testing as one aspect of how some aspects of working with _the cloud_ looks like. 
 
 ## Cloud provider
 
-The cloud is managed my some system this can be one of the public clouds like
+In order to access resources in _the cloud_ some kind of management software is needed.
+There are several options available, the big public clouds providers
 - Amazone  [aws](https://aws.amazon.com/)
 - Microsoft [Azure](https://azure.microsoft.com/)
 - Google [GCP](https://cloud.google.com/gcp/)
-or on premises 
+or an example for on premises (private)
 - [openstack](https://www.openstack.org/)
 
 Now we do not have such an infrastructure at our disposal but we can still simulate one.
-We do this with a somewhat powerful server and [libvirt](https://libvirt.org/), this is going to be our cloud provider. 
+We do this with a somewhat powerful server and [libvirt](https://libvirt.org/), this will be our _cloud provider_. 
 
 ## Setup of the provider
-The cloud needs to be created as so many other things.
-Of on premise clouds this means installing the cloud software (openstack) and adding servers, storage, ... to the managed resources. 
-In our case we install libvirt on Ubuntu.
+As mentioned before there is a management layer present and that needs to be installed.
+For on premise clouds this includes installing the cloud software (openstack) and adding servers, storage, ... to the managed resources. 
+In our case we install `libvirt` on Ubuntu.
 
 ## Create your infrastructure
 
@@ -34,12 +35,12 @@ In our case we would like to have
 - one Slurm management node
 - three Slurm worker nodes
 - storage for each virtual machine
-- a operating system on each machine - we use Rocky Linux 8
+- an operating system on each machine - we use Rocky Linux 8
 - initial setup of the nodes to allow further configuration (service account)
-- a network for all of the machines
+- a network for all the machines
 
-We describe all of this in [Terraform](https://www.terraform.io/) a descriptive language that is often used to define infrastructure. 
-Luckily for us, there is a Terraform provider for libvirt. 
+We describe all of this using the descriptive language [Terraform](https://www.terraform.io/) that is often used to define infrastructure. 
+Luckily for us, there is a Terraform provider for `libvirt`. 
 
 The actual code is `yml`, e.g. below you see the final part of defining the worker nodes.
 ```yml
@@ -89,11 +90,11 @@ resource "libvirt_domain" "worker" {
 With our _Infrastructure as Code_ we can use Terraform to deploy it and with that we have our machines. 
 The minimal configuration to have a service account for the next step is done via `cloud-init`.
 
-This can easily be automated and is often called **Infrastructure as a Service**
+This can easily be automated and is often called **Infrastructure as a Service** or **IaaS**.
 
 ## Configure the infrastructure
 
-All we have now is 4 virtual machines that have a Linux on them and an account that can be accessed via `ssh`.
+All we have now is 4 virtual machines running Linux on them and an account that can be accessed via `ssh`.
 The next step is to actually configure them into a working HPC cluster. 
 
 For this we use [Ansible](https://www.ansible.com/) from RedHat.
