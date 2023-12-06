@@ -366,12 +366,75 @@ We can actually delete multiple jobs with one call of `scancel`:
 scancel 6
 ```
 
-## Answers to the questions
+### Answers to the questions
 1. The command `sleep 10s && /bin/hostname` first sleeps for 10 seconds, afterwards it will output the node (what we usually see in the prompt) where the job is started.
 
 1. Our job only runs on one CPU, therefore it only runs on one of the nodes.
 
 1. The directory is shared over all the nodes. Recall the previous section about shared filesystems, [link](../architecture#storage). 
+
+## Working with Julia in Slurm
+
+If we want to get our Julia project to the cluster there are a couple of things to consider. 
+
+### Software
+
+On a cluster a lot of different people work with different software and quite often with different versions of the same software.
+One common example is the toolchain, e.g. GNU compile vs. Intel compiler, or Intel MKL vs OpenBLAS.
+As a consequence, depending on the toolchain programs need to be compiled separately.
+
+In order to keep this sorted most systems have a way of managing modules.
+One of the two is likely installed on the cluster
+- [Environment Modules](https://modules.readthedocs.io/en/latest/)
+- [Lmod](https://lmod.readthedocs.io/en/latest/index.html)
+and as long as you are no admin the two can be used more or less in the same way. 
+
+The most important commands are:
+```bash
+# have a look what modules are available
+$ module avail
+------ /etc/modulefiles ------
+julia/1.9.4 
+
+#load the module
+$ module load julia/1.9.4
+
+# remove the module
+$ module remove julia/1.9.4
+```
+
+\note{
+Julia can be a bit tricky to install on a cluster or more precisely it is not completely clear how to do the installation. 
+A nice guide can be found [here](https://juliahpc.github.io/JuliaOnHPCClusters/).
+}
+
+### Using the `Distributed` package
+
+When discussing [distributed computing](../../hpc/distributed/) we used 
+```bash
+julia -p 4 --project
+```
+to start 4 workers.
+With the constraints of the job scheduler we need to let Julia know where the workers should be started.
+This can be achieved with the `--machine-file=machinefile` option[^5].
+The file can be generated with `generate_pbs_nodefile`.
+
+Putting everything together a job file could look as follows:
+```bash
+#!/bin/bash
+#SBATCH --job-name=peter
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=1
+
+module load julia/1.9.4
+
+export SLURM_NODEFILE=`generate_pbs_nodefile`
+julia --machine-file=$SLURM_NODEFILE main.jl
+```
+
+\note{
+As stated [here](https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism) there are a couple of downsides to using `Distributed.jl`, but as we have no interconnect and did not introduce `MPI` or `MPI.jl` we still use it. 
+}
 
 [^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.
 
@@ -381,3 +444,4 @@ scancel 6
 
 [^4]: [UIBK LEO5 Tutorial](https://www.uibk.ac.at/zid/systeme/hpc-systeme/common/tutorials/slurm-tutorial.html)
 
+[^5]: [docs](https://docs.julialang.org/en/v1/manual/distributed-computing/#Starting-and-managing-worker-processes)
