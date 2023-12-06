@@ -110,7 +110,7 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="usage"><a href="#usage" class="header-anchor">Usage</a></h1>
-<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#testsetup">Testsetup</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li></ol></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#testsetup">Testsetup</a></li><li><a href="#slurm_-_as_a_job_scheduler">Slurm - as a job scheduler</a><ol><li><a href="#submitting_a_job">Submitting a job</a></li><li><a href="#running_parallel_jobs">Running parallel jobs</a></li><li><a href="#interactive_jobs">Interactive jobs</a></li><li><a href="#monitoring">Monitoring</a></li><li><a href="#altering_jobs">Altering jobs</a></li><li><a href="#deleting_jobs">Deleting jobs</a></li><li><a href="#answers_to_the_questions">Answers to the questions</a></li></ol></li><li><a href="#working_with_julia_in_slurm">Working with Julia in Slurm</a><ol><li><a href="#software">Software</a></li><li><a href="#using_the_distributed_package">Using the <code>Distributed</code> package</a></li></ol></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
 <p>The idea of HPC Systems is to be used as much as possible, usually by a lot of different people or programs.  In order to make sure that users and programs do not interfere with each other the nodes can not be accessed directly.  The actual execution of programs is done by a job scheduler.  We need to define a job, with all the resources we need and hand this job over to the job scheduler.  The job scheduler will now make sure that all constraints are met and schedule our job along with all the other jobs.</p>
 <p>While there is a lot of work going into making the access and use of such systems easier, more convenient, more interactive and maybe even provide some graphical user interface, the standard mode of access is still via terminal<sup id="fnref:1"><a href="#fndef:1" class="fnref">[1]</a></sup>. </p>
@@ -347,7 +347,7 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 <h3 id="deleting_jobs"><a href="#deleting_jobs" class="header-anchor">Deleting jobs</a></h3>
 <p>To delete jobs we use <code>scancel</code> together with the <code>JobID</code>. We can actually delete multiple jobs with one call of <code>scancel</code>:</p>
 <pre><code class="bash hljs">scancel 6</code></pre>
-<h2 id="answers_to_the_questions"><a href="#answers_to_the_questions" class="header-anchor">Answers to the questions</a></h2>
+<h3 id="answers_to_the_questions"><a href="#answers_to_the_questions" class="header-anchor">Answers to the questions</a></h3>
 <ol>
 <li><p>The command <code>sleep 10s &amp;&amp; /bin/hostname</code> first sleeps for 10 seconds, afterwards it will output the node &#40;what we usually see in the prompt&#41; where the job is started.</p>
 </li>
@@ -356,6 +356,47 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
 <li><p>The directory is shared over all the nodes. Recall the previous section about shared filesystems, <a href="../architecture#storage">link</a>. </p>
 </li>
 </ol>
+<h2 id="working_with_julia_in_slurm"><a href="#working_with_julia_in_slurm" class="header-anchor">Working with Julia in Slurm</a></h2>
+<p>If we want to get our Julia project to the cluster there are a couple of things to consider. </p>
+<h3 id="software"><a href="#software" class="header-anchor">Software</a></h3>
+<p>On a cluster a lot of different people work with different software and quite often with different versions of the same software. One common example is the toolchain, e.g. GNU compile vs. Intel compiler, or Intel MKL vs OpenBLAS. As a consequence, depending on the toolchain programs need to be compiled separately.</p>
+<p>In order to keep this sorted most systems have a way of managing modules. One of the two is likely installed on the cluster</p>
+<ul>
+<li><p><a href="https://modules.readthedocs.io/en/latest/">Environment Modules</a></p>
+</li>
+<li><p><a href="https://lmod.readthedocs.io/en/latest/index.html">Lmod</a></p>
+</li>
+</ul>
+<p>and as long as you are no admin the two can be used more or less in the same way. </p>
+<p>The most important commands are:</p>
+<pre><code class="bash hljs"><span class="hljs-comment"># have a look what modules are available</span>
+$ module avail
+------ /etc/modulefiles ------
+julia/1.9.4 
+
+<span class="hljs-comment">#load the module</span>
+$ module load julia/1.9.4
+
+<span class="hljs-comment"># remove the module</span>
+$ module remove julia/1.9.4</code></pre>
+<div class="note"><div class="title">⚠ Note</div>
+<div class="content">Julia can be a bit tricky to install on a cluster or more precisely it is not completely clear how to do the installation.  A nice guide can be found <a href="https://juliahpc.github.io/JuliaOnHPCClusters/">here</a>.</div></div>
+<h3 id="using_the_distributed_package"><a href="#using_the_distributed_package" class="header-anchor">Using the <code>Distributed</code> package</a></h3>
+<p>When discussing <a href="../../hpc/distributed/">distributed computing</a> we used </p>
+<pre><code class="bash hljs">julia -p 4 --project</code></pre>
+<p>to start 4 workers. With the constraints of the job scheduler we need to let Julia know where the workers should be started. This can be achieved with the <code>--machine-file&#61;machinefile</code> option<sup id="fnref:5"><a href="#fndef:5" class="fnref">[5]</a></sup>. The file can be generated with <code>generate_pbs_nodefile</code>.</p>
+<p>Putting everything together a job file could look as follows:</p>
+<pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
+<span class="hljs-comment">#SBATCH --job-name=peter</span>
+<span class="hljs-comment">#SBATCH --ntasks=4</span>
+<span class="hljs-comment">#SBATCH --cpus-per-task=1</span>
+
+module load julia/1.9.4
+
+<span class="hljs-built_in">export</span> SLURM_NODEFILE=`generate_pbs_nodefile`
+julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl</code></pre>
+<div class="note"><div class="title">⚠ Note</div>
+<div class="content">As stated <a href="https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism">here</a> there are a couple of downsides to using <code>Distributed.jl</code>, but as we have no interconnect and did not introduce <code>MPI</code> or <code>MPI.jl</code> we still use it.</div></div>
 <p><table class="fndef" id="fndef:1">
     <tr>
         <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
@@ -380,9 +421,15 @@ JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
         <td class="fndef-content"><a href="https://www.uibk.ac.at/zid/systeme/hpc-systeme/common/tutorials/slurm-tutorial.html">UIBK LEO5 Tutorial</a></td>
     </tr>
 </table>
+ <table class="fndef" id="fndef:5">
+    <tr>
+        <td class="fndef-backref"><a href="#fnref:5">[5]</a></td>
+        <td class="fndef-content"><a href="https://docs.julialang.org/en/v1/manual/distributed-computing/#Starting-and-managing-worker-processes">docs</a></td>
+    </tr>
+</table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: November 23, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: December 06, 2023.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
