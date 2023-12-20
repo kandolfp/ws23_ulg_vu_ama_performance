@@ -97,7 +97,7 @@ Let us transfer and extend the previous job into a job script `job.slurm` and ad
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=peter
+#SBATCH --job-name=$USER
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
@@ -263,7 +263,7 @@ and with this we can rewrite `job.slurm` as
 ```bash
 #!/bin/bash
 
-#SBATCH --job-name=peter
+#SBATCH --job-name=$USER
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
@@ -422,7 +422,7 @@ The file can be generated with `generate_pbs_nodefile`.
 Putting everything together a job file could look as follows:
 ```bash
 #!/bin/bash
-#SBATCH --job-name=peter
+#SBATCH --job-name=$USER
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=1
 
