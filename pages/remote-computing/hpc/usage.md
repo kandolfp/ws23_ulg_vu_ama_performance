@@ -27,8 +27,8 @@ E.g. use the excellent docker-compose setup of [Giocanni Torres](https://github.
 
 At the time of creation of these notes the following sequence of commands will start a cluster and give you access to the nodes. 
 ```bash
-SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose build
-SLURM_TAG=slurm-22-05-10-1 IMAGE_TAG=22.05.10.1 docker-compose up -d
+SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose build
+SLURM_TAG=slurm-21-08-6-1  IMAGE_TAG=21.08.06.1 docker-compose up -d
 docker exec -it slurmctld bash
 ```
 
