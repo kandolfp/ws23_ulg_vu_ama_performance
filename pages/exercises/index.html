@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  
+   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/katex/katex.min.css">
+     
    <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
    
     <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
@@ -51,7 +52,7 @@
   }
 </style>
 
-   <title>Remote Computing - Cloud Computing - Basics</title>  
+   <title>Parallel Computing - Exercises</title>  
 </head>
 <body>                      <!-- closed in foot.html -->
 <div class="page-wrap">   <!-- closed in foot.html -->
@@ -76,7 +77,7 @@
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/distributed/" class="menu-list-link ">Distributed computing</a>
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/hpc/gpu/" class="menu-list-link ">GPU computing</a>
           </ul>
-        <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remote computing</a>
+        <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link ">Remote computing</a>
           <ul class="menu-list-child-list ">
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link ">High Performance Computing</a>
@@ -85,15 +86,15 @@
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link ">Architecture</a>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
             </ul>
-            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link active">Cloud Computing</a>
+            <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
               <ul class="menu-list-child-list ">
-                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link active">Basics</a>
+                <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link ">Basics</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link ">Architecture</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
               </ul>
             <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/notes/" class="menu-list-link ">Notes</a>
           </ul>
-          <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/exercises/" class="menu-list-link ">Exercises</a>
+          <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/exercises/" class="menu-list-link active">Exercises</a>
       </ul>
     </div>
     <div class="footer">
@@ -110,21 +111,82 @@
 
 
 <!-- Content appended here (in class franklin-content) -->
-<div class="franklin-content"><h1 id="basics"><a href="#basics" class="header-anchor">Basics</a></h1>
-<div class="franklin-toc"><ol><li><a href="#history">History</a></li></ol></div>
-<h2 id="history"><a href="#history" class="header-anchor">History</a></h2>
-<p>Cloud computing has gained a lot of traction over the last couple of years but it has been around for quite a long time. Shortly after the internet came around the first <em>cloud services</em> were born. Nobody called it that but there is not much difference.</p>
-<p>A web server that does some computation before we get the result, the email client, video editing on some platform, uploading snippets of information to some platform and so forth.  All of these <em>services</em> do work on some server that is in the cloud, i.e. cloud computing.</p>
-<p>The modern way of cloud computing that we usually think about is rightly connected to the rise of <strong>Amazon web services</strong> &#40;aws&#41;. The legend goes as follows:</p>
-<p>When Amazon started it just needed a couple of servers to run, the more the site got used the more servers it required. Soon it gotten so big that it built its on compute centers. They had a problem, during christmas there where so many request that they needed a massive infrastructure to cope. The worst you can do is to have the customer waiting before he/she can order and maybe decide that it is not worth it, user experience above everything else. The rest of the time the compute center had resources unused. So they made a business model out of it and aws was born. The best customers where selling on Amazon anyway and used their cloud.</p>
-<p>They were more or less the first public cloud provided and with their success soon others started as well. The entire <em>cloud stack</em> developed from there. Of course it was not exactly like that and a lot of open source developers and companies where involved and are still involved in creating the <em>cloud stack</em>.</p>
-<p>On cloud conferences you will often see slides with millions of logos, something like: 
-<figure style="text-align:center;">
-<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/cloud/2018-02-23-devops-ecosystem.jpg" style="padding:0; " alt=" Logo collection."/>
-<figcaption> Logo collection. Original source: <p style="font-size:11px"><a href=" http://rafaelhart.com/2018/02/what-actually-is-devops/"> http://rafaelhart.com/2018/02/what-actually-is-devops/</a></p></figcaption>
-</figure>
-</p>
-<p>What we now see is that Amazon, Microsoft and Google have the large platforms &#40;in the west&#41; and large companies, universities or something like the finance sector has its own private clouds.</p>
+<div class="franklin-content"><h1 id="exercises"><a href="#exercises" class="header-anchor">Exercises</a></h1>
+<p>Please find below the exercise sheet for this lecture.</p>
+<h2 id="julia_optimize_your_code"><a href="#julia_optimize_your_code" class="header-anchor">Julia optimize your code</a></h2>
+<p>Optimize the following code as much as possible, while still achieving the same result. Use comments to explain your changes in the code. You can use everything that you have learned in this lecture or somewhere else. If you feel like changing the interface to the function that is fine as well.</p>
+<p>The points/mark will be based on your improvements and not on the final runtime. If you use GPUs try to reduce vendor specifics as much as possible but if it helps performance go for it.</p>
+<p>As context for the example please have a look at <a href="https://en.wikipedia.org/wiki/Julia_set">Julia set</a> and the skeleton for the example as</p>
+<pre><code class="julia hljs"><span class="hljs-keyword">using</span> Base.Threads, BenchmarkTools, Plots
+
+<span class="hljs-keyword">function</span> juliaset_naive(input, c)
+    result_image = zeros(height, width)
+
+    <span class="hljs-keyword">for</span> idx <span class="hljs-keyword">in</span> eachindex(input)
+        z = input[idx]
+        foundval = <span class="hljs-literal">false</span>
+
+        <span class="hljs-keyword">for</span> it <span class="hljs-keyword">in</span> <span class="hljs-number">1</span>:maxiter
+            <span class="hljs-keyword">if</span> abs2(z) &gt; <span class="hljs-number">4</span>
+                result_image[idx] = (it - <span class="hljs-number">1</span>)
+                foundval = <span class="hljs-literal">true</span>
+                <span class="hljs-keyword">break</span>
+            <span class="hljs-keyword">end</span>
+
+            z = z * z + c
+        <span class="hljs-keyword">end</span>
+
+        <span class="hljs-keyword">if</span> !foundval
+            result_image[idx] = maxiter
+        <span class="hljs-keyword">end</span>
+    <span class="hljs-keyword">end</span>
+
+    <span class="hljs-keyword">return</span> result_image
+<span class="hljs-keyword">end</span>
+
+
+<span class="hljs-comment"># SETUP START</span>
+scale = <span class="hljs-number">500.0</span> <span class="hljs-comment"># the greater the more details</span>
+width = <span class="hljs-number">2000</span>
+height = <span class="hljs-number">1000</span>
+
+x = -<span class="hljs-number">0.8</span>
+y = <span class="hljs-number">0.156</span>
+
+maxiter = <span class="hljs-number">255</span>
+<span class="hljs-comment"># SETUP END</span>
+
+c = x + y * <span class="hljs-literal">im</span>
+xvalues = <span class="hljs-built_in">LinRange</span>(-width / <span class="hljs-number">2</span>, width / <span class="hljs-number">2</span>, width) ./ scale
+yvalues = <span class="hljs-built_in">LinRange</span>(-height / <span class="hljs-number">2</span>, height / <span class="hljs-number">2</span>, height) ./ scale
+inputmatrix = xvalues&#x27; .+ yvalues .* <span class="hljs-literal">im</span>
+
+
+<span class="hljs-meta">@btime</span> juliaset_naive(inputmatrix, c)
+
+result = juliaset_naive(inputmatrix, c)
+heatmap(xvalues, yvalues, result, aspect_ratio=<span class="hljs-literal">true</span>)</code></pre>
+<p>Please hand in some kind of protocol &#40;e.g. in markdown&#41; where you document your code, the runtime of the <code>juliaset_naive</code> function vs. your implementation on your machine and a working copy of your code.</p>
+<h2 id="hpc_cluster"><a href="#hpc_cluster" class="header-anchor">HPC Cluster</a></h2>
+<p>With the docker compose setup of the Slurm-Cluster run the <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>π</mi></mrow><annotation encoding="application/x-tex">\pi</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">π</span></span></span></span> exercises and examples from the <a href="https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/hpc/distributed/">Distributed Computing</a> section.</p>
+<p>Please hand in the the job files along with the code you used and the job result files.</p>
+<p>The points/mark will be based on the files you hand in and if the jobs can be run on the test setup or not. </p>
+<h2 id="additional_exercises"><a href="#additional_exercises" class="header-anchor">Additional exercises</a></h2>
+<p>Here are some additional exercises/suggestions in case you want to play around with your HPC cluster.</p>
+<ol>
+<li><p>Add/remove workers from your cluster &#40;you need to change the <code>docker-compose.yml</code> and <code>slurm.conf</code> files&#41;.</p>
+</li>
+<li><p>Additionally to Julia 1.9.4 install 1.10.0 and switch between them via the <code>module</code> environment &#40;use <code>julia --version</code> to test&#41;.</p>
+</li>
+<li><p>Install some additional software &#40;e.g. <code>python</code>, <code>R</code>&#41; and create the necessary module files &#40;The image is based on Rocky Linux, a RedHat based Linux&#41;.</p>
+</li>
+<li><p>Try changing to 2 CPUs per worker &#40;depending on your hardware you might need to reduce workers&#41;</p>
+</li>
+<li><p>Can be tricky: try to include a GPU into the setup.</p>
+</li>
+<li><p>Change the <code>SelectType</code> and therefore how resources can be consumed, see <a href="https://slurm.schedmd.com/cons_tres_share.html">docs</a>.</p>
+</li>
+</ol>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 08, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -133,6 +195,11 @@
     </div> <!-- end of class main-content -->
     </div> <!-- end of class main-content-wrap -->
     </div> <!-- end of class page-wrap-->
+    
+      
+
+
+
     
     
       

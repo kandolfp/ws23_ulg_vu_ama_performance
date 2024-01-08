@@ -68,6 +68,12 @@
     <priority>0.5</priority>
 </url>
 <url>
+    <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/exercises/index.html</loc>
+    <lastmod>2024-01-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
     <loc>https://kandolfp.github.io/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc/index.html</loc>
     <lastmod>2024-01-08</lastmod>
     <changefreq>monthly</changefreq>
