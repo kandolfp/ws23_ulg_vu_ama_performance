@@ -443,11 +443,14 @@ As stated [here](https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_
 }
 
 \exercise{
-Let us test this setup with a small test code from github.
+
+Let us test this setup with a small test code from github:
 
 1. Get the source `git clone https://github.com/Arpeggeo/julia-distributed-computing.git`
 1. Write an appropriate job file.
 1. Run the code and check the output
+
+See if your job runs right away or if you need to wait.
 }
 
 [^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.
