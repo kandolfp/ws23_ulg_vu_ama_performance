@@ -118,6 +118,9 @@
 <p>There are different job schedulers around, the most commonly found is <a href="https://www.schedmd.com/">Slurm</a>.  The <em>workload manager</em> itself is <a href="https://github.com/SchedMD/slurm">open source</a>, the company SchedMD® <em>distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration</em><sup id="fnref:2"><a href="#fndef:2" class="fnref">[2]</a></sup>.</p>
 <h2 id="testsetup"><a href="#testsetup" class="header-anchor">Testsetup</a></h2>
 <p>If you do this class at home or at another time you can still use a test setup.  E.g. use the excellent docker-compose setup of <a href="https://github.com/giovtorres">Giocanni Torres</a> that you can find <a href="https://github.com/giovtorres/slurm-docker-cluster">here</a>.</p>
+<p>In order to have &#40;almost&#41; the same setup as for the live session, please clone the fork &#40;<code>ulg</code> branch&#41;.</p>
+<pre><code class="bash hljs">git <span class="hljs-built_in">clone</span> --depth 1 --branch ulg git@github.com:kandolfp/slurm-docker-cluster.git</code></pre>
+<p>This will add <code>Julia</code> and the <code>Environment Modules</code> &#40;we see later what that is&#41;.</p>
 <p>At the time of creation of these notes the following sequence of commands will start a cluster and give you access to the nodes. </p>
 <pre><code class="bash hljs">SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose build
 SLURM_TAG=slurm-21-08-6-1  IMAGE_TAG=21.08.06.1 docker-compose up -d
@@ -397,6 +400,16 @@ module load julia/1.9.4
 julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl</code></pre>
 <div class="note"><div class="title">⚠ Note</div>
 <div class="content">As stated <a href="https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism">here</a> there are a couple of downsides to using <code>Distributed.jl</code>, but as we have no interconnect and did not introduce <code>MPI</code> or <code>MPI.jl</code> we still use it.</div></div>
+<p><button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Let us test this setup with a small test code from github.</p>
+<ol>
+<li><p>Get the source <code>git clone https://github.com/Arpeggeo/julia-distributed-computing.git</code></p>
+</li>
+<li><p>Write an appropriate job file.</p>
+</li>
+<li><p>Run the code and check the output </div></p>
+</li>
+</ol>
+
 <p><table class="fndef" id="fndef:1">
     <tr>
         <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
@@ -429,7 +442,7 @@ julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl<
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: December 20, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 08, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

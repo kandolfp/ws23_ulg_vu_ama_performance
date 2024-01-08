@@ -169,11 +169,11 @@ println()
 println(<span class="hljs-string">&quot;Built-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum(a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum:
-  92.643 μs (1 allocation: 16 bytes)
+  92.562 μs (1 allocation: 16 bytes)
 
 Built-in sum:
-  11.331 μs (1 allocation: 16 bytes)
-49863.487188437066</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
+  11.361 μs (1 allocation: 16 bytes)
+49940.27155682202</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there.</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
 
@@ -246,25 +246,25 @@ println(<span class="hljs-string">&quot;Simple sum with SIMD and direct element 
 <span class="hljs-meta">@show</span> my_sum_simd_elem_access(a)
 <span class="hljs-meta">@btime</span> my_sum_simd_elem_access($a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum
-my_sum(a) = 50063.02807574476
-  92.602 μs (0 allocations: 0 bytes)
+my_sum(a) = 50152.319953871796
+  92.542 μs (0 allocations: 0 bytes)
 
 Built-in sum
-sum(a) = 50063.028075744834
-  11.200 μs (0 allocations: 0 bytes)
+sum(a) = 50152.31995387254
+  11.221 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD
-my_sum_simd(a) = 50063.02807574486
-  10.038 μs (0 allocations: 0 bytes)
+my_sum_simd(a) = 50152.319953872546
+  9.868 μs (0 allocations: 0 bytes)
 
 Simple my_sum with direct element access
-my_sum_elem_access(a) = 50063.02807574476
-  92.612 μs (0 allocations: 0 bytes)
+my_sum_elem_access(a) = 50152.319953871796
+  92.552 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD and direct element access
-my_sum_simd_elem_access(a) = 50063.02807574486
-  9.888 μs (0 allocations: 0 bytes)
-50063.02807574486</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
+my_sum_simd_elem_access(a) = 50152.319953872546
+  9.678 μs (0 allocations: 0 bytes)
+50152.319953872546</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
 <p>This is due to the fact that the numerics involved are a bit tricky. In short, when adding floating point numbers you lose accuracy when adding a large number to a small number. This is exactly what is happening for our first example as we add all the numbers in one long sequence.</p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
@@ -273,167 +273,523 @@ my_sum_simd_elem_access(a) = 50063.02807574486
 <span class="hljs-meta">@code_llvm</span> my_sum(a)
 printstyled(<span class="hljs-string">&quot;\n------Separator-------\n\n&quot;</span>; color = :red)
 <span class="hljs-meta">@code_llvm</span> my_sum_simd(a)</code></pre>
-<pre><code class="plaintext hljs">;  @ none:2 within `my_sum`
-define double @julia_my_sum_1887({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+<pre><code class="plaintext hljs">;  @ none:1 within `my_sum`
+define double @julia_my_sum_1944({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
-;  @ none:5 within `my_sum`
-; ┌ @ abstractarray.jl:314 within `eachindex`
-; │┌ @ abstractarray.jl:133 within `axes1`
+;  @ none:4 within `my_sum`
+; ┌ @ abstractarray.jl:318 within `eachindex`
+; │┌ @ abstractarray.jl:134 within `axes1`
 ; ││┌ @ abstractarray.jl:98 within `axes`
-; │││┌ @ array.jl:149 within `size`
+; │││┌ @ array.jl:191 within `size`
       %1 = bitcast {}* %0 to { i8*, i64, i16, i16, i32 }*
-      %2 = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
-      %3 = load i64, i64* %2, align 8
+      %arraylen_ptr = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
+      %arraylen = load i64, i64* %arraylen_ptr, align 8
 ; └└└└
-; ┌ @ range.jl:887 within `iterate`
-; │┌ @ range.jl:662 within `isempty`
-; ││┌ @ operators.jl:369 within `&gt;`
+; ┌ @ range.jl:897 within `iterate`
+; │┌ @ range.jl:672 within `isempty`
+; ││┌ @ operators.jl:378 within `&gt;`
 ; │││┌ @ int.jl:83 within `&lt;`
-      %.not.not = icmp eq i64 %3, 0
+      %.not.not = icmp eq i64 %arraylen, 0
 ; └└└└
   br i1 %.not.not, label %L29, label %L13.preheader
 
 L13.preheader:                                    ; preds = %top
-  %4 = bitcast {}* %0 to double**
-  %5 = load double*, double** %4, align 8
-;  @ none:7 within `my_sum`
+  %2 = bitcast {}* %0 to double**
+  %arrayptr12 = load double*, double** %2, align 8
+;  @ none:6 within `my_sum`
+  %3 = add nsw i64 %arraylen, -1
+  %xtraiter = and i64 %arraylen, 7
+  %4 = icmp ult i64 %3, 7
+  br i1 %4, label %L29.loopexit.unr-lcssa, label %L13.preheader.new
+
+L13.preheader.new:                                ; preds = %L13.preheader
+  %unroll_iter = and i64 %arraylen, 9223372036854775800
   br label %L13
 
-L13:                                              ; preds = %L13, %L13.preheader
-  %value_phi3 = phi i64 [ %10, %L13 ], [ 1, %L13.preheader ]
-  %value_phi5 = phi double [ %9, %L13 ], [ 0.000000e+00, %L13.preheader ]
-;  @ none:6 within `my_sum`
+L13:                                              ; preds = %L13, %L13.preheader.new
+  %value_phi3 = phi i64 [ 1, %L13.preheader.new ], [ %28, %L13 ]
+  %value_phi5 = phi double [ 0.000000e+00, %L13.preheader.new ], [ %27, %L13 ]
+  %niter = phi i64 [ 0, %L13.preheader.new ], [ %niter.next.7, %L13 ]
+;  @ none:5 within `my_sum`
 ; ┌ @ essentials.jl:13 within `getindex`
-   %6 = add nsw i64 %value_phi3, -1
-   %7 = getelementptr inbounds double, double* %5, i64 %6
-   %8 = load double, double* %7, align 8
+   %5 = add nsw i64 %value_phi3, -1
+   %6 = getelementptr inbounds double, double* %arrayptr12, i64 %5
+   %arrayref = load double, double* %6, align 8
 ; └
-; ┌ @ float.jl:408 within `+`
-   %9 = fadd double %value_phi5, %8
+; ┌ @ float.jl:409 within `+`
+   %7 = fadd double %value_phi5, %arrayref
 ; └
-;  @ none:7 within `my_sum`
-; ┌ @ range.jl:891 within `iterate`
-; │┌ @ promotion.jl:499 within `==`
-    %.not.not12 = icmp eq i64 %value_phi3, %3
-; │└
-   %10 = add nuw nsw i64 %value_phi3, 1
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %8 = add nuw nsw i64 %value_phi3, 1
 ; └
-  br i1 %.not.not12, label %L29, label %L13
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %9 = getelementptr inbounds double, double* %arrayptr12, i64 %value_phi3
+   %arrayref.1 = load double, double* %9, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %10 = fadd double %7, %arrayref.1
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %11 = add nuw nsw i64 %value_phi3, 2
+; └
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %12 = getelementptr inbounds double, double* %arrayptr12, i64 %8
+   %arrayref.2 = load double, double* %12, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %13 = fadd double %10, %arrayref.2
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %14 = add nuw nsw i64 %value_phi3, 3
+; └
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %15 = getelementptr inbounds double, double* %arrayptr12, i64 %11
+   %arrayref.3 = load double, double* %15, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %16 = fadd double %13, %arrayref.3
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %17 = add nuw nsw i64 %value_phi3, 4
+; └
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %18 = getelementptr inbounds double, double* %arrayptr12, i64 %14
+   %arrayref.4 = load double, double* %18, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %19 = fadd double %16, %arrayref.4
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %20 = add nuw nsw i64 %value_phi3, 5
+; └
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %21 = getelementptr inbounds double, double* %arrayptr12, i64 %17
+   %arrayref.5 = load double, double* %21, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %22 = fadd double %19, %arrayref.5
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %23 = add nuw nsw i64 %value_phi3, 6
+; └
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %24 = getelementptr inbounds double, double* %arrayptr12, i64 %20
+   %arrayref.6 = load double, double* %24, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %25 = fadd double %22, %arrayref.6
+; └
+; ┌ @ essentials.jl:13 within `getindex`
+   %26 = getelementptr inbounds double, double* %arrayptr12, i64 %23
+   %arrayref.7 = load double, double* %26, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %27 = fadd double %25, %arrayref.7
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %28 = add nuw nsw i64 %value_phi3, 8
+; └
+  %niter.next.7 = add i64 %niter, 8
+  %niter.ncmp.7 = icmp eq i64 %niter.next.7, %unroll_iter
+  br i1 %niter.ncmp.7, label %L29.loopexit.unr-lcssa, label %L13
 
-L29:                                              ; preds = %L13, %top
-  %value_phi9 = phi double [ 0.000000e+00, %top ], [ %9, %L13 ]
-;  @ none:9 within `my_sum`
+L29.loopexit.unr-lcssa:                           ; preds = %L13, %L13.preheader
+  %.lcssa.ph = phi double [ undef, %L13.preheader ], [ %27, %L13 ]
+  %value_phi3.unr = phi i64 [ 1, %L13.preheader ], [ %28, %L13 ]
+  %value_phi5.unr = phi double [ 0.000000e+00, %L13.preheader ], [ %27, %L13 ]
+  %lcmp.mod.not = icmp eq i64 %xtraiter, 0
+  br i1 %lcmp.mod.not, label %L29, label %L13.epil
+
+L13.epil:                                         ; preds = %L13.epil, %L29.loopexit.unr-lcssa
+  %value_phi3.epil = phi i64 [ %32, %L13.epil ], [ %value_phi3.unr, %L29.loopexit.unr-lcssa ]
+  %value_phi5.epil = phi double [ %31, %L13.epil ], [ %value_phi5.unr, %L29.loopexit.unr-lcssa ]
+  %epil.iter = phi i64 [ %epil.iter.next, %L13.epil ], [ 0, %L29.loopexit.unr-lcssa ]
+;  @ none:5 within `my_sum`
+; ┌ @ essentials.jl:13 within `getindex`
+   %29 = add nsw i64 %value_phi3.epil, -1
+   %30 = getelementptr inbounds double, double* %arrayptr12, i64 %29
+   %arrayref.epil = load double, double* %30, align 8
+; └
+; ┌ @ float.jl:409 within `+`
+   %31 = fadd double %value_phi5.epil, %arrayref.epil
+; └
+;  @ none:6 within `my_sum`
+; ┌ @ range.jl:901 within `iterate`
+   %32 = add nuw nsw i64 %value_phi3.epil, 1
+; └
+  %epil.iter.next = add i64 %epil.iter, 1
+  %epil.iter.cmp.not = icmp eq i64 %epil.iter.next, %xtraiter
+  br i1 %epil.iter.cmp.not, label %L29, label %L13.epil
+
+L29:                                              ; preds = %L13.epil, %L29.loopexit.unr-lcssa, %top
+  %value_phi9 = phi double [ 0.000000e+00, %top ], [ %.lcssa.ph, %L29.loopexit.unr-lcssa ], [ %31, %L13.epil ]
+;  @ none:8 within `my_sum`
   ret double %value_phi9
 }
 
 ------Separator-------
 
-;  @ none:3 within `my_sum_simd`
-define double @julia_my_sum_simd_1896({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
+;  @ none:1 within `my_sum_simd`
+define double @julia_my_sum_simd_1946({}* noundef nonnull align 16 dereferenceable(40) %0) #0 {
 top:
-;  @ none:6 within `my_sum_simd`
+;  @ none:4 within `my_sum_simd`
 ; ┌ @ simdloop.jl:69 within `macro expansion`
-; │┌ @ abstractarray.jl:314 within `eachindex`
-; ││┌ @ abstractarray.jl:133 within `axes1`
+; │┌ @ abstractarray.jl:318 within `eachindex`
+; ││┌ @ abstractarray.jl:134 within `axes1`
 ; │││┌ @ abstractarray.jl:98 within `axes`
-; ││││┌ @ array.jl:149 within `size`
+; ││││┌ @ array.jl:191 within `size`
        %1 = bitcast {}* %0 to { i8*, i64, i16, i16, i32 }*
-       %2 = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
-       %3 = load i64, i64* %2, align 8
+       %arraylen_ptr = getelementptr inbounds { i8*, i64, i16, i16, i32 }, { i8*, i64, i16, i16, i32 }* %1, i64 0, i32 1
+       %arraylen = load i64, i64* %arraylen_ptr, align 8
 ; │└└└└
 ; │ @ simdloop.jl:72 within `macro expansion`
 ; │┌ @ int.jl:83 within `&lt;`
-    %.not = icmp eq i64 %3, 0
+    %.not = icmp eq i64 %arraylen, 0
 ; │└
    br i1 %.not, label %L30, label %L13.lr.ph
 
 L13.lr.ph:                                        ; preds = %top
-   %4 = bitcast {}* %0 to double**
-   %5 = load double*, double** %4, align 8
+   %2 = bitcast {}* %0 to double**
+   %arrayptr6 = load double*, double** %2, align 8
 ; │ @ simdloop.jl:75 within `macro expansion`
-   %min.iters.check = icmp ult i64 %3, 16
+   %min.iters.check = icmp ult i64 %arraylen, 16
    br i1 %min.iters.check, label %scalar.ph, label %vector.ph
 
 vector.ph:                                        ; preds = %L13.lr.ph
-   %n.vec = and i64 %3, 9223372036854775792
+   %n.vec = and i64 %arraylen, 9223372036854775792
+   %3 = add nsw i64 %n.vec, -16
+   %4 = lshr exact i64 %3, 4
+   %5 = add nuw nsw i64 %4, 1
+   %xtraiter = and i64 %5, 7
+   %6 = icmp ult i64 %3, 112
+   br i1 %6, label %middle.block.unr-lcssa, label %vector.ph.new
+
+vector.ph.new:                                    ; preds = %vector.ph
+   %unroll_iter = and i64 %5, 2305843009213693944
    br label %vector.body
 
-vector.body:                                      ; preds = %vector.body, %vector.ph
+vector.body:                                      ; preds = %vector.body, %vector.ph.new
 ; │ @ simdloop.jl:78 within `macro expansion`
 ; │┌ @ int.jl:87 within `+`
-    %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
-    %vec.phi = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %14, %vector.body ]
-    %vec.phi9 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %15, %vector.body ]
-    %vec.phi10 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %16, %vector.body ]
-    %vec.phi11 = phi &lt;4 x double&gt; [ zeroinitializer, %vector.ph ], [ %17, %vector.body ]
-    %6 = getelementptr inbounds double, double* %5, i64 %index
+    %index = phi i64 [ 0, %vector.ph.new ], [ %index.next.7, %vector.body ]
+    %vec.phi = phi &lt;4 x double&gt; [ &lt;double 0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph.new ], [ %99, %vector.body ]
+    %vec.phi10 = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph.new ], [ %100, %vector.body ]
+    %vec.phi11 = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph.new ], [ %101, %vector.body ]
+    %vec.phi12 = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph.new ], [ %102, %vector.body ]
+    %niter = phi i64 [ 0, %vector.ph.new ], [ %niter.next.7, %vector.body ]
 ; │└
-; │ @ simdloop.jl:77 within `macro expansion` @ none:7
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
 ; │┌ @ essentials.jl:13 within `getindex`
-    %7 = bitcast double* %6 to &lt;4 x double&gt;*
-    %wide.load = load &lt;4 x double&gt;, &lt;4 x double&gt;* %7, align 8
-    %8 = getelementptr inbounds double, double* %6, i64 4
-    %9 = bitcast double* %8 to &lt;4 x double&gt;*
-    %wide.load12 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %9, align 8
-    %10 = getelementptr inbounds double, double* %6, i64 8
-    %11 = bitcast double* %10 to &lt;4 x double&gt;*
-    %wide.load13 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %11, align 8
-    %12 = getelementptr inbounds double, double* %6, i64 12
-    %13 = bitcast double* %12 to &lt;4 x double&gt;*
-    %wide.load14 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %13, align 8
+    %7 = getelementptr inbounds double, double* %arrayptr6, i64 %index
+    %8 = bitcast double* %7 to &lt;4 x double&gt;*
+    %wide.load = load &lt;4 x double&gt;, &lt;4 x double&gt;* %8, align 8
+    %9 = getelementptr inbounds double, double* %7, i64 4
+    %10 = bitcast double* %9 to &lt;4 x double&gt;*
+    %wide.load13 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %10, align 8
+    %11 = getelementptr inbounds double, double* %7, i64 8
+    %12 = bitcast double* %11 to &lt;4 x double&gt;*
+    %wide.load14 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %12, align 8
+    %13 = getelementptr inbounds double, double* %7, i64 12
+    %14 = bitcast double* %13 to &lt;4 x double&gt;*
+    %wide.load15 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %14, align 8
 ; │└
-; │┌ @ float.jl:408 within `+`
-    %14 = fadd fast &lt;4 x double&gt; %vec.phi, %wide.load
-    %15 = fadd fast &lt;4 x double&gt; %vec.phi9, %wide.load12
-    %16 = fadd fast &lt;4 x double&gt; %vec.phi10, %wide.load13
-    %17 = fadd fast &lt;4 x double&gt; %vec.phi11, %wide.load14
+; │┌ @ float.jl:409 within `+`
+    %15 = fadd reassoc contract &lt;4 x double&gt; %vec.phi, %wide.load
+    %16 = fadd reassoc contract &lt;4 x double&gt; %vec.phi10, %wide.load13
+    %17 = fadd reassoc contract &lt;4 x double&gt; %vec.phi11, %wide.load14
+    %18 = fadd reassoc contract &lt;4 x double&gt; %vec.phi12, %wide.load15
 ; │└
 ; │ @ simdloop.jl:78 within `macro expansion`
 ; │┌ @ int.jl:87 within `+`
-    %index.next = add nuw i64 %index, 16
-    %18 = icmp eq i64 %index.next, %n.vec
-    br i1 %18, label %middle.block, label %vector.body
+    %index.next = or i64 %index, 16
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %19 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next
+    %20 = bitcast double* %19 to &lt;4 x double&gt;*
+    %wide.load.1 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %20, align 8
+    %21 = getelementptr inbounds double, double* %19, i64 4
+    %22 = bitcast double* %21 to &lt;4 x double&gt;*
+    %wide.load13.1 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %22, align 8
+    %23 = getelementptr inbounds double, double* %19, i64 8
+    %24 = bitcast double* %23 to &lt;4 x double&gt;*
+    %wide.load14.1 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %24, align 8
+    %25 = getelementptr inbounds double, double* %19, i64 12
+    %26 = bitcast double* %25 to &lt;4 x double&gt;*
+    %wide.load15.1 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %26, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %27 = fadd reassoc contract &lt;4 x double&gt; %15, %wide.load.1
+    %28 = fadd reassoc contract &lt;4 x double&gt; %16, %wide.load13.1
+    %29 = fadd reassoc contract &lt;4 x double&gt; %17, %wide.load14.1
+    %30 = fadd reassoc contract &lt;4 x double&gt; %18, %wide.load15.1
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.1 = or i64 %index, 32
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %31 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.1
+    %32 = bitcast double* %31 to &lt;4 x double&gt;*
+    %wide.load.2 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %32, align 8
+    %33 = getelementptr inbounds double, double* %31, i64 4
+    %34 = bitcast double* %33 to &lt;4 x double&gt;*
+    %wide.load13.2 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %34, align 8
+    %35 = getelementptr inbounds double, double* %31, i64 8
+    %36 = bitcast double* %35 to &lt;4 x double&gt;*
+    %wide.load14.2 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %36, align 8
+    %37 = getelementptr inbounds double, double* %31, i64 12
+    %38 = bitcast double* %37 to &lt;4 x double&gt;*
+    %wide.load15.2 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %38, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %39 = fadd reassoc contract &lt;4 x double&gt; %27, %wide.load.2
+    %40 = fadd reassoc contract &lt;4 x double&gt; %28, %wide.load13.2
+    %41 = fadd reassoc contract &lt;4 x double&gt; %29, %wide.load14.2
+    %42 = fadd reassoc contract &lt;4 x double&gt; %30, %wide.load15.2
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.2 = or i64 %index, 48
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %43 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.2
+    %44 = bitcast double* %43 to &lt;4 x double&gt;*
+    %wide.load.3 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %44, align 8
+    %45 = getelementptr inbounds double, double* %43, i64 4
+    %46 = bitcast double* %45 to &lt;4 x double&gt;*
+    %wide.load13.3 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %46, align 8
+    %47 = getelementptr inbounds double, double* %43, i64 8
+    %48 = bitcast double* %47 to &lt;4 x double&gt;*
+    %wide.load14.3 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %48, align 8
+    %49 = getelementptr inbounds double, double* %43, i64 12
+    %50 = bitcast double* %49 to &lt;4 x double&gt;*
+    %wide.load15.3 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %50, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %51 = fadd reassoc contract &lt;4 x double&gt; %39, %wide.load.3
+    %52 = fadd reassoc contract &lt;4 x double&gt; %40, %wide.load13.3
+    %53 = fadd reassoc contract &lt;4 x double&gt; %41, %wide.load14.3
+    %54 = fadd reassoc contract &lt;4 x double&gt; %42, %wide.load15.3
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.3 = or i64 %index, 64
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %55 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.3
+    %56 = bitcast double* %55 to &lt;4 x double&gt;*
+    %wide.load.4 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %56, align 8
+    %57 = getelementptr inbounds double, double* %55, i64 4
+    %58 = bitcast double* %57 to &lt;4 x double&gt;*
+    %wide.load13.4 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %58, align 8
+    %59 = getelementptr inbounds double, double* %55, i64 8
+    %60 = bitcast double* %59 to &lt;4 x double&gt;*
+    %wide.load14.4 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %60, align 8
+    %61 = getelementptr inbounds double, double* %55, i64 12
+    %62 = bitcast double* %61 to &lt;4 x double&gt;*
+    %wide.load15.4 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %62, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %63 = fadd reassoc contract &lt;4 x double&gt; %51, %wide.load.4
+    %64 = fadd reassoc contract &lt;4 x double&gt; %52, %wide.load13.4
+    %65 = fadd reassoc contract &lt;4 x double&gt; %53, %wide.load14.4
+    %66 = fadd reassoc contract &lt;4 x double&gt; %54, %wide.load15.4
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.4 = or i64 %index, 80
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %67 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.4
+    %68 = bitcast double* %67 to &lt;4 x double&gt;*
+    %wide.load.5 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %68, align 8
+    %69 = getelementptr inbounds double, double* %67, i64 4
+    %70 = bitcast double* %69 to &lt;4 x double&gt;*
+    %wide.load13.5 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %70, align 8
+    %71 = getelementptr inbounds double, double* %67, i64 8
+    %72 = bitcast double* %71 to &lt;4 x double&gt;*
+    %wide.load14.5 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %72, align 8
+    %73 = getelementptr inbounds double, double* %67, i64 12
+    %74 = bitcast double* %73 to &lt;4 x double&gt;*
+    %wide.load15.5 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %74, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %75 = fadd reassoc contract &lt;4 x double&gt; %63, %wide.load.5
+    %76 = fadd reassoc contract &lt;4 x double&gt; %64, %wide.load13.5
+    %77 = fadd reassoc contract &lt;4 x double&gt; %65, %wide.load14.5
+    %78 = fadd reassoc contract &lt;4 x double&gt; %66, %wide.load15.5
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.5 = or i64 %index, 96
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %79 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.5
+    %80 = bitcast double* %79 to &lt;4 x double&gt;*
+    %wide.load.6 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %80, align 8
+    %81 = getelementptr inbounds double, double* %79, i64 4
+    %82 = bitcast double* %81 to &lt;4 x double&gt;*
+    %wide.load13.6 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %82, align 8
+    %83 = getelementptr inbounds double, double* %79, i64 8
+    %84 = bitcast double* %83 to &lt;4 x double&gt;*
+    %wide.load14.6 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %84, align 8
+    %85 = getelementptr inbounds double, double* %79, i64 12
+    %86 = bitcast double* %85 to &lt;4 x double&gt;*
+    %wide.load15.6 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %86, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %87 = fadd reassoc contract &lt;4 x double&gt; %75, %wide.load.6
+    %88 = fadd reassoc contract &lt;4 x double&gt; %76, %wide.load13.6
+    %89 = fadd reassoc contract &lt;4 x double&gt; %77, %wide.load14.6
+    %90 = fadd reassoc contract &lt;4 x double&gt; %78, %wide.load15.6
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.6 = or i64 %index, 112
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %91 = getelementptr inbounds double, double* %arrayptr6, i64 %index.next.6
+    %92 = bitcast double* %91 to &lt;4 x double&gt;*
+    %wide.load.7 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %92, align 8
+    %93 = getelementptr inbounds double, double* %91, i64 4
+    %94 = bitcast double* %93 to &lt;4 x double&gt;*
+    %wide.load13.7 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %94, align 8
+    %95 = getelementptr inbounds double, double* %91, i64 8
+    %96 = bitcast double* %95 to &lt;4 x double&gt;*
+    %wide.load14.7 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %96, align 8
+    %97 = getelementptr inbounds double, double* %91, i64 12
+    %98 = bitcast double* %97 to &lt;4 x double&gt;*
+    %wide.load15.7 = load &lt;4 x double&gt;, &lt;4 x double&gt;* %98, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %99 = fadd reassoc contract &lt;4 x double&gt; %87, %wide.load.7
+    %100 = fadd reassoc contract &lt;4 x double&gt; %88, %wide.load13.7
+    %101 = fadd reassoc contract &lt;4 x double&gt; %89, %wide.load14.7
+    %102 = fadd reassoc contract &lt;4 x double&gt; %90, %wide.load15.7
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.7 = add nuw i64 %index, 128
+    %niter.next.7 = add i64 %niter, 8
+    %niter.ncmp.7 = icmp eq i64 %niter.next.7, %unroll_iter
+    br i1 %niter.ncmp.7, label %middle.block.unr-lcssa, label %vector.body
 
-middle.block:                                     ; preds = %vector.body
+middle.block.unr-lcssa:                           ; preds = %vector.body, %vector.ph
+    %.lcssa21.ph = phi &lt;4 x double&gt; [ undef, %vector.ph ], [ %99, %vector.body ]
+    %.lcssa20.ph = phi &lt;4 x double&gt; [ undef, %vector.ph ], [ %100, %vector.body ]
+    %.lcssa19.ph = phi &lt;4 x double&gt; [ undef, %vector.ph ], [ %101, %vector.body ]
+    %.lcssa18.ph = phi &lt;4 x double&gt; [ undef, %vector.ph ], [ %102, %vector.body ]
+    %index.unr = phi i64 [ 0, %vector.ph ], [ %index.next.7, %vector.body ]
+    %vec.phi.unr = phi &lt;4 x double&gt; [ &lt;double 0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph ], [ %99, %vector.body ]
+    %vec.phi10.unr = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph ], [ %100, %vector.body ]
+    %vec.phi11.unr = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph ], [ %101, %vector.body ]
+    %vec.phi12.unr = phi &lt;4 x double&gt; [ &lt;double -0.000000e+00, double -0.000000e+00, double -0.000000e+00, double -0.000000e+00&gt;, %vector.ph ], [ %102, %vector.body ]
+    %lcmp.mod.not = icmp eq i64 %xtraiter, 0
+    br i1 %lcmp.mod.not, label %middle.block, label %vector.body.epil
+
+vector.body.epil:                                 ; preds = %vector.body.epil, %middle.block.unr-lcssa
+    %index.epil = phi i64 [ %index.next.epil, %vector.body.epil ], [ %index.unr, %middle.block.unr-lcssa ]
+    %vec.phi.epil = phi &lt;4 x double&gt; [ %111, %vector.body.epil ], [ %vec.phi.unr, %middle.block.unr-lcssa ]
+    %vec.phi10.epil = phi &lt;4 x double&gt; [ %112, %vector.body.epil ], [ %vec.phi10.unr, %middle.block.unr-lcssa ]
+    %vec.phi11.epil = phi &lt;4 x double&gt; [ %113, %vector.body.epil ], [ %vec.phi11.unr, %middle.block.unr-lcssa ]
+    %vec.phi12.epil = phi &lt;4 x double&gt; [ %114, %vector.body.epil ], [ %vec.phi12.unr, %middle.block.unr-lcssa ]
+    %epil.iter = phi i64 [ %epil.iter.next, %vector.body.epil ], [ 0, %middle.block.unr-lcssa ]
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ essentials.jl:13 within `getindex`
+    %103 = getelementptr inbounds double, double* %arrayptr6, i64 %index.epil
+    %104 = bitcast double* %103 to &lt;4 x double&gt;*
+    %wide.load.epil = load &lt;4 x double&gt;, &lt;4 x double&gt;* %104, align 8
+    %105 = getelementptr inbounds double, double* %103, i64 4
+    %106 = bitcast double* %105 to &lt;4 x double&gt;*
+    %wide.load13.epil = load &lt;4 x double&gt;, &lt;4 x double&gt;* %106, align 8
+    %107 = getelementptr inbounds double, double* %103, i64 8
+    %108 = bitcast double* %107 to &lt;4 x double&gt;*
+    %wide.load14.epil = load &lt;4 x double&gt;, &lt;4 x double&gt;* %108, align 8
+    %109 = getelementptr inbounds double, double* %103, i64 12
+    %110 = bitcast double* %109 to &lt;4 x double&gt;*
+    %wide.load15.epil = load &lt;4 x double&gt;, &lt;4 x double&gt;* %110, align 8
+; │└
+; │┌ @ float.jl:409 within `+`
+    %111 = fadd reassoc contract &lt;4 x double&gt; %vec.phi.epil, %wide.load.epil
+    %112 = fadd reassoc contract &lt;4 x double&gt; %vec.phi10.epil, %wide.load13.epil
+    %113 = fadd reassoc contract &lt;4 x double&gt; %vec.phi11.epil, %wide.load14.epil
+    %114 = fadd reassoc contract &lt;4 x double&gt; %vec.phi12.epil, %wide.load15.epil
+; │└
+; │ @ simdloop.jl:78 within `macro expansion`
+; │┌ @ int.jl:87 within `+`
+    %index.next.epil = add nuw i64 %index.epil, 16
+    %epil.iter.next = add i64 %epil.iter, 1
+    %epil.iter.cmp.not = icmp eq i64 %epil.iter.next, %xtraiter
+    br i1 %epil.iter.cmp.not, label %middle.block, label %vector.body.epil
+
+middle.block:                                     ; preds = %vector.body.epil, %middle.block.unr-lcssa
+; │└
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
+; │┌ @ float.jl:409 within `+`
+    %.lcssa21 = phi &lt;4 x double&gt; [ %.lcssa21.ph, %middle.block.unr-lcssa ], [ %111, %vector.body.epil ]
+    %.lcssa20 = phi &lt;4 x double&gt; [ %.lcssa20.ph, %middle.block.unr-lcssa ], [ %112, %vector.body.epil ]
+    %.lcssa19 = phi &lt;4 x double&gt; [ %.lcssa19.ph, %middle.block.unr-lcssa ], [ %113, %vector.body.epil ]
+    %.lcssa18 = phi &lt;4 x double&gt; [ %.lcssa18.ph, %middle.block.unr-lcssa ], [ %114, %vector.body.epil ]
 ; │└
 ; │ @ simdloop.jl:75 within `macro expansion`
-   %bin.rdx = fadd fast &lt;4 x double&gt; %15, %14
-   %bin.rdx15 = fadd fast &lt;4 x double&gt; %16, %bin.rdx
-   %bin.rdx16 = fadd fast &lt;4 x double&gt; %17, %bin.rdx15
-   %19 = call fast double @llvm.vector.reduce.fadd.v4f64(double -0.000000e+00, &lt;4 x double&gt; %bin.rdx16)
-   %cmp.n = icmp eq i64 %3, %n.vec
+   %bin.rdx = fadd reassoc contract &lt;4 x double&gt; %.lcssa20, %.lcssa21
+   %bin.rdx16 = fadd reassoc contract &lt;4 x double&gt; %.lcssa19, %bin.rdx
+   %bin.rdx17 = fadd reassoc contract &lt;4 x double&gt; %.lcssa18, %bin.rdx16
+   %115 = call reassoc contract double @llvm.vector.reduce.fadd.v4f64(double -0.000000e+00, &lt;4 x double&gt; %bin.rdx17)
+   %cmp.n = icmp eq i64 %arraylen, %n.vec
    br i1 %cmp.n, label %L30, label %scalar.ph
 
 scalar.ph:                                        ; preds = %middle.block, %L13.lr.ph
    %bc.resume.val = phi i64 [ %n.vec, %middle.block ], [ 0, %L13.lr.ph ]
-   %bc.merge.rdx = phi double [ %19, %middle.block ], [ 0.000000e+00, %L13.lr.ph ]
+   %bc.merge.rdx = phi double [ %115, %middle.block ], [ 0.000000e+00, %L13.lr.ph ]
    br label %L13
 
 L13:                                              ; preds = %L13, %scalar.ph
-   %value_phi18 = phi i64 [ %bc.resume.val, %scalar.ph ], [ %23, %L13 ]
-   %value_phi7 = phi double [ %bc.merge.rdx, %scalar.ph ], [ %22, %L13 ]
-; │ @ simdloop.jl:77 within `macro expansion` @ none:7
+   %value_phi19 = phi i64 [ %bc.resume.val, %scalar.ph ], [ %118, %L13 ]
+   %value_phi8 = phi double [ %bc.merge.rdx, %scalar.ph ], [ %117, %L13 ]
+; │ @ simdloop.jl:77 within `macro expansion` @ none:5
 ; │┌ @ essentials.jl:13 within `getindex`
-    %20 = getelementptr inbounds double, double* %5, i64 %value_phi18
-    %21 = load double, double* %20, align 8
+    %116 = getelementptr inbounds double, double* %arrayptr6, i64 %value_phi19
+    %arrayref = load double, double* %116, align 8
 ; │└
-; │┌ @ float.jl:408 within `+`
-    %22 = fadd fast double %value_phi7, %21
+; │┌ @ float.jl:409 within `+`
+    %117 = fadd reassoc contract double %value_phi8, %arrayref
 ; │└
 ; │ @ simdloop.jl:78 within `macro expansion`
 ; │┌ @ int.jl:87 within `+`
-    %23 = add nuw nsw i64 %value_phi18, 1
+    %118 = add nuw nsw i64 %value_phi19, 1
 ; │└
 ; │ @ simdloop.jl:75 within `macro expansion`
 ; │┌ @ int.jl:83 within `&lt;`
-    %exitcond.not = icmp eq i64 %23, %3
+    %exitcond.not = icmp eq i64 %118, %arraylen
 ; │└
    br i1 %exitcond.not, label %L30, label %L13
 
 L30:                                              ; preds = %L13, %middle.block, %top
-   %value_phi2 = phi double [ 0.000000e+00, %top ], [ %19, %middle.block ], [ %22, %L13 ]
+   %value_phi2 = phi double [ 0.000000e+00, %top ], [ %115, %middle.block ], [ %117, %L13 ]
 ; └
-;  @ none:10 within `my_sum_simd`
+;  @ none:8 within `my_sum_simd`
   ret double %value_phi2
 }
 </code></pre>
@@ -500,426 +856,426 @@ L30:                                              ; preds = %L13, %middle.block,
 <p>As we might have already seen throughout this workshop we can define the same function name for different input arguments. This is very obvious for the basic math operators but it is true for every function. Let us have a look at the <code>&#43;</code> operator:</p>
 <pre><code class="julia hljs">methods(+)</code></pre>
 <pre><code class="plaintext hljs"># 208 methods for generic function &quot;+&quot; from Base:
-   [1] +(x::T, y::T) where T&lt;:Union{Int128, Int16, Int32, Int64, Int8, UInt128, UInt16, UInt32, UInt64, UInt8}
-     @ int.jl:87
-   [2] +(x::T, y::T) where T&lt;:Union{Float16, Float32, Float64}
-     @ float.jl:408
-   [3] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigInt)
-     @ Base.GMP gmp.jl:539
-   [4] +(c::Union{Int16, Int32, Int64, Int8}, x::BigInt)
-     @ Base.GMP gmp.jl:545
-   [5] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigFloat)
-     @ Base.MPFR mpfr.jl:407
-   [6] +(c::Union{Int16, Int32, Int64, Int8}, x::BigFloat)
-     @ Base.MPFR mpfr.jl:415
-   [7] +(c::Union{Float16, Float32, Float64}, x::BigFloat)
-     @ Base.MPFR mpfr.jl:423
-   [8] +(x::Union{Dates.CompoundPeriod, Dates.Period})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:342
-   [9] +(y::Dates.TimeType, x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:18
-  [10] +(Da::LinearAlgebra.Diagonal, Db::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:184
-  [11] +(D::LinearAlgebra.Diagonal, S::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:188
-  [12] +(D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}}, H::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:194
-  [13] +(x::LinearAlgebra.Diagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [14] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:130
-  [15] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:140
-  [16] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:168
-  [17] +(A::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:246
-  [18] +(x::Base.TwicePrecision, y::Number)
-     @ twiceprecision.jl:290
-  [19] +(x::Base.TwicePrecision{T}, y::Base.TwicePrecision{T}) where T
-     @ twiceprecision.jl:296
-  [20] +(x::Base.TwicePrecision, y::Base.TwicePrecision)
-     @ twiceprecision.jl:301
-  [21] +(r1::LinRange{T}, r2::LinRange{T}) where T
-     @ range.jl:1448
-  [22] +(x::P, y::P) where P&lt;:Dates.Period
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:75
-  [23] +(x::Dates.Period, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:331
-  [24] +(y::Dates.Period, x::Dates.CompoundPeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:333
-  [25] +(y::Dates.Period, x::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:85
-  [26] +(x::Dates.Period, r::AbstractRange{&lt;:Dates.TimeType})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:64
-  [27] +(y::Union{Dates.CompoundPeriod, Dates.Period}, x::AbstractArray{&lt;:Dates.TimeType})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:14
-  [28] +(x::AbstractIrrational, y::AbstractIrrational)
-     @ irrationals.jl:161
-  [29] +(x::Dates.Instant)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:4
-  [30] +(r1::StepRangeLen{T, R}, r2::StepRangeLen{T, R}) where {R&lt;:Base.TwicePrecision, T}
-     @ twiceprecision.jl:628
-  [31] +(r1::StepRangeLen{T, S}, r2::StepRangeLen{T, S}) where {T, S}
-     @ range.jl:1464
-  [32] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:647
-  [33] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:649
-  [34] +(UL::LinearAlgebra.UnitLowerTriangular, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
-  [35] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [36] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
-  [37] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
-  [38] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:14
-  [39] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:17
-  [40] +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2065
-  [41] +(x::SparseArrays.AbstractSparseVector, y::SparseArrays.AbstractSparseVector)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsevector.jl:1516
-  [42] +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2068
-  [43] +(A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}, J::LinearAlgebra.UniformScaling{T}) where {T&lt;:Number, Tv, Ti}
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4098
-  [44] +(r1::OrdinalRange, r2::OrdinalRange)
-     @ range.jl:1441
-  [45] +(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::Union{LinRange, OrdinalRange, StepRangeLen})
-     @ range.jl:1457
-  [46] +(x::T, y::Integer) where T&lt;:AbstractChar
-     @ char.jl:237
-  [47] +(y::AbstractFloat, x::Bool)
-     @ bool.jl:176
-  [48] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
-  [49] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.SymTridiagonal{var&quot;#s969&quot;, V} where {var&quot;#s969&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s969&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:488
-  [50] +(H::LinearAlgebra.Hermitian, D::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:197
-  [51] +(A::LinearAlgebra.Hermitian, J::LinearAlgebra.UniformScaling{&lt;:Complex})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:195
-  [52] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
-  [53] +(A::LinearAlgebra.Hermitian, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
-  [54] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:26
-  [55] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Symmetric{var&quot;#s972&quot;, S} where {var&quot;#s972&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s972&quot;})})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:483
-  [56] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:24
-  [57] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:469
-  [58] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:486
-  [59] +(S::LinearAlgebra.Symmetric, D::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/diagonal.jl:191
-  [60] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:15
-  [61] +(A::LinearAlgebra.Symmetric, B::SparseArrays.AbstractSparseMatrix)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:18
-  [62] +(A::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:25
-  [63] +(A::LinearAlgebra.Symmetric{var&quot;#s971&quot;, S} where {var&quot;#s971&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s971&quot;})}, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:484
-  [64] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/linalg.jl:23
-  [65] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:643
-  [66] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:645
-  [67] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [68] +(F::LinearAlgebra.Hessenberg, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:647
-  [69] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:642
-  [70] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:644
-  [71] +(x::LinearAlgebra.UpperTriangular, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [72] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
-  [73] +(J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:149
-  [74] +(J::LinearAlgebra.UniformScaling, x::Number)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:144
-  [75] +(J1::LinearAlgebra.UniformScaling, J2::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:150
-  [76] +(J::LinearAlgebra.UniformScaling, B::BitMatrix)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:152
-  [77] +(x::LinearAlgebra.UniformScaling, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [78] +(J::LinearAlgebra.UniformScaling, F::LinearAlgebra.Hessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:648
-  [79] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:250
-  [80] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:255
-  [81] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:260
-  [82] +(A::LinearAlgebra.UniformScaling, B::LinearAlgebra.Diagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}})
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:265
-  [83] +(J::LinearAlgebra.UniformScaling{T}, A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}) where {T&lt;:Number, Tv, Ti}
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:4100
-  [84] +(J::LinearAlgebra.UniformScaling, A::AbstractMatrix)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:153
-  [85] +(z::Complex, w::Complex)
-     @ complex.jl:291
-  [86] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:754
-  [87] +(x::LinearAlgebra.Tridiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [88] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:162
-  [89] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:178
-  [90] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:198
-  [91] +(A::LinearAlgebra.Tridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:231
-  [92] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/bidiag.jl:374
-  [93] +(x::LinearAlgebra.Bidiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
-  [94] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [95] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [96] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.LowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [97] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitLowerTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:99
-  [98] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:120
-  [99] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:188
- [100] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:208
- [101] +(A::LinearAlgebra.Bidiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:241
- [102] +(x::Ptr, y::Integer)
-     @ pointer.jl:167
- [103] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/tridiag.jl:207
- [104] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Symmetric)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:485
- [105] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s970&quot;, V} where {var&quot;#s970&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s970&quot;}}, B::LinearAlgebra.Hermitian)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/symmetric.jl:487
- [106] +(x::LinearAlgebra.SymTridiagonal, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
- [107] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:150
- [108] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:164
- [109] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:218
- [110] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s972&quot;, V} where {var&quot;#s972&quot;&lt;:Number, V&lt;:AbstractVector{var&quot;#s972&quot;}}, B::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:236
- [111] +(A::LinearAlgebra.UpperHessenberg, B::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:104
- [112] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [113] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Diagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [114] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [115] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Tridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [116] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.SymTridiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [117] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [118] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:111
- [119] +(A::BitArray, B::BitArray)
-     @ bitarray.jl:1184
- [120] +(index1::CartesianIndex{N}, index2::CartesianIndex{N}) where N
-     @ Base.IteratorsMD multidimensional.jl:111
- [121] +(r::AbstractRange{&lt;:Dates.TimeType}, x::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/ranges.jl:65
- [122] +(x::AbstractArray{&lt;:Dates.TimeType}, y::Union{Dates.CompoundPeriod, Dates.Period})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:6
- [123] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:646
- [124] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:648
- [125] +(A::LinearAlgebra.AbstractTriangular, B::LinearAlgebra.AbstractTriangular)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/triangular.jl:650
- [126] +(UL::LinearAlgebra.UnitUpperTriangular, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:181
- [127] +(x::LinearAlgebra.UnitUpperTriangular, H::LinearAlgebra.UpperHessenberg)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/hessenberg.jl:112
- [128] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.Bidiagonal)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/special.jl:91
- [129] +(x::Dates.AbstractTime, y::Missing)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:88
- [130] +(A::Array, Bs::Array...)
-     @ arraymath.jl:12
- [131] +(X::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, Y::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:62
- [132] +(A::Array, B::SparseArrays.AbstractSparseMatrixCSC)
-     @ SparseArrays /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/SparseArrays/src/sparsematrix.jl:2069
- [133] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:55
- [134] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, y::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/deprecated.jl:10
- [135] +(A::AbstractArray, B::AbstractArray)
-     @ arraymath.jl:6
- [136] +(x::Rational, y::Integer)
-     @ rational.jl:327
- [137] +(dt::Dates.Date, t::Dates.Time)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:19
- [138] +(dt::Dates.Date, y::Dates.Year)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:27
- [139] +(dt::Dates.Date, z::Dates.Month)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:54
- [140] +(x::Dates.Date, y::Dates.Quarter)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:73
- [141] +(x::Dates.Date, y::Dates.Week)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:77
- [142] +(x::Dates.Date, y::Dates.Day)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:79
- [143] +(x::BigInt, c::Union{UInt16, UInt32, UInt64, UInt8})
-     @ Base.GMP gmp.jl:538
- [144] +(x::BigInt, c::Union{Int16, Int32, Int64, Int8})
-     @ Base.GMP gmp.jl:544
- [145] +(x::BigInt, y::BigInt)
-     @ Base.GMP gmp.jl:490
- [146] +(a::BigInt, b::BigInt, c::BigInt)
-     @ Base.GMP gmp.jl:530
- [147] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt)
-     @ Base.GMP gmp.jl:531
- [148] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt, e::BigInt)
-     @ Base.GMP gmp.jl:532
- [149] +(x::BigInt, y::BigInt, rest::BigInt...)
-     @ Base.GMP gmp.jl:666
- [150] +(c::BigInt, x::BigFloat)
-     @ Base.MPFR mpfr.jl:431
- [151] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
-     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
- [152] +(x::Bool)
-     @ bool.jl:163
- [153] +(x::Integer, y::Ptr)
-     @ pointer.jl:169
- [154] +(y::Integer, x::Rational)
-     @ rational.jl:334
- [155] +(x::Integer, y::AbstractChar)
-     @ char.jl:247
- [156] +(x::Bool, y::T) where T&lt;:AbstractFloat
-     @ bool.jl:173
- [157] +(x::Bool, y::Bool)
-     @ bool.jl:166
- [158] +(a::Integer, b::Integer)
-     @ int.jl:1038
- [159] +(x::Bool, z::Complex{Bool})
-     @ complex.jl:302
- [160] +(x::Bool, z::Complex)
-     @ complex.jl:309
- [161] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:151
- [162] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:214
- [163] +(x::AbstractArray{&lt;:Number})
-     @ abstractarraymath.jl:220
- [164] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
-     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/fieldvalues.jl:43
- [165] +(::Missing)
-     @ missing.jl:101
- [166] +(::Missing, ::Number)
-     @ missing.jl:123
- [167] +(x::Missing, y::Dates.AbstractTime)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:89
- [168] +(::Missing, ::Missing)
-     @ missing.jl:122
- [169] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
-     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Pkg/src/Resolve/versionweights.jl:22
- [170] +(x::Dates.CompoundPeriod, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:332
- [171] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:362
- [172] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:334
- [173] +(level::Base.CoreLogging.LogLevel, inc::Integer)
+   [1] +(level::Base.CoreLogging.LogLevel, inc::Integer)
      @ Base.CoreLogging logging.jl:131
- [174] +(x::Rational{BigInt}, y::Rational{BigInt})
-     @ Base.GMP.MPQ gmp.jl:1027
- [175] +(x::Rational)
-     @ rational.jl:284
- [176] +(x::Real, z::Complex{Bool})
-     @ complex.jl:316
- [177] +(x::Real, z::Complex)
-     @ complex.jl:328
- [178] +(x::Rational, y::Rational)
-     @ rational.jl:298
- [179] +(dt::Dates.DateTime, y::Dates.Year)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:23
- [180] +(dt::Dates.DateTime, z::Dates.Month)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:47
- [181] +(x::Dates.DateTime, y::Dates.Quarter)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:75
- [182] +(x::Dates.DateTime, y::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:81
- [183] +(x::BigFloat, c::Union{UInt16, UInt32, UInt64, UInt8})
-     @ Base.MPFR mpfr.jl:402
- [184] +(x::BigFloat, c::Union{Int16, Int32, Int64, Int8})
-     @ Base.MPFR mpfr.jl:410
- [185] +(x::BigFloat, c::Union{Float16, Float32, Float64})
-     @ Base.MPFR mpfr.jl:418
- [186] +(x::BigFloat, y::BigFloat)
-     @ Base.MPFR mpfr.jl:395
- [187] +(x::BigFloat, c::BigInt)
-     @ Base.MPFR mpfr.jl:426
- [188] +(a::BigFloat, b::BigFloat, c::BigFloat)
-     @ Base.MPFR mpfr.jl:567
- [189] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat)
-     @ Base.MPFR mpfr.jl:573
- [190] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat, e::BigFloat)
-     @ Base.MPFR mpfr.jl:580
- [191] +(z::Complex{Bool}, x::Bool)
-     @ complex.jl:303
- [192] +(z::Complex, x::Bool)
-     @ complex.jl:310
- [193] +(z::Complex{Bool}, x::Real)
-     @ complex.jl:317
- [194] +(z::Complex)
-     @ complex.jl:289
- [195] +(x::Number, y::Base.TwicePrecision)
-     @ twiceprecision.jl:294
- [196] +(::Number, ::Missing)
+   [2] +(x::Bool, z::Complex{Bool})
+     @ complex.jl:305
+   [3] +(x::Bool, y::Bool)
+     @ bool.jl:166
+   [4] +(x::Bool)
+     @ bool.jl:163
+   [5] +(x::Bool, z::Complex)
+     @ complex.jl:312
+   [6] +(x::Real, z::Complex{Bool})
+     @ complex.jl:319
+   [7] +(x::Bool, y::T) where T&lt;:AbstractFloat
+     @ bool.jl:173
+   [8] +(z::Complex{Bool}, x::Bool)
+     @ complex.jl:306
+   [9] +(z::Complex{Bool}, x::Real)
+     @ complex.jl:320
+  [10] +(z::Complex, x::Bool)
+     @ complex.jl:313
+  [11] +(t::Dates.Time, dt::Dates.Date)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:22
+  [12] +(x::Dates.Time, y::Dates.TimePeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:85
+  [13] +(a::Pkg.Resolve.FieldValue, b::Pkg.Resolve.FieldValue)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Pkg/src/Resolve/fieldvalues.jl:43
+  [14] +(x::Rational{BigInt}, y::Rational{BigInt})
+     @ Base.GMP.MPQ gmp.jl:1061
+  [15] +(x::Dates.DateTime, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:77
+  [16] +(dt::Dates.DateTime, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:49
+  [17] +(dt::Dates.DateTime, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:25
+  [18] +(x::Dates.DateTime, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:83
+  [19] +(x::BigFloat, c::BigInt)
+     @ Base.MPFR mpfr.jl:463
+  [20] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat, e::BigFloat)
+     @ Base.MPFR mpfr.jl:619
+  [21] +(x::BigFloat, y::BigFloat)
+     @ Base.MPFR mpfr.jl:432
+  [22] +(a::BigFloat, b::BigFloat, c::BigFloat)
+     @ Base.MPFR mpfr.jl:606
+  [23] +(a::BigFloat, b::BigFloat, c::BigFloat, d::BigFloat)
+     @ Base.MPFR mpfr.jl:612
+  [24] +(x::BigFloat, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.MPFR mpfr.jl:439
+  [25] +(x::BigFloat, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.MPFR mpfr.jl:447
+  [26] +(x::BigFloat, c::Union{Float16, Float32, Float64})
+     @ Base.MPFR mpfr.jl:455
+  [27] +(x::Dates.CompoundPeriod, y::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:334
+  [28] +(x::Dates.CompoundPeriod, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:362
+  [29] +(x::Dates.CompoundPeriod, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:332
+  [30] +(x::Dates.Date, y::Dates.Day)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:81
+  [31] +(x::Dates.Date, y::Dates.Week)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:79
+  [32] +(x::Dates.Date, y::Dates.Quarter)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:75
+  [33] +(dt::Dates.Date, z::Dates.Month)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:56
+  [34] +(dt::Dates.Date, y::Dates.Year)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:29
+  [35] +(dt::Dates.Date, t::Dates.Time)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:21
+  [36] +(a::OpenSSL.BigNum, b::OpenSSL.BigNum)
+     @ OpenSSL ~/.julia/packages/OpenSSL/8wxMC/src/OpenSSL.jl:747
+  [37] +(a::Pkg.Resolve.VersionWeight, b::Pkg.Resolve.VersionWeight)
+     @ Pkg.Resolve /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Pkg/src/Resolve/versionweights.jl:22
+  [38] +(B::BitMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:151
+  [39] +(x::BigInt, y::BigInt)
+     @ Base.GMP gmp.jl:501
+  [40] +(a::BigInt, b::BigInt, c::BigInt)
+     @ Base.GMP gmp.jl:541
+  [41] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt)
+     @ Base.GMP gmp.jl:542
+  [42] +(a::BigInt, b::BigInt, c::BigInt, d::BigInt, e::BigInt)
+     @ Base.GMP gmp.jl:543
+  [43] +(x::BigInt, y::BigInt, rest::BigInt...)
+     @ Base.GMP gmp.jl:683
+  [44] +(c::BigInt, x::BigFloat)
+     @ Base.MPFR mpfr.jl:468
+  [45] +(x::BigInt, c::Union{UInt16, UInt32, UInt64, UInt8})
+     @ Base.GMP gmp.jl:549
+  [46] +(x::BigInt, c::Union{Int16, Int32, Int64, Int8})
+     @ Base.GMP gmp.jl:555
+  [47] +(::Missing, ::Missing)
+     @ missing.jl:122
+  [48] +(::Missing)
+     @ missing.jl:101
+  [49] +(x::Missing, y::Dates.AbstractTime)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:91
+  [50] +(::Missing, ::Number)
+     @ missing.jl:123
+  [51] +(index1::CartesianIndex{N}, index2::CartesianIndex{N}) where N
+     @ Base.IteratorsMD multidimensional.jl:119
+  [52] +(A::Array, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsematrix.jl:2246
+  [53] +(A::Array, Bs::Array...)
+     @ arraymath.jl:12
+  [54] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:202
+  [55] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/bidiag.jl:390
+  [56] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:242
+  [57] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:217
+  [58] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:99
+  [59] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:151
+  [60] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:99
+  [61] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:99
+  [62] +(A::LinearAlgebra.Bidiagonal, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:99
+  [63] +(x::LinearAlgebra.Bidiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+  [64] +(A::SparseArrays.AbstractSparseMatrixCSC, B::SparseArrays.AbstractSparseMatrixCSC)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsematrix.jl:2242
+  [65] +(A::SparseArrays.AbstractSparseMatrixCSC, B::Array)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsematrix.jl:2245
+  [66] +(A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}, J::LinearAlgebra.UniformScaling{T}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsematrix.jl:4275
+  [67] +(H::LinearAlgebra.Hermitian, D::LinearAlgebra.Diagonal{var&quot;#s988&quot;, V} where {var&quot;#s988&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s988&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/diagonal.jl:238
+  [68] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:16
+  [69] +(A::LinearAlgebra.Hermitian, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:19
+  [70] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:27
+  [71] +(A::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:25
+  [72] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Symmetric{var&quot;#s988&quot;, S} where {var&quot;#s988&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s988&quot;})})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:518
+  [73] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.SymTridiagonal{var&quot;#s126&quot;, V} where {var&quot;#s126&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s126&quot;}})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:523
+  [74] +(A::LinearAlgebra.Hermitian, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:504
+  [75] +(A::LinearAlgebra.Hermitian, J::LinearAlgebra.UniformScaling{&lt;:Complex})
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:195
+  [76] +(F::LinearAlgebra.Hessenberg, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:560
+  [77] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:91
+  [78] +(x::LinearAlgebra.UpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+  [79] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:652
+  [80] +(A::LinearAlgebra.UpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:650
+  [81] +(x::LinearAlgebra.Diagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+  [82] +(B::LinearAlgebra.Diagonal, A::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra none:0
+  [83] +(D::LinearAlgebra.Diagonal, S::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/diagonal.jl:229
+  [84] +(Da::LinearAlgebra.Diagonal, Db::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/diagonal.jl:225
+  [85] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:166
+  [86] +(D::LinearAlgebra.Diagonal{var&quot;#s988&quot;, V} where {var&quot;#s988&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s988&quot;}}, H::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/diagonal.jl:235
+  [87] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:247
+  [88] +(A::LinearAlgebra.Diagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:187
+  [89] +(x::Number, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:145
+  [90] +(::Number, ::Missing)
      @ missing.jl:124
- [197] +(x::Number, J::LinearAlgebra.UniformScaling)
-     @ LinearAlgebra /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/LinearAlgebra/src/uniformscaling.jl:145
- [198] +(z::Complex, x::Real)
-     @ complex.jl:329
- [199] +(x::Number)
-     @ operators.jl:515
- [200] +(x::T, y::T) where T&lt;:Number
-     @ promotion.jl:485
- [201] +(x::Number, y::Number)
-     @ promotion.jl:410
- [202] +(x::Dates.Time, y::Dates.TimePeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:83
- [203] +(t::Dates.Time, dt::Dates.Date)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:20
- [204] +(x::Dates.TimeType)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/arithmetic.jl:8
- [205] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:353
- [206] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period, d::Dates.Period...)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:354
- [207] +(x::Dates.TimeType, y::Dates.CompoundPeriod)
-     @ Dates /opt/hostedtoolcache/julia/1.9.4/x64/share/julia/stdlib/v1.9/Dates/src/periods.jl:356
+  [91] +(x::Number, y::Base.TwicePrecision)
+     @ twiceprecision.jl:292
+  [92] +(z::Complex)
+     @ complex.jl:292
+  [93] +(x::Rational)
+     @ rational.jl:300
+  [94] +(x::Number)
+     @ operators.jl:524
+  [95] +(z::Complex, w::Complex)
+     @ complex.jl:294
+  [96] +(x::AbstractIrrational, y::AbstractIrrational)
+     @ irrationals.jl:161
+  [97] +(c::Union{Int16, Int32, Int64, Int8}, x::BigInt)
+     @ Base.GMP gmp.jl:556
+  [98] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigInt)
+     @ Base.GMP gmp.jl:550
+  [99] +(x::T, y::T) where T&lt;:Union{Int128, Int16, Int32, Int64, Int8, UInt128, UInt16, UInt32, UInt64, UInt8}
+     @ int.jl:87
+ [100] +(a::Integer, b::Integer)
+     @ int.jl:1064
+ [101] +(x::Rational, y::Rational)
+     @ rational.jl:314
+ [102] +(x::T, y::T) where T&lt;:Union{Float16, Float32, Float64}
+     @ float.jl:409
+ [103] +(x::T, y::T) where T&lt;:Number
+     @ promotion.jl:507
+ [104] +(z::Complex, x::Real)
+     @ complex.jl:332
+ [105] +(x::Real, z::Complex)
+     @ complex.jl:331
+ [106] +(y::Integer, x::Rational)
+     @ rational.jl:350
+ [107] +(y::AbstractFloat, x::Bool)
+     @ bool.jl:176
+ [108] +(x::Rational, y::Integer)
+     @ rational.jl:343
+ [109] +(c::Union{Float16, Float32, Float64}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:460
+ [110] +(c::Union{Int16, Int32, Int64, Int8}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:452
+ [111] +(c::Union{UInt16, UInt32, UInt64, UInt8}, x::BigFloat)
+     @ Base.MPFR mpfr.jl:444
+ [112] +(x::Number, y::Number)
+     @ promotion.jl:422
+ [113] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:91
+ [114] +(x::LinearAlgebra.UnitUpperTriangular, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+ [115] +(UL::LinearAlgebra.UnitUpperTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:181
+ [116] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:656
+ [117] +(A::LinearAlgebra.UnitUpperTriangular, B::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:654
+ [118] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:91
+ [119] +(UL::LinearAlgebra.UnitLowerTriangular, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:181
+ [120] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:657
+ [121] +(A::LinearAlgebra.UnitLowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:655
+ [122] +(A::BitArray, B::BitArray)
+     @ bitarray.jl:1184
+ [123] +(x::Ptr, y::Integer)
+     @ pointer.jl:282
+ [124] +(x::T, y::Integer) where T&lt;:AbstractChar
+     @ char.jl:237
+ [125] +(r1::LinRange{T}, r2::LinRange{T}) where T
+     @ range.jl:1461
+ [126] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:232
+ [127] +(B::LinearAlgebra.Tridiagonal, A::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra none:0
+ [128] +(B::LinearAlgebra.Tridiagonal, A::LinearAlgebra.Diagonal)
+     @ LinearAlgebra none:0
+ [129] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:183
+ [130] +(x::LinearAlgebra.Tridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+ [131] +(A::LinearAlgebra.Tridiagonal, B::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/tridiag.jl:739
+ [132] +(J::LinearAlgebra.UniformScaling, B::BitMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:152
+ [133] +(B::LinearAlgebra.UniformScaling, A::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra none:0
+ [134] +(B::LinearAlgebra.UniformScaling, A::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra none:0
+ [135] +(x::LinearAlgebra.UniformScaling, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+ [136] +(J::LinearAlgebra.UniformScaling{T}, A::SparseArrays.AbstractSparseMatrixCSC{Tv, Ti}) where {T&lt;:Number, Tv, Ti}
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsematrix.jl:4277
+ [137] +(J::LinearAlgebra.UniformScaling, F::LinearAlgebra.Hessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:561
+ [138] +(B::LinearAlgebra.UniformScaling, A::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra none:0
+ [139] +(B::LinearAlgebra.UniformScaling, A::LinearAlgebra.Diagonal)
+     @ LinearAlgebra none:0
+ [140] +(J::LinearAlgebra.UniformScaling, x::Number)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:144
+ [141] +(J::LinearAlgebra.UniformScaling, A::AbstractMatrix)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:153
+ [142] +(J1::LinearAlgebra.UniformScaling, J2::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:150
+ [143] +(J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:149
+ [144] +(x::Integer, y::AbstractChar)
+     @ char.jl:247
+ [145] +(x::Integer, y::Ptr)
+     @ pointer.jl:284
+ [146] +(x::Dates.Instant)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:4
+ [147] +(x::Dates.AbstractTime, y::Missing)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:90
+ [148] +(x::Base.TwicePrecision{T}, y::Base.TwicePrecision{T}) where T
+     @ twiceprecision.jl:294
+ [149] +(x::Base.TwicePrecision, y::Base.TwicePrecision)
+     @ twiceprecision.jl:299
+ [150] +(x::Base.TwicePrecision, y::Number)
+     @ twiceprecision.jl:288
+ [151] +(B::LinearAlgebra.SymTridiagonal, A::LinearAlgebra.Diagonal)
+     @ LinearAlgebra none:0
+ [152] +(B::LinearAlgebra.SymTridiagonal, A::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra none:0
+ [153] +(x::LinearAlgebra.SymTridiagonal, H::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:120
+ [154] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:520
+ [155] +(A::LinearAlgebra.SymTridiagonal{var&quot;#s127&quot;, V} where {var&quot;#s127&quot;&lt;:Real, V&lt;:AbstractVector{var&quot;#s127&quot;}}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:522
+ [156] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/tridiag.jl:210
+ [157] +(A::LinearAlgebra.SymTridiagonal, B::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:237
+ [158] +(B::LinearAlgebra.SymTridiagonal, A::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra none:0
+ [159] +(r1::OrdinalRange, r2::OrdinalRange)
+     @ range.jl:1454
+ [160] +(y::Dates.TimeType, x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:18
+ [161] +(x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:8
+ [162] +(x::Dates.TimeType, y::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:356
+ [163] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:353
+ [164] +(a::Dates.TimeType, b::Dates.Period, c::Dates.Period, d::Dates.Period...)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:354
+ [165] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/special.jl:91
+ [166] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.UnitLowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:653
+ [167] +(A::LinearAlgebra.LowerTriangular, B::LinearAlgebra.LowerTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:651
+ [168] +(r::AbstractRange{&lt;:Dates.TimeType}, x::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/ranges.jl:65
+ [169] +(x::Dates.Period, r::AbstractRange{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/ranges.jl:64
+ [170] +(y::Dates.Period, x::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/arithmetic.jl:87
+ [171] +(y::Dates.Period, x::Dates.CompoundPeriod)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:333
+ [172] +(x::P, y::P) where P&lt;:Dates.Period
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:75
+ [173] +(x::Dates.Period, y::Dates.Period)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:331
+ [174] +(A::LinearAlgebra.AbstractTriangular, B::LinearAlgebra.AbstractTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/triangular.jl:658
+ [175] +(S::LinearAlgebra.Symmetric, D::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/diagonal.jl:232
+ [176] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:16
+ [177] +(A::LinearAlgebra.Symmetric, B::SparseArrays.AbstractSparseMatrix)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:19
+ [178] +(A::LinearAlgebra.Symmetric{&lt;:Real, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:26
+ [179] +(A::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix}, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:24
+ [180] +(A::LinearAlgebra.Symmetric{var&quot;#s128&quot;, S} where {var&quot;#s128&quot;&lt;:Real, S&lt;:(AbstractMatrix{&lt;:var&quot;#s128&quot;})}, B::LinearAlgebra.Hermitian)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:519
+ [181] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:521
+ [182] +(A::LinearAlgebra.Symmetric, B::LinearAlgebra.Symmetric)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/symmetric.jl:504
+ [183] +(x::SparseArrays.AbstractSparseVector, y::SparseArrays.AbstractSparseVector)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/sparsevector.jl:1562
+ [184] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:15
+ [185] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Hermitian)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:18
+ [186] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric{&lt;:Any, &lt;:SparseArrays.AbstractSparseMatrix})
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:15
+ [187] +(A::SparseArrays.AbstractSparseMatrix, B::LinearAlgebra.Symmetric)
+     @ SparseArrays /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/SparseArrays/src/linalg.jl:18
+ [188] +(x::AbstractArray{&lt;:Dates.TimeType}, y::Union{Dates.CompoundPeriod, Dates.Period})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:6
+ [189] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [190] +(A::AbstractMatrix, J::LinearAlgebra.UniformScaling)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/uniformscaling.jl:214
+ [191] +(r1::StepRangeLen{T, R}, r2::StepRangeLen{T, R}) where {R&lt;:Base.TwicePrecision, T}
+     @ twiceprecision.jl:626
+ [192] +(r1::StepRangeLen{T, S}, r2::StepRangeLen{T, S}) where {T, S}
+     @ range.jl:1477
+ [193] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Tridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [194] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Bidiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [195] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.Diagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [196] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.SymTridiagonal)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [197] +(A::LinearAlgebra.UpperHessenberg, B::LinearAlgebra.UpperHessenberg)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:112
+ [198] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UnitUpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [199] +(H::LinearAlgebra.UpperHessenberg, x::LinearAlgebra.UpperTriangular)
+     @ LinearAlgebra /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/LinearAlgebra/src/hessenberg.jl:119
+ [200] +(X::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, Y::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:62
+ [201] +(r1::Union{LinRange, OrdinalRange, StepRangeLen}, r2::Union{LinRange, OrdinalRange, StepRangeLen})
+     @ range.jl:1470
+ [202] +(A::AbstractArray, B::AbstractArray)
+     @ arraymath.jl:6
+ [203] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:55
+ [204] +(x::AbstractArray{&lt;:Number})
+     @ abstractarraymath.jl:220
+ [205] +(y::Union{Dates.CompoundPeriod, Dates.Period}, x::AbstractArray{&lt;:Dates.TimeType})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:14
+ [206] +(x::StridedArray{&lt;:Union{Dates.CompoundPeriod, Dates.Period}}, y::Dates.TimeType)
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/deprecated.jl:10
+ [207] +(x::Union{Dates.CompoundPeriod, Dates.Period})
+     @ Dates /opt/hostedtoolcache/julia/1.10.0/x64/share/julia/stdlib/v1.10/Dates/src/periods.jl:342
  [208] +(a, b, c, xs...)
-     @ operators.jl:578</code></pre>
+     @ operators.jl:587</code></pre>
 <p>This shows us two things. First, we did not think anybody will print this workshop on paper or we would have gone for shorter outputs. Second, and more importantly, every time we call a function, Julia will look at the type of each argument and search for the function that fits best. As a result we can write optimized code for different types and in general this is one key stone in the excellent performance of Julia.</p>
 <p>Before we continue to the other parallel computation concepts, we introduce an <a href="../pi/">example</a> that will help us along, same as the sum did for the beginning of this section.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: December 20, 2023.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 08, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->

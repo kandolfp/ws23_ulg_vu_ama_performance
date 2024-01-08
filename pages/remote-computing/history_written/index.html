@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-   <link rel="stylesheet" href="/ws23_ulg_vu_ama_performance/libs/highlight/github.min.css">
-   
-    <script src="/ws23_ulg_vu_ama_performance/libs/clipboard.min.js"></script>
   
   
   <script src="/ws23_ulg_vu_ama_performance/libs/plotly-1_58_5.min.js"></script> 
@@ -51,7 +48,7 @@
   }
 </style>
 
-   <title>Remote Computing - Cloud Computing - Basics</title>  
+   <title>Basics</title>  
 </head>
 <body>                      <!-- closed in foot.html -->
 <div class="page-wrap">   <!-- closed in foot.html -->
@@ -78,16 +75,16 @@
           </ul>
           <li class="menu-list-item active"><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/" class="menu-list-link active">Remote computing</a>
             <ul class="menu-list-child-list ">
-              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link ">History</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/history" class="menu-list-link active">History</a>
               <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/" class="menu-list-link ">High Performance Computing</a>
               <ul class="menu-list-child-list ">
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/basics" class="menu-list-link ">Basics</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/architecture" class="menu-list-link ">Architecture</a>
                 <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/hpc/usage" class="menu-list-link ">Usage</a>
               </ul>
-              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link active">Cloud Computing</a>
+              <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/" class="menu-list-link ">Cloud Computing</a>
                 <ul class="menu-list-child-list ">
-                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link active">Basics</a>
+                  <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/basics" class="menu-list-link ">Basics</a>
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/architecture" class="menu-list-link ">Architecture</a>
                   <li class="menu-list-item "><a href="/ws23_ulg_vu_ama_performance/pages/remote-computing/cloud/setup_vhpc" class="menu-list-link ">Setup vHPC</a>
                 </ul>
@@ -109,21 +106,14 @@
 
 
 <!-- Content appended here (in class franklin-content) -->
-<div class="franklin-content"><h1 id="basics"><a href="#basics" class="header-anchor">Basics</a></h1>
-<div class="franklin-toc"><ol><li><a href="#history">History</a></li></ol></div>
-<h2 id="history"><a href="#history" class="header-anchor">History</a></h2>
-<p>Cloud computing has gained a lot of traction over the last couple of years but it has been around for quite a long time. Shortly after the internet came around the first <em>cloud services</em> were born. Nobody called it that but there is not much difference.</p>
-<p>A web server that does some computation before we get the result, the email client, video editing on some platform, uploading snippets of information to some platform and so forth.  All of these <em>services</em> do work on some server that is in the cloud, i.e. cloud computing.</p>
-<p>The modern way of cloud computing that we usually think about is rightly connected to the rise of <strong>Amazon web services</strong> &#40;aws&#41;. The legend goes as follows:</p>
-<p>When Amazon started it just needed a couple of servers to run, the more the site got used the more servers it required. Soon it gotten so big that it built its on compute centers. They had a problem, during christmas there where so many request that they needed a massive infrastructure to cope. The worst you can do is to have the customer waiting before he/she can order and maybe decide that it is not worth it, user experience above everything else. The rest of the time the compute center had resources unused. So they made a business model out of it and aws was born. The best customers where selling on Amazon anyway and used their cloud.</p>
-<p>They were more or less the first public cloud provided and with their success soon others started as well. The entire <em>cloud stack</em> developed from there. Of course it was not exactly like that and a lot of open source developers and companies where involved and are still involved in creating the <em>cloud stack</em>.</p>
-<p>On cloud conferences you will often see slides with millions of logos, something like: 
-<figure style="text-align:center;">
-<img src="/ws23_ulg_vu_ama_performance/assets/pages/remote-computing/cloud/2018-02-23-devops-ecosystem.jpg" style="padding:0; " alt=" Logo collection."/>
-<figcaption> Logo collection. Original source: <p style="font-size:11px"><a href=" http://rafaelhart.com/2018/02/what-actually-is-devops/"> http://rafaelhart.com/2018/02/what-actually-is-devops/</a></p></figcaption>
-</figure>
-</p>
-<p>What we now see is that Amazon, Microsoft and Google have the large platforms &#40;in the west&#41; and large companies, universities or something like the finance sector has its own private clouds.</p>
+<div class="franklin-content"><p>We are only briefly describing the main steps in computing hardware, limiting ourself to <em>modern</em> computing hardware, i.e. digital computers, and focus on how they can/could be accessed and used. We heavily rely on <a href="https://en.wikipedia.org/wiki/History_of_computing_hardware">Wikipedia: History of computing hardware</a> for this section.</p>
+<p>Before we start, <a href="https://www.computerhistory.org/timeline/computers/">computer history museum</a> has an excellent timeline starting in 1937 with a relay based adder and ending in 2015 with the Apple Watch - <a href="https://www.smbc-comics.com/comic/2011-02-17">you can for sure run doom on it</a>. </p>
+<h2 id="basics"><a href="#basics" class="header-anchor">Basics</a></h2>
+<p>The principal concept of <em>modern computers</em> was introduced by <a href="https://en.wikipedia.org/wiki/Alan_Turing">Alan Turing</a> when he reformulated <a href="https://en.wikipedia.org/wiki/Kurt_G&#37;C3&#37;B6del">Kurt Gödels</a> results and introduced the <a href="https://en.wikipedia.org/wiki/Turing_machine">Turing machine</a>.</p>
+<p>This was the basis for the first electromechanical computers that started developing during World War II. Most notably the devices developed in Bletchley Park by Alan Turing called <em>bombs</em>, used to decrypt the messages from Enigma. All of these devices mainly performed logical operations on the input that was set by hand. If you wanted something else to be done, you needed to rebuild/reconfigure the hardware. These machines where not <a href="https://en.wikipedia.org/wiki/Turing_completeness">Turing-complete</a>, i.e. not general purpose. The machines where also electromechanical &#40;electric switches and mechanical relays.&#41;</p>
+<p>The machine getting the title for Turing-complete is from <a href="https://en.wikipedia.org/wiki/Konrad_Zuse">Konrad Zuse</a> that developed <em>the world&#39;s first working electromechanical programmable, fully automatic digital computer</em>, the <a href="https://en.wikipedia.org/wiki/Z3_&#40;computer&#41;">Z3</a>. Already with a lot of similarities to machines we know, one example being that it had floating-point numbers.</p>
+<p>As input for these machines punched-cards or tapes &#40;first used for weaving&#41; where used to set the input variables.</p>
+<p>The first stored-program computer was the <a href="https://en.wikipedia.org/wiki/Manchester_Baby"><em>Manchester Baby</em></a> and it is also said to be the first &#40;working&#41; machine that contains all the essential elements of what know as computer. It was still somewhat cumbersome to program but you did not need to rearrange the internal wiring.</p>
 <div class="page-foot">
     <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 08, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
@@ -133,69 +123,6 @@
     </div> <!-- end of class main-content-wrap -->
     </div> <!-- end of class page-wrap-->
     
-    
-      
-
-
-      <script>
-    (function(){
-    
-      // Get the elements.
-      // - the 'pre' element.
-      // - the 'div' with the 'paste-content' id.
-    
-      var pre = document.getElementsByTagName('pre');
-    
-      // Add a copy button in the 'pre' element.
-      // which only has the className of 'language-'.
-    
-      for (var i = 0; i < pre.length; i++) {
-        var isLanguage = pre[i].children[0].tagName == 'CODE';
-    
-        if ( isLanguage ) {
-          var button           = document.createElement('button');
-              button.className = 'copy-button';
-              button.textContent = 'Copy';
-    
-              pre[i].appendChild(button);
-        }
-      };
-    
-      // Run Clipboard
-    
-      var copyCode = new Clipboard('.copy-button', {
-        target: function(trigger) {
-          return trigger.previousElementSibling;
-        }
-      });
-    
-      // On success:
-      // - Change the "Copy" text to "Copied".
-      // - Swap it to "Copy" in 2s.
-      // - Lead user to the "contenteditable" area with Velocity scroll.
-    
-      copyCode.on('success', function(event) {
-        event.clearSelection();
-        event.trigger.textContent = 'Copied';
-        window.setTimeout(function() {
-          event.trigger.textContent = 'Copy';
-        }, 2000);
-    
-      });
-    
-      // On error (Safari):
-      // - Change the  "Press Ctrl+C to copy"
-      // - Swap it to "Copy" in 2s.
-    
-      copyCode.on('error', function(event) {
-        event.trigger.textContent = 'Press "Ctrl + C" to copy';
-        window.setTimeout(function() {
-          event.trigger.textContent = 'Copy';
-        }, 5000);
-      });
-    
-    })();
-</script>
     
   </body>
 </html>
