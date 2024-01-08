@@ -442,6 +442,14 @@ julia --machine-file=$SLURM_NODEFILE main.jl
 As stated [here](https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism) there are a couple of downsides to using `Distributed.jl`, but as we have no interconnect and did not introduce `MPI` or `MPI.jl` we still use it. 
 }
 
+\exercise{
+Let us test this setup with a small test code from github.
+
+1. Get the source `git clone https://github.com/Arpeggeo/julia-distributed-computing.git`
+1. Write an appropriate job file.
+1. Run the code and check the output
+}
+
 [^1]: The standard Operating System is Linux, there are some UNIX clusters but Windows is not the way to go here.
 
 [^2]: [www.schedmd.com](https://www.schedmd.com/index.php)
