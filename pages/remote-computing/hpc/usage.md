@@ -25,6 +25,12 @@ The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm)
 If you do this class at home or at another time you can still use a test setup. 
 E.g. use the excellent docker-compose setup of [Giocanni Torres](https://github.com/giovtorres) that you can find [here](https://github.com/giovtorres/slurm-docker-cluster).
 
+In order to have (almost) the same setup as for the live session, please clone the fork (`ulg` branch).
+```bash
+git clone --depth 1 --branch ulg git@github.com:kandolfp/slurm-docker-cluster.git
+```
+This will add `Julia` and the `Environment Modules` (we see later what that is).
+
 At the time of creation of these notes the following sequence of commands will start a cluster and give you access to the nodes. 
 ```bash
 SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose build
