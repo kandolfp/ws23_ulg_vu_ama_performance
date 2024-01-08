@@ -401,16 +401,16 @@ module load julia/1.9.4
 julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl</code></pre>
 <div class="note"><div class="title">⚠ Note</div>
 <div class="content">As stated <a href="https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism">here</a> there are a couple of downsides to using <code>Distributed.jl</code>, but as we have no interconnect and did not introduce <code>MPI</code> or <code>MPI.jl</code> we still use it.</div></div>
-<p><button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Let us test this setup with a small test code from github.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Let us test this setup with a small test code from github:</p>
 <ol>
 <li><p>Get the source <code>git clone https://github.com/Arpeggeo/julia-distributed-computing.git</code></p>
 </li>
 <li><p>Write an appropriate job file.</p>
 </li>
-<li><p>Run the code and check the output </div></p>
+<li><p>Run the code and check the output</p>
 </li>
 </ol>
-
+<p>See if your job runs right away or if you need to wait. </div>
 <p><table class="fndef" id="fndef:1">
     <tr>
         <td class="fndef-backref"><a href="#fnref:1">[1]</a></td>
