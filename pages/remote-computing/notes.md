@@ -57,7 +57,7 @@ When we come to security the two worlds look very different as well.
 Once we are in a HPC System we are free to move, there is not a lot of security holding us back, yes we have to go through the job scheduler and we are not allowed to be `root` but not much more. 
 We can install software, use as much traffic between nodes as possible, no password to access individual nodes, no token to allow applications to run and so forth.
 If our program is written poorly we can use more resources than the job scheduler allows (mainly on older systems), this will not make the other users happy and we will get a stern warning from the admins but that is it.
-In sort we are in a gated system that is a trusted system once we are in.
+In short we are in a gated system that is a trusted system once we are in.
 
 The cloud system is _security first_.
 Everything is built with security in mind.
