@@ -128,7 +128,7 @@
 <p>All of this sums to two very distinct use cases that are hard to combine. Given the relentless hunger for flops of the HPC bubble and the almost religious way of abstracting everything by the cloud community.</p>
 <h3 id="security"><a href="#security" class="header-anchor">Security</a></h3>
 <p>When we come to security the two worlds look very different as well.</p>
-<p>Once we are in a HPC System we are free to move, there is not a lot of security holding us back, yes we have to go through the job scheduler and we are not allowed to be <code>root</code> but not much more.  We can install software, use as much traffic between nodes as possible, no password to access individual nodes, no token to allow applications to run and so forth. If our program is written poorly we can use more resources than the job scheduler allows &#40;mainly on older systems&#41;, this will not make the other users happy and we will get a stern warning from the admins but that is it. In sort we are in a gated system that is a trusted system once we are in.</p>
+<p>Once we are in a HPC System we are free to move, there is not a lot of security holding us back, yes we have to go through the job scheduler and we are not allowed to be <code>root</code> but not much more.  We can install software, use as much traffic between nodes as possible, no password to access individual nodes, no token to allow applications to run and so forth. If our program is written poorly we can use more resources than the job scheduler allows &#40;mainly on older systems&#41;, this will not make the other users happy and we will get a stern warning from the admins but that is it. In short we are in a gated system that is a trusted system once we are in.</p>
 <p>The cloud system is <em>security first</em>. Everything is built with security in mind. This also means, we always assume that we are in an unsecure environment and therefore we need to do everything to make our application as secure as possible. Even on the cloud software side, the virtualization allows us to capsule each application better and also limit its resources so no other application can be affected. Connections between and maybe entire VMs are encrypted. We do not log in with username and password, just with a token that is only valid for a short time. All of this costs performance but is necessary to hold up the high goal of <em>security first</em>.</p>
 <h3 id="storage"><a href="#storage" class="header-anchor">Storage</a></h3>
 <p>The storage systems are very different.  An HPC storage should allow high I/O throughput to not slow down the application whereas on cloud systems entire blobs of storage function as VM hard drives and access patterns are very different. </p>
@@ -146,7 +146,7 @@
 </figure>
 
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 08, 2024.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 10, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
