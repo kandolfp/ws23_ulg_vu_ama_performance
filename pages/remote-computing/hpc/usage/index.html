@@ -124,7 +124,7 @@
 <p>This will add <code>Julia</code> and the <code>Environment Modules</code> &#40;we see later what that is&#41;.</p>
 <p>At the time of creation of these notes the following sequence of commands will start a cluster and give you access to the nodes. </p>
 <pre><code class="bash hljs">SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose build
-SLURM_TAG=slurm-21-08-6-1  IMAGE_TAG=21.08.06.1 docker-compose up -d
+SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose up -d
 docker <span class="hljs-built_in">exec</span> -it slurmctld bash</code></pre>
 <p>For the live session of this class we created a virtual HPC with 3 nodes.  How this was done is described further in the cloud section. </p>
 <div class="important">How to get access to the live setup is not in the notes.</div>
@@ -145,9 +145,9 @@ docker <span class="hljs-built_in">exec</span> -it slurmctld bash</code></pre>
 </li>
 </ul>
 <p>Let us dive right in and submit our first job and from there we extend our job to be more refined.</p>
-<div class="note"><div class="title">⚠ Note</div>
+<div class="note"><div class="title"><strong>⚠ Note</strong></div>
 <div class="content">The next part is designed as a type along section.      We also ask some questions in between to keep your focus, the <a href="#answers_to_the_questions">answers</a> are at the bottom of the page.</div></div>
-<div class="note"><div class="title">⚠ Note</div>
+<div class="note"><div class="title"><strong>⚠ Note</strong></div>
 <div class="content">The following notes are a combination from various sources <sup id="fnref:3"><a href="#fndef:3" class="fnref">[3]</a></sup> <sup id="fnref:4"><a href="#fndef:4" class="fnref">[4]</a></sup>.</div></div>
 <h3 id="submitting_a_job"><a href="#submitting_a_job" class="header-anchor">Submitting a job</a></h3>
 <p>Let us start by directly handing over a job to Slurm</p>
@@ -383,7 +383,7 @@ $ module load julia/1.9.4
 
 <span class="hljs-comment"># remove the module</span>
 $ module remove julia/1.9.4</code></pre>
-<div class="note"><div class="title">⚠ Note</div>
+<div class="note"><div class="title"><strong>⚠ Note</strong></div>
 <div class="content">Julia can be a bit tricky to install on a cluster or more precisely it is not completely clear how to do the installation.  A nice guide can be found <a href="https://juliahpc.github.io/JuliaOnHPCClusters/">here</a>.</div></div>
 <h3 id="using_the_distributed_package"><a href="#using_the_distributed_package" class="header-anchor">Using the <code>Distributed</code> package</a></h3>
 <p>When discussing <a href="../../hpc/distributed/">distributed computing</a> we used </p>
@@ -399,7 +399,7 @@ module load julia/1.9.4
 
 <span class="hljs-built_in">export</span> SLURM_NODEFILE=`generate_pbs_nodefile`
 julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl</code></pre>
-<div class="note"><div class="title">⚠ Note</div>
+<div class="note"><div class="title"><strong>⚠ Note</strong></div>
 <div class="content">As stated <a href="https://juliahpc.github.io/JuliaOnHPCClusters/user_faq/#should_i_use_distributedjl_or_mpijl_for_large-scale_parallelism">here</a> there are a couple of downsides to using <code>Distributed.jl</code>, but as we have no interconnect and did not introduce <code>MPI</code> or <code>MPI.jl</code> we still use it.</div></div>
 <button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Let us test this setup with a small test code from github:</p>
 <ol>
@@ -443,7 +443,7 @@ julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl<
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 10, 2024.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 11, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
