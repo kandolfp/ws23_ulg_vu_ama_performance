@@ -27,7 +27,8 @@ Add here global latex commands to use throughout your pages.
 -->
 \newcommand{\R}{\mathbb R}
 \newcommand{\scal}[1]{\langle #1 \rangle}
-\newcommand{\note}[1]{@@note @@title ⚠ Note@@ @@content #1 @@ @@}
+\newcommand{\note}[1]{@@note @@title **⚠ Note**@@ @@content #1 @@ @@}
+\newcommand{\fun}[1]{@@fun @@title **Fun fact** 😅@@ @@content #1 @@ @@}
 \newcommand{\example}[1]{
 ~~~<button type="button" class="collapsible" style="background-color:#caffa5">~~~ Example ~~~</button><div class="collapsiblecontent">~~~ #1 ~~~</div>~~~
 }
