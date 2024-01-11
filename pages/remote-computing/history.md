@@ -7,18 +7,20 @@
 While it would be worth while and fun to got through the entire list of 
 - [computing hardware before 1950](https://en.wikipedia.org/wiki/Timeline_of_computing_hardware_before_1950)
 - [computing hardware after 1960](https://en.wikipedia.org/wiki/History_of_computing_hardware_(1960s%E2%80%93present))
-on Wikipedia, we need to limit ourself. 
+on Wikipedia, we need to limit ourself.
 
-We will do this in pictures and some explanation/interactive session with a very subjective list, so if you are reading this at a later point please have a look at [computer history museum](https://www.computerhistory.org/timeline/computers/) where most images
-from.
+Nevertheless, we will make a (to short) walk on history lane and we will do this in pictures with some explanation/interactive session.
+Please note, that this is a very subjective list, so you might want to have a look at [computer history museum](https://www.computerhistory.org/timeline/computers/) where most images are from.
 
-\figenvsource{Computers used to be a person who carried out calculations or computations.}{/assets/pages/remote-computing/hpc/X-4_with_Female_Computer_-_GPN-2000-001932.jpg}{}{https://en.wikipedia.org/wiki/Computer#Etymology}
-
+\fun{
+Computers used to be a person, who carried out calculations or computations.
+\figenvsource{A computer before the meaning changed.}{/assets/pages/remote-computing/hpc/X-4_with_Female_Computer_-_GPN-2000-001932.jpg}{}{https://en.wikipedia.org/wiki/Computer#Etymology}
+}
 \figenvsource{The first Bombe is completed (1941).}{/assets/pages/remote-computing/hpc/timeline_computers_1941.bombe.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1941.bombe.jpg}
 
 \figenvsource{First Colossus operational at Bletchley Park (1944).}{/assets/pages/remote-computing/hpc/timeline_computers_1944.colossus.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1944.colossus.jpg}
 
-\note{
+\fun{
 An error in a program or **bug** is named after the common problem that bugs would prevent relays from switching. So yes it used to be actual 🐛 that caused errors, [reference](https://education.nationalgeographic.org/resource/worlds-first-computer-bug/).
 }
 
@@ -26,7 +28,7 @@ An error in a program or **bug** is named after the common problem that bugs wou
 
 \figenvsource{The Atlas Computer debuts (1962) - worlds first supercomputer.}{/assets/pages/remote-computing/hpc/timeline_computers_1962.atlas.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1962.atlas.jpg}
 
-\figenvsource{Intel introduces the first microprocessor (1971) - worlds first supercomputer.}{/assets/pages/remote-computing/hpc/timeline_computers_1971.4004.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1971.4004.jpg}
+\figenvsource{Intel introduces the first microprocessor (1971).}{/assets/pages/remote-computing/hpc/timeline_computers_1971.4004.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1971.4004.jpg}
 
 \figenvsource{Cray-1 supercomputer introduced (1976).}{/assets/pages/remote-computing/hpc/timeline_computers_1976.cray1.jpg}{}{https://images.computerhistory.org/timeline/timeline_computers_1976.cray1.jpg}
 
