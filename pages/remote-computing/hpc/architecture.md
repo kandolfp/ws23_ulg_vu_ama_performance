@@ -23,7 +23,7 @@ Where inside the partition the nodes all look the same, are located near each ot
 
 \figenv{Architecture 1 - From node to partition.}{/assets/pages/remote-computing/hpc/parts1.svg}{}
 
-Finally, several partitions will form the computing part of the high performance system, but some additional components are required.
+Finally, several partitions will form the _computing part_ of the high performance system, but some additional components are required.
 
 This includes various high performance parallel storage systems for different usage (home, scratch, ...), the high speed netword (switches, routers, and so forth), login nodes, monitoring systems, and more. 
 
@@ -46,13 +46,12 @@ For Lumi the layout looks like the following.
 The main idea of a HPC System is to maximize performance of a computation [^1]. 
 This is strongly reflected in the architecture described above. 
 
-For these considerations we assume that we start with a computation on a single core and spread it out over the entire system. 
+For the following discussion of the components, we assume that we start with a computation on a single core and spread it out over the entire system. 
 This allows us to discuss the different parts that help to make the computation as fast as possible. 
 While this will probably be some weather simulation or the collision of two galaxies it could also just be the computation of $\pi$.
 
-
 ### Node
-In the previous sections we have seen how to move the computation from a single core within one CPU to multiple cores. 
+In the previous sections, we have seen how to move the computation from a single core within one CPU to multiple cores. 
 Obviously, the faster the CPU the faster the computation. 
 Usually a node will have multiple CPUs so with a bit of extra work we can make sure that all of them are used as well. 
 Now there is going to be a bit of communication between the CPUs so the faster they are connected the better. 
@@ -61,10 +60,10 @@ The more we know about the architecture and the particular components of the nod
 Now we spread out to the next nodes in the rack.
 
 ### Rack
-This is not too hard as they look exactly the same and they are (physically) close.
-Of course there is some overhead with the code, we need to communicate between the nodes but luckily there is a fast connection. 
+This is not too hard, as they look exactly the same and are (physically) close.
+Of course, there is some overhead with the code, we need to communicate between the nodes but luckily there is a fast connection. 
 Again, we will try to write our code such that the communication between the nodes is minimized.
-Soon the entire rack is again working at peak load. Thus we put more racks in and form a partition.  
+Soon the entire rack is again working at peak load. Thus we pull more racks in and form a partition.  
 
 ### Partition
 Since one partition usually consists of identical racks, we just need to make sure that we localize communication again.
@@ -77,7 +76,7 @@ Again communication is needed so lets consider the high speed interconnect.
 
 ### High Speed Interconnect
 We could simple wire up the nodes with normal ethernet cables or if we are insane try WiFi. 
-This works fine if we do not have a lot of data that gets send around. 
+This works fine, if we do not have a lot of data that gets send around. 
 It is the same as with the internet connection at home, if we watch two 4K video streams, download the latest data bundles for our new cool project we will see that performance goes down.
 
 This is basically the reason for the high speed interconnect. 
@@ -97,11 +96,11 @@ The different layers and spaces are easily explained from their use.
 
 Each node will have a SSD for the operating system and the basic programs needed, maybe you can also use this for temporary storage during computations.
 
-Next each user should have a home directory where the most important part of the project is stored and we need this available all the time on all the nodes, but this directory can be rather small.
+Next each user should have a _home_ directory where the most important part of the project is stored and we need this available all the time on all the nodes, but this directory can be rather small.
 
-Usually we will also have something called _scratch_ where data is stored as a result of computations or from steps. 
-With regard from Julia this could also be the packages used. 
-Nevertheless, this should be large but for that we should assume that this memory is volatile and there is no backup. 
+Usually, we will also have something called _scratch_ where data is stored as a result of computations or from (program) steps. 
+With regard to Julia this could also be the packages used. 
+Nevertheless, this should be large but we should assume that this memory is volatile and there is no backup. 
 Some systems will offer an archive or something similar for long term storage.
 
 ### Entire HPC System
