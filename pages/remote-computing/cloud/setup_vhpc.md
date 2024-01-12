@@ -153,6 +153,8 @@ This part is often summarized under the umbrella of **Platform as a Service**.
 
 Now that we have **deployed** and **configured** our service we can use it. 
 
+\figenv{Visualization of the setup.}{/assets/pages/remote-computing/cloud/vhpc.svg}{}
+
 Once all pieces work together the virtual HPC can be brought to life with the following sequence of commands:
 
 ```bash
