@@ -114,7 +114,7 @@
 <div class="franklin-content"><h1 id="setup_vhpc"><a href="#setup_vhpc" class="header-anchor">Setup vHPC</a></h1>
 <div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#cloud_provider">Cloud provider</a></li><li><a href="#setup_of_the_provider">Setup of the provider</a></li><li><a href="#create_your_infrastructure">Create your infrastructure</a></li><li><a href="#configure_the_infrastructure">Configure the infrastructure</a></li><li><a href="#use_the_infrastructure">Use the infrastructure</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
-<p>We use the setup of the vHPC as used in the other section for testing as one aspect of how some aspects of working with <em>the cloud</em> looks like. </p>
+<p>We use the setup of the vHPC as an example of how some aspects of working with <em>the cloud</em> looks like. </p>
 <h2 id="cloud_provider"><a href="#cloud_provider" class="header-anchor">Cloud provider</a></h2>
 <p>In order to access resources in <em>the cloud</em> some kind of management software is needed. There are several options available, the big public clouds providers</p>
 <ul>
@@ -138,7 +138,7 @@
 <ul>
 <li><p>one Slurm management node</p>
 </li>
-<li><p>three Slurm worker nodes</p>
+<li><p>several Slurm worker nodes</p>
 </li>
 <li><p>storage for each virtual machine</p>
 </li>
@@ -194,8 +194,7 @@
 <p>With our <em>Infrastructure as Code</em> we can use Terraform to deploy it and with that we have our machines.  The minimal configuration to have a service account for the next step is done via <code>cloud-init</code>.</p>
 <p>This can easily be automated and is often called <strong>Infrastructure as a Service</strong> or <strong>IaaS</strong>.</p>
 <h2 id="configure_the_infrastructure"><a href="#configure_the_infrastructure" class="header-anchor">Configure the infrastructure</a></h2>
-<p>All we have now is 4 virtual machines &#40;VMs&#41; running Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. </p>
-<p>For this we use <a href="https://www.ansible.com/">Ansible</a> from RedHat.</p>
+<p>All we have now is a couple of virtual machines &#40;VMs&#41; running Linux on them and an account that can be accessed via <code>ssh</code>. The next step is to actually configure them into a working HPC cluster. For this we use <a href="https://www.ansible.com/">Ansible</a> from RedHat.</p>
 <p>Again we write some <code>yml</code> files that do the actual configuration. More precisely we used the excellent ansible scripts provided by the <a href="https://github.com/elasticluster/elasticluster">elasticluster</a> project.  Unfortunately, this project is already a bit stale but with some adaptations it works for our setup. </p>
 <p>The main idea is to define playbooks.  A playbook usually makes sure to configure a certain service, in our case the vHPC. The service has different roles so we subdivide down to roles.  For example the Slurm playbook is split into three parts:</p>
 <ul>
@@ -260,7 +259,7 @@ ansible-playbook --inventory inventory.yml --become --key-file id_rsa main.yml</
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 11, 2024.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 12, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
