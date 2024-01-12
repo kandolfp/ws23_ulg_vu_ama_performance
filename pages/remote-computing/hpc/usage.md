@@ -19,11 +19,12 @@ Via `ssh` we usually reach one of the login nodes and from here we get access to
 We can prepare our job script, maybe compile some sources, sort out data and when everything is finished submit our job to the queue (and wait). 
 
 There are different job schedulers around, the most commonly found is [Slurm](https://www.schedmd.com/). 
-The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® _distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration_[^2].
+The _workload manager_ itself is [open source](https://github.com/SchedMD/slurm), the company SchedMD® 
+> distributes and maintains the canonical version of Slurm as well as providing Slurm support, development, training, installation, and configuration[^2].
 
-## Testsetup
-If you do this class at home or at another time you can still use a test setup. 
-E.g. use the excellent docker-compose setup of [Giocanni Torres](https://github.com/giovtorres) that you can find [here](https://github.com/giovtorres/slurm-docker-cluster).
+## Test setup
+If you look through this notes at home or at another time you can still use a test setup. 
+E.g. use the excellent [docker-compose](https://docs.docker.com/compose/) setup of [Giocanni Torres](https://github.com/giovtorres), that you can find on [github](https://github.com/giovtorres/slurm-docker-cluster).
 
 In order to have (almost) the same setup as for the live session, please clone the fork (`ulg` branch).
 ```bash
@@ -38,8 +39,8 @@ SLURM_TAG=slurm-21-08-6-1 IMAGE_TAG=21.08.06.1 docker-compose up -d
 docker exec -it slurmctld bash
 ```
 
-For the live session of this class we created a virtual HPC with 3 nodes. 
-How this was done is described further in the cloud section. 
+For the live session of this class we created a virtual HPC with 6 nodes. 
+How this was done is described further in the [cloud section](../../cloud/setup_vhpc/). 
 
 @@important
 How to get access to the live setup is not in the notes.
@@ -47,11 +48,11 @@ How to get access to the live setup is not in the notes.
 
 ## Slurm - as a job scheduler
 
-The inner workings of the Slurm can be found in the [documentation](https://slurm.schedmd.com/),
+The inner workings of Slurm can be found in the [documentation](https://slurm.schedmd.com/),
 we discuss some of the most important commands[^3]
 - `sbatch` is used so submit a job script 
 - `srun` is used to submit a job for execution in real time
-- `scancel` is used to cancel a pending or running job or job step
+- `scancel` is used to cancel a pending or running job (or job step)
 - `squeue` reports the state of jobs or job steps
 - `sacct` is used to report job or job step accounting information about active or completed jobs
 - `scontrol` is the administrative tool used to view and/or modify jobs or the Slurm state
@@ -75,7 +76,7 @@ Submitted batch job 1
 ```
 the `--wrap` option allows us to wrap a command string into a shell script and submit this script to the job scheduler. 
 
-**Question 1**: What does the command `sleep 10s && /bin/hostname` do? 
+**Question 1**: What does the command `sleep 100s && /bin/hostname` do? 
 
 Slurm keeps track of the _standard output_ and _error output_ of the command executed and redirects them into an output file. 
 By default this file is called `slurm-n.out` where `n` corresponds to the `JobID` (`1` in the example above). 
@@ -91,7 +92,7 @@ $ squeue
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
     1    normal     wrap     root  R       0:01      1 c1
 ```
-With a couple of options we can see more details about the job, e.g. `--start` will tell us the expected start time and with `--user=user_name` we can limit the output to just our users.
+With a couple of options we can see more details about the job, e.g. `--start` will tell us the expected start time and with `--user=user_name` we can limit the output to just our jobs.
 
 Now that we have submitted a first job we can have a look how to do this in a more orderly fashion. 
 The general format of the `sbatch` command is
@@ -386,7 +387,7 @@ If we want to get our Julia project to the cluster there are a couple of things 
 ### Software
 
 On a cluster a lot of different people work with different software and quite often with different versions of the same software.
-One common example is the toolchain, e.g. GNU compile vs. Intel compiler, or Intel MKL vs OpenBLAS.
+One common example is the toolchain, e.g. GNU compile vs. Intel compiler, or Intel MKL vs. OpenBLAS.
 As a consequence, depending on the toolchain programs need to be compiled separately.
 
 In order to keep this sorted most systems have a way of managing modules.
@@ -423,7 +424,7 @@ julia -p 4 --project
 to start 4 workers.
 With the constraints of the job scheduler we need to let Julia know where the workers should be started.
 This can be achieved with the `--machine-file=machinefile` option[^5].
-The file can be generated with `generate_pbs_nodefile`.
+The file can be generated with `generate_pbs_nodefile`[^6].
 
 Putting everything together a job file could look as follows:
 ```bash
@@ -462,3 +463,5 @@ See if your job runs right away or if you need to wait.
 [^4]: [UIBK LEO5 Tutorial](https://www.uibk.ac.at/zid/systeme/hpc-systeme/common/tutorials/slurm-tutorial.html)
 
 [^5]: [docs](https://docs.julialang.org/en/v1/manual/distributed-computing/#Starting-and-managing-worker-processes)
+
+[^6]: PBS is a different job scheduler, [Wikipedia](https://en.wikipedia.org/wiki/Portable_Batch_System)
