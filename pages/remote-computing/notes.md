@@ -7,21 +7,21 @@
 
 ## Overview
 
-We discussed high performance computing systems and cloud systems (way more for HPC).
+We discussed High Performance Computing Systems and Cloud Systems (way more for HPC).
 Now there are some insights and notes that do not perfectly fit in either of the sections but we would like to share anyway. 
 
 @@important
 **A short disclaimer:**
 
-The authors have some experience with HPC systems, private and public clouds.
+The authors have some experience with HPC Systems, private and public clouds.
 By no measure are they experts and these are just some insights after a lot of time spent in these often conflicting fields.
 @@
 
 ## Why do HPC and cloud computing exist as separate entities instead of being a unified concept?
 
-On a first glance looking at the two systems in terms of architecture, there is not much difference.
+On a first glance, looking at the two systems in terms of architecture, there is not much difference.
 Nevertheless, the two worlds are hard to combine and people working in one field have a hard time understanding someone from the other and vice versa.
-This is due to the fact that the same term has different meanings in HPC and in cloud systems and from personal experience we can tell that the two groups come to discussions with unspoken assumptions on the system that conflict with the other world. 
+This is due to the fact that the same terms (can) have different meanings in HPC and in cloud systems and from personal experience we can tell that the two groups come to discussions with unspoken assumptions on the system that conflict with the other world. 
 
 We need to stress, that this is not always the case and that there are some HPC clusters that are deployed via a cloud managing software like openstack and that a lot of HPC systems come with a cloud part to provide services better suited for this setup, see for example the [architecture of Lumi](../hpc/architecture/#real_world_examples).
 
@@ -36,10 +36,10 @@ All components are fine-tuned to squeeze out the most flops possible.
 The software that is run is also fine-tuned, the specific architecture of the CPU is known to optimize the compiler, the code knows the architecture and relative positions of various sub programs on other nodes to optimize communication, I/O is layered with computation calls to save time and so forth. 
 
 On the other hand, a cloud system is more general purpose.
-One node might run a web server with a single page app or a static HTML page, a database application as well as an AI training model running at the same time.
+One node might run a web server with a single page app or a static HTML page, a database application as well as an AI training model at the same time.
 This might change quickly and also the workload changes.
 Maybe it is christmas and the web page has so many users that you actually start a second instance, handle the traffic correct for each user and boost throughput.
-For all of this flops do not count.
+For all of this flops do not a valid measure of _performance_.
 
 Performance is measured differently.
 It is almost impossible to know the architecture of our CPU, we will also not get the highest performance as there is an abstraction layer with the virtualization that is used.

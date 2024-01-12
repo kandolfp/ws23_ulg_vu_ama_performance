@@ -8,7 +8,7 @@
 
 ## Overview
 
-We use the setup of the vHPC as used in the other section for testing as one aspect of how some aspects of working with _the cloud_ looks like. 
+We use the setup of the vHPC as an example of how some aspects of working with _the cloud_ looks like. 
 
 ## Cloud provider
 
@@ -33,7 +33,7 @@ In our case we install `libvirt` on Ubuntu.
 Now we need to define our infrastructure. 
 In our case we would like to have
 - one Slurm management node
-- three Slurm worker nodes
+- several Slurm worker nodes
 - storage for each virtual machine
 - an operating system on each machine - we use Rocky Linux 8
 - initial setup of the nodes to allow further configuration (service account)
@@ -94,10 +94,8 @@ This can easily be automated and is often called **Infrastructure as a Service**
 
 ## Configure the infrastructure
 
-All we have now is 4 virtual machines (VMs) running Linux on them and an account that can be accessed via `ssh`.
-The next step is to actually configure them into a working HPC cluster. 
-
-For this we use [Ansible](https://www.ansible.com/) from RedHat.
+All we have now is a couple of virtual machines (VMs) running Linux on them and an account that can be accessed via `ssh`.
+The next step is to actually configure them into a working HPC cluster. For this we use [Ansible](https://www.ansible.com/) from RedHat.
 
 Again we write some `yml` files that do the actual configuration.
 More precisely we used the excellent ansible scripts provided by the [elasticluster](https://github.com/elasticluster/elasticluster) project. 
