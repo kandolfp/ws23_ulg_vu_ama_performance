@@ -171,7 +171,7 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 <p>where the important part here is <code>script</code>.  Let us transfer and extend the previous job into a job script <code>job.slurm</code> and add some of the long list of <code>sbatch</code> <a href="https://slurm.schedmd.com/sbatch.html">options</a></p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
-<span class="hljs-comment">#SBATCH --job-name=$USER</span>
+<span class="hljs-comment">#SBATCH --job-name=NAME</span>
 <span class="hljs-comment">#SBATCH --ntasks=1</span>
 <span class="hljs-comment">#SBATCH --cpus-per-task=1</span>
 
@@ -258,7 +258,9 @@ allocation failure: Requested node configuration is not available</code></pre>
 <pre><code class="bash hljs">$ srun --nodes=2 --label /bin/hostname
 1: c2
 0: c1</code></pre>
-<p>Here <code>--nodes&#61;2</code> allocated two nodes and <code>--label</code> includes the task number for the output.</p>
+<p>Here <code>--nodes&#61;2</code> allocated two nodes and <code>--label</code> includes the task number for the output. The general format of the <code>srun</code> command is</p>
+<pre><code class="bash hljs">srun [OPTIONS(0)... [executable(0) [args(0)...]]] [ : [OPTIONS(N)...]] executable(N) [args(N)...]</code></pre>
+<p>where the important part here is <code>executable</code>. </p>
 <p>As we have seen before, we can define multiple tasks in <code>sbatch</code> and that is the recommended way. Therefore, running a parallel job consists of two phases:</p>
 <ol>
 <li><p>Starting the job script on the main node selected by the job scheduler. In Slurm terms this is the actual job.</p>
@@ -266,8 +268,8 @@ allocation failure: Requested node configuration is not available</code></pre>
 <li><p>Deploy the individual <em>tasks</em> across all of the nodes selected by the job scheduler. In Slurm terms this is called the <em>job step</em>. One job might have several job steps. </p>
 </li>
 </ol>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks and such that the actual workload is distributed with <code>srun</code>.</p>
-<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need to split up the code and put the <code>echo</code> and the <code>for</code> loop into a separate script, i.e. <code>task.sh</code>.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks. In order to do so, separate the actual <em>work</em> from the configuration and run the workload with <code>srun</code>.</p>
+<p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need to split up the code and put the <code>echo</code> and the <code>for</code> loop into a separate script, i.e. <code>task.sh</code>. This script needs to be <em>executable</em> &#40;<code>chmod &#43;x</code>&#41;.</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
 <span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;running on `/bin/hostname`&quot;</span>
@@ -279,7 +281,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 <p>and with this we can rewrite <code>job.slurm</code> as</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
-<span class="hljs-comment">#SBATCH --job-name=$USER</span>
+<span class="hljs-comment">#SBATCH --job-name=NAME</span>
 <span class="hljs-comment">#SBATCH --ntasks=1</span>
 <span class="hljs-comment">#SBATCH --cpus-per-task=1</span>
 
@@ -394,7 +396,7 @@ $ module remove julia/1.9.4</code></pre>
 <p>to start 4 workers. With the constraints of the job scheduler we need to let Julia know where the workers should be started. This can be achieved with the <code>--machine-file&#61;machinefile</code> option<sup id="fnref:5"><a href="#fndef:5" class="fnref">[5]</a></sup>. The file can be generated with <code>generate_pbs_nodefile</code><sup id="fnref:6"><a href="#fndef:6" class="fnref">[6]</a></sup>.</p>
 <p>Putting everything together a job file could look as follows:</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
-<span class="hljs-comment">#SBATCH --job-name=$USER</span>
+<span class="hljs-comment">#SBATCH --job-name=NAME</span>
 <span class="hljs-comment">#SBATCH --ntasks=4</span>
 <span class="hljs-comment">#SBATCH --cpus-per-task=1</span>
 
@@ -452,7 +454,7 @@ julia --machine-file=<span class="hljs-variable">$SLURM_NODEFILE</span> main.jl<
 </table>
 </p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 12, 2024.
+    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 15, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
