@@ -1,4 +1,5 @@
 {
+    "access_right": "open",
     "creators": [
         {
             "orcid": "0000-0003-4816-0233",
@@ -9,7 +10,10 @@
             "name": "Kandolf, Peter"
         }
     ],
+    "description": "Course material for a ~4+4 hours introductionary course to Julia. Topics: Parallel Programming and further topics on high performance computing",
+    "keywords": ["Julia", "GPU computing", "SIMD", "Performance Computing", "Course material", "Parallel Computing", "Multithreading", "Cloud Computing", "Remote Computing"],
     "license": "CC BY-SA 4.0",
+    "publication_date": "2024-01-15",
     "title": "ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics",
-    "keywords": ["Julia", "GPU computing", "SIMD", "Performance Computing", "Course material", "Parallel Computing", "Multithreading", "Cloud Computing", "Remote Computing"]
+    "upload_type": "lesson"
 }
