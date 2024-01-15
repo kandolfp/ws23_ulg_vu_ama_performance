@@ -1,5 +1,5 @@
 Simple sum:
-  92.564 μs (1 allocation: 16 bytes)
+  92.563 μs (1 allocation: 16 bytes)
 
 Built-in sum:
-  12.583 μs (1 allocation: 16 bytes)
+  11.442 μs (1 allocation: 16 bytes)

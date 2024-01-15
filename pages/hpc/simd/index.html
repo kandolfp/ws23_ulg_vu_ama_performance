@@ -112,7 +112,7 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="single-instruction_multiple_data"><a href="#single-instruction_multiple_data" class="header-anchor">Single-Instruction multiple data</a></h1>
-<p>Before we are going to specifically parallelize code we talk about an inbuilt mechanism called <em>_</em>Single Instruction Multiple Data<em>_</em> or <a href="https://docs.julialang.org/en/v1/base/simd-types/">SIMD</a> for short. The main idea is that <em>central processing units</em> &#40;CPUs&#41; or basically any <em>arithmetic logic unit</em> &#40;ALU&#41; can perform the same operation on multiple inputs in a single clock cycle. This was already used for BLAS and LAPACK packages, with the so called <em>unrolling</em>.</p>
+<p>Before we are going to specifically parallelize code we talk about an inbuilt mechanism called <em><em>Single Instruction Multiple Data</em></em> or <a href="https://docs.julialang.org/en/v1/base/simd-types/">SIMD</a> for short. The main idea is that <em>central processing units</em> &#40;CPUs&#41; or basically any <em>arithmetic logic unit</em> &#40;ALU&#41; can perform the same operation on multiple inputs in a single clock cycle. This was already used for BLAS and LAPACK packages, with the so called <em>unrolling</em>.</p>
 <p>Let us consider the following example</p>
 <div class="nonumber"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right" columnspacing=""><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msub><mi>y</mi><mn>1</mn></msub><mo>→</mo><msub><mi>z</mi><mn>1</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>2</mn></msub><mo>+</mo><msub><mi>y</mi><mn>2</mn></msub><mo>→</mo><msub><mi>z</mi><mn>2</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>3</mn></msub><mo>+</mo><msub><mi>y</mi><mn>3</mn></msub><mo>→</mo><msub><mi>z</mi><mn>3</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>x</mi><mn>4</mn></msub><mo>+</mo><msub><mi>y</mi><mn>4</mn></msub><mo>→</mo><msub><mi>z</mi><mn>4</mn></msub></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
 x_1 + y_1 \to z_1\\
@@ -170,11 +170,11 @@ println()
 println(<span class="hljs-string">&quot;Built-in sum:&quot;</span>)
 <span class="hljs-meta">@btime</span> sum(a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum:
-  92.564 μs (1 allocation: 16 bytes)
+  92.563 μs (1 allocation: 16 bytes)
 
 Built-in sum:
-  12.583 μs (1 allocation: 16 bytes)
-49861.24064696238</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
+  11.442 μs (1 allocation: 16 bytes)
+49915.02573413233</code></pre> As we can see, we are slower, exactly how much slower depends on the architecture of your CPU but it is usually between 2 to 16 times.</p>
 <p>In order to enable SIMD in a program &#40;if it is not done by library calls anyway&#41;, we can use the <code>@simd</code> macro, this works if we loop over the indices or the elements, Julia is quite flexible there.</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">using</span> BenchmarkTools
 
@@ -247,25 +247,25 @@ println(<span class="hljs-string">&quot;Simple sum with SIMD and direct element 
 <span class="hljs-meta">@show</span> my_sum_simd_elem_access(a)
 <span class="hljs-meta">@btime</span> my_sum_simd_elem_access($a)</code></pre>
 <p><pre><code class="plaintext hljs">Simple sum
-my_sum(a) = 50045.33741207137
-  92.553 μs (0 allocations: 0 bytes)
+my_sum(a) = 50073.59157680982
+  92.533 μs (0 allocations: 0 bytes)
 
 Built-in sum
-sum(a) = 50045.337412071385
-  12.804 μs (0 allocations: 0 bytes)
+sum(a) = 50073.59157680966
+  11.321 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD
-my_sum_simd(a) = 50045.33741207142
-  12.573 μs (0 allocations: 0 bytes)
+my_sum_simd(a) = 50073.59157680967
+  9.828 μs (0 allocations: 0 bytes)
 
 Simple my_sum with direct element access
-my_sum_elem_access(a) = 50045.33741207137
-  92.552 μs (0 allocations: 0 bytes)
+my_sum_elem_access(a) = 50073.59157680982
+  92.562 μs (0 allocations: 0 bytes)
 
 Simple sum with SIMD and direct element access
-my_sum_simd_elem_access(a) = 50045.33741207142
-  12.573 μs (0 allocations: 0 bytes)
-50045.33741207142</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
+my_sum_simd_elem_access(a) = 50073.59157680967
+  9.638 μs (0 allocations: 0 bytes)
+50073.59157680967</code></pre> We can see a massive speed up &#40;that will depend on the CPU architecture you are running your code on&#41;. What is interesting is, that the results of the three function calls are not the same.</p>
 <p>This is due to the fact that the numerics involved are a bit tricky. In short, when adding floating point numbers you lose accuracy when adding a large number to a small number. This is exactly what is happening for our first example as we add all the numbers in one long sequence.</p>
 <p>The built-in <code>sum</code> function as well as the <code>@simd</code> macro allow Julia to change the order of the operations. In this specific case, it boils down to computing the result for the even and odd entries separately and therefore gaining a bit of accuracy.</p>
 <p>If you are not sure if something is vectorized, you can check out the LLVM code for the two versions and see the difference &#40;Hint: look out for something called <code>vector.ph</code>&#41;.</p>
