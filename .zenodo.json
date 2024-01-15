@@ -1,0 +1,15 @@
+{
+    "creators": [
+        {
+            "orcid": "0000-0003-4816-0233",
+            "name": "Ehrensperger, Gregor"
+        },
+        {
+            "orcid": "0000-0003-3601-085",
+            "name": "Kandolf, Peter"
+        }
+    ],
+    "license": "CC BY-SA 4.0",
+    "title": "ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics",
+    "keywords": ["Julia", "GPU computing", "SIMD", "Performance Computing", "Course material", "Parallel Computing", "Multithreading", "Cloud Computing", "Remote Computing"]
+}
