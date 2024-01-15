@@ -12,7 +12,7 @@
     ],
     "description": "Course material for a ~4+4 hours introductionary course to Julia. Topics: Parallel Programming and further topics on high performance computing",
     "keywords": ["Julia", "GPU computing", "SIMD", "Performance Computing", "Course material", "Parallel Computing", "Multithreading", "Cloud Computing", "Remote Computing"],
-    "license": "CC BY-SA 4.0",
+    "license": "cc-by-nc-sa-4.0",
     "publication_date": "2024-01-15",
     "title": "ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics",
     "upload_type": "lesson"
