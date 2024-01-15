@@ -244,6 +244,11 @@ $ srun --nodes=2 --label /bin/hostname
 0: c1
 ```
 Here `--nodes=2` allocated two nodes and `--label` includes the task number for the output.
+The general format of the `srun` command is
+```bash
+srun [OPTIONS(0)... [executable(0) [args(0)...]]] [ : [OPTIONS(N)...]] executable(N) [args(N)...]
+```
+where the important part here is `executable`. 
 
 As we have seen before, we can define multiple tasks in `sbatch` and that is the recommended way.
 Therefore, running a parallel job consists of two phases:
@@ -251,11 +256,13 @@ Therefore, running a parallel job consists of two phases:
 1. Deploy the individual _tasks_ across all of the nodes selected by the job scheduler. In Slurm terms this is called the _job step_. One job might have several job steps. 
 \exercise{
 
-Rewrite our `job.slum` for two tasks and such that the actual workload is distributed with `srun`.
+Rewrite our `job.slum` for two tasks.
+In order to do so, separate the actual _work_ from the configuration and run the workload with `srun`.
 
 \solution{
 
 We need to split up the code and put the `echo` and the `for` loop into a separate script, i.e. `task.sh`.
+This script needs to be _executable_ (`chmod +x`).
 ```bash
 #!/bin/bash
 
