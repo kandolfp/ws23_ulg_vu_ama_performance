@@ -256,7 +256,7 @@ Therefore, running a parallel job consists of two phases:
 1. Deploy the individual _tasks_ across all of the nodes selected by the job scheduler. In Slurm terms this is called the _job step_. One job might have several job steps. 
 \exercise{
 
-Rewrite our `job.slum` for two tasks.
+Rewrite our `job.slurm` for two tasks.
 In order to do so, separate the actual _work_ from the configuration and run the workload with `srun`.
 
 \solution{
