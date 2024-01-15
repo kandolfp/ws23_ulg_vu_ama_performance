@@ -33,7 +33,7 @@ We install the package with `Pkg.add("CUDA"); using CUDA` and execute the test r
 ```julia-repl
 julia> using CUDA
 
-(@v1.7) pkg> test CUDA
+pkg> test CUDA
 ┌ Info: System information:
 │ CUDA toolkit 11.7, artifact installation
 │ NVIDIA driver 510.73.5, for CUDA 11.6
