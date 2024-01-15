@@ -3,9 +3,6 @@
 
 # Preface
 
-@@important
-THIS WORKSHOP IS STILL UNDER CONSTRUCTION AND ACTIVE DEVELOPMENT.
-@@
 # Getting started with Julia
 
 Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing.
