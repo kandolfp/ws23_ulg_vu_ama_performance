@@ -268,7 +268,7 @@ allocation failure: Requested node configuration is not available</code></pre>
 <li><p>Deploy the individual <em>tasks</em> across all of the nodes selected by the job scheduler. In Slurm terms this is called the <em>job step</em>. One job might have several job steps. </p>
 </li>
 </ol>
-<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Rewrite our <code>job.slum</code> for two tasks. In order to do so, separate the actual <em>work</em> from the configuration and run the workload with <code>srun</code>.</p>
+<button type="button" class="collapsible" style="background-color:#b5ddff"> Exercise </button><div class="collapsiblecontent">  Rewrite our <code>job.slurm</code> for two tasks. In order to do so, separate the actual <em>work</em> from the configuration and run the workload with <code>srun</code>.</p>
 <p><div class="solution"> Solution </div><div class="solutioncollapsible">  We need to split up the code and put the <code>echo</code> and the <code>for</code> loop into a separate script, i.e. <code>task.sh</code>. This script needs to be <em>executable</em> &#40;<code>chmod &#43;x</code>&#41;.</p>
 <pre><code class="bash hljs"><span class="hljs-meta">#!/bin/bash</span>
 
