@@ -39,7 +39,7 @@ Leonardo (#4 on the TOP500) has a nice animated video that shows the different s
 
 For Lumi the layout looks like the following.
 
-\figenvsource{The architecture of Lumi **the queen of the north**.}{/assets/pages/remote-computing/hpc/snowflake-lumi.png}{}{https://www.lumi-supercomputer.eu/lumi_supercomputer/}
+\figenvsource{The architecture of LUMI, the queen of the north.}{/assets/pages/remote-computing/hpc/snowflake-lumi.png}{}{https://www.lumi-supercomputer.eu/lumi_supercomputer/}
 
 ## Reasons and consequences
 

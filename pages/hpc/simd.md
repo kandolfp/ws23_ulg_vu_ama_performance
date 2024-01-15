@@ -5,7 +5,7 @@
 
 # Single-Instruction multiple data
 
-Before we are going to specifically parallelize code we talk about an inbuilt mechanism called *_*Single Instruction Multiple Data*_* or [SIMD](https://docs.julialang.org/en/v1/base/simd-types/) for short.
+Before we are going to specifically parallelize code we talk about an inbuilt mechanism called *_Single Instruction Multiple Data_* or [SIMD](https://docs.julialang.org/en/v1/base/simd-types/) for short.
 The main idea is that *central processing units* (CPUs) or basically any *arithmetic logic unit* (ALU) can perform the same operation on multiple inputs in a single clock cycle.
 This was already used for BLAS and LAPACK packages, with the so called *unrolling*.
 
