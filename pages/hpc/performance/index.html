@@ -125,9 +125,9 @@
 V = rand(<span class="hljs-number">100_000</span>)
 <span class="hljs-meta">@time</span> my_sum(V)
 <span class="hljs-meta">@time</span> my_sum(V)</code></pre>
-<pre><code class="plaintext hljs">  0.007834 seconds (2.21 k allocations: 152.062 KiB, 98.62% compilation time)
+<pre><code class="plaintext hljs">  0.007773 seconds (2.21 k allocations: 152.062 KiB, 98.62% compilation time)
   0.000097 seconds (1 allocation: 16 bytes)
-49923.436973413845</code></pre>
+49874.13859501492</code></pre>
 <div class="important">In order to optimize the loop call we use the <a href="https://docs.julialang.org/en/v1/devdocs/boundscheck/"><code>@inbounds</code></a> macro to eliminate inbound checks for the array access and thus improve performance. It is challenging and probably even not possible to prove the safety of methods using <code>@inbounds</code>, so it is essential to consider the trade-off between performance gains and the potential for unnoticed errors. Rule of thumb: Do not use it, unless you really need this performance gain.</div>
 <p>The downside with the <code>@time</code> macro is, that it really just measures the execution time of what is given to it. This means, if the function is not already compiled this might include compiling or if the CPU is busy with something else it is often not accurate.</p>
 <p>Therefore, if we are serious about measuring performance we should stick to the <a href="https://juliaci.github.io/BenchmarkTools.jl/stable/"><code>BenchmarkTools</code></a>. It comes with a couple of macros that we should test out:</p>
@@ -147,13 +147,13 @@ V = rand(<span class="hljs-number">100_000</span>)
 
 <span class="hljs-meta">@benchmark</span> my_sum($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.542 μs … 118.952 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.602 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   93.108 μs ±   2.000 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.553 μs … 113.763 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.614 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   92.960 μs ±   1.646 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █    ▂                                                       ▁
-  █▆▄▃▅█▄▄▁▄▅▅▅▅▇█▇▆▅▅▄▅▄▅▅▄▃▄▄▁▅▄▄▆▅▆▆▅▆▆▅▅▆▅▇▇▇▇▇▆▆▆▆▄▇█▇▇▆▅ █
-  92.5 μs       Histogram: log(frequency) by time       102 μs &lt;
+  █    ▃                                                       ▁
+  █▃▄▄▅█▄▄▄▃▄▄▄▆█▇▆▄▃▄▅▃▃▄▃▄▆▃▃▁▁▄▃▁▁▁▁▁▃▁▁▅▁▄▃▄▄▆▅▅▅▅▅▅▅▄▅██▇ █
+  92.6 μs       Histogram: log(frequency) by time       101 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> the full details with </p>
 <pre><code class="julia hljs">t = <span class="hljs-meta">@benchmark</span> my_sum($V)
@@ -168,14 +168,14 @@ dump(t)</code></pre>
     gcsample: Bool false
     time_tolerance: Float64 0.05
     memory_tolerance: Float64 0.01
-  times: Array{Float64}((10000,)) [94316.0, 92753.0, 92683.0, 97792.0, 92702.0, 92672.0, 92702.0, 92713.0, 92692.0, 92702.0  …  92652.0, 92663.0, 92652.0, 92612.0, 92642.0, 92613.0, 92652.0, 92613.0, 92672.0, 92612.0]
+  times: Array{Float64}((10000,)) [94087.0, 109546.0, 98285.0, 92994.0, 92774.0, 92634.0, 92624.0, 92645.0, 92594.0, 92664.0  …  92654.0, 93425.0, 92624.0, 92644.0, 92684.0, 92614.0, 92624.0, 92614.0, 92634.0, 92614.0]
   gctimes: Array{Float64}((10000,)) [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
   memory: Int64 0
   allocs: Int64 0
 </code></pre> and the often used sanity check, that actually also shows you the output of your code.</p>
 <pre><code class="julia hljs"><span class="hljs-meta">@btime</span> my_sum($V)</code></pre>
-<pre><code class="plaintext hljs">  92.542 μs (0 allocations: 0 bytes)
-49923.436973413845</code></pre>
+<pre><code class="plaintext hljs">  92.544 μs (0 allocations: 0 bytes)
+49874.13859501492</code></pre>
 <p>Skipping the <code>inbound</code> check only gives a minor improvement as you can see when you compare the results to the following version which performs the check:</p>
 <pre><code class="julia hljs"><span class="hljs-keyword">function</span> my_sum_no_inbounds(V)
     s = zero(eltype(V))
@@ -189,13 +189,13 @@ dump(t)</code></pre>
 
 <span class="hljs-meta">@benchmark</span> my_sum_no_inbounds($V)</code></pre>
 <p><pre><code class="plaintext hljs">BenchmarkTools.Trial: 10000 samples with 1 evaluation.
- Range (min … max):  92.542 μs … 116.757 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):     92.612 μs               ┊ GC (median):    0.00%
- Time  (mean ± σ):   93.063 μs ±   1.928 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
+ Range (min … max):  92.553 μs … 121.217 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     92.614 μs               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   92.984 μs ±   1.739 μs  ┊ GC (mean ± σ):  0.00% ± 0.00%
 
-  █                                                            ▁
-  ██▅▄▆▇▅▅▄▄▄▄▅▅█▇▇▅▅▄▄▁▄▃▁▅▄▄▁▄▅▄▅▄▆▄▅▄▅▆▅▆▅▆▆▆▆▆▆▆▆▆▆▆▆▇██▇▆ █
-  92.5 μs       Histogram: log(frequency) by time       102 μs &lt;
+  █▁   ▃                                                       ▁
+  ██▅▆▄█▄▄▄▄▁▃▆▇▇▇▆▄▃▄▁▄▄▄▄▅▄▄▃▄▁▄▃▃▁▁▃▃▁▄▄▁▁▁▅▄▅▆▅▅▆▅▄▄▅▆██▇▆ █
+  92.6 μs       Histogram: log(frequency) by time       102 μs &lt;
 
  Memory estimate: 0 bytes, allocs estimate: 0.</code></pre> </div> </div>
 <div class="important">Note that for benchmarking we often use the <code>&#36;</code> literal for variables to tell the Julia interpreter to use interpolation. This will make sure that the variable is not allocated inside the function and the measurement is more accurate, or more likely what we actually want to know.</div>
@@ -227,7 +227,7 @@ Profile.print(maxdepth=<span class="hljs-number">15</span>)</code></pre>
     ╎    ╎    ╎     8279  @Base/range.jl:837; iterate
 Total snapshots: 16562</code></pre>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 15, 2024.
+    <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 15, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
