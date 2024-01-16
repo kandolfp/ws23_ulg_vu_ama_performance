@@ -1,0 +1,27 @@
+abstract: 'Course material for a ~4+4 hours introductory course to Julia. Topics:
+  Parallel Programming and further topics on (High) Performance Computing'
+authors:
+- family-names: Ehrensperger
+  given-names: Gregor
+  orcid: 0000-0003-4816-0233
+- family-names: Kandolf
+  given-names: Peter
+  orcid: 0000-0003-3601-0852
+cff-version: 1.2.0
+date-released: '2024-01-15'
+doi: 10.5281/zenodo.10514499
+keywords:
+- Julia
+- GPU computing
+- SIMD
+- Performance Computing
+- Course material
+- Parallel Computing
+- Multithreading
+- Cloud Computing
+- Remote Computing
+license:
+- cc-by-nc-sa-4.0
+title: ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance
+  topics
+version: V1.0

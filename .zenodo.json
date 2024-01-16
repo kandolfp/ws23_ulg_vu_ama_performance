@@ -10,7 +10,7 @@
             "name": "Kandolf, Peter"
         }
     ],
-    "description": "Course material for a ~4+4 hours introductory course to Julia. Topics: Parallel Programming and further topics on high performance computing",
+    "description": "Course material for a ~4+4 hours introductory course to Julia. Topics: Parallel Programming and further topics on (High) Performance Computing",
     "keywords": ["Julia", "GPU computing", "SIMD", "Performance Computing", "Course material", "Parallel Computing", "Multithreading", "Cloud Computing", "Remote Computing"],
     "license": "cc-by-nc-sa-4.0",
     "publication_date": "2024-01-15",
