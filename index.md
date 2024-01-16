@@ -1,7 +1,25 @@
-@def title = "WS23 971007 VU Advanced Methods and its Applications - Julia"
+@def title = "WS23 971007 VU Advanced Methods and its Applications - Performance topics"
 @def tags = ["syntax", "code"]
 
 # Preface
+
+Course material for a ~4+4 hours introductory course to Julia. Topics: Parallel Programming and further topics on high performance computing
+
+## Citation
+In case you want to refer to this lecture material, use the following BibTex snippet:
+```Bibtex
+@misc{perftop2023,
+    doi = {10.5281/zenodo.10514499},
+    url = {https://kandolfp.github.io/ws23_ulg_vu_ama_performance/},
+    author = {Ehrensperger, Gregor and Kandolf, Peter},
+    keywords = {FOS: Mathematics},
+    language = {en},
+    title = {ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics},
+    year = {2024},
+    copyright = {Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International}
+}
+```
+or use [CITATION.cff](CITATION.cff).
 
 # Getting started with Julia
 
