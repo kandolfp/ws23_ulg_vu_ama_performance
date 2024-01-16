@@ -51,7 +51,7 @@
   }
 </style>
 
-   <title>WS23 971007 VU Advanced Methods and its Applications - Julia</title>  
+   <title>WS23 971007 VU Advanced Methods and its Applications - Performance topics</title>  
 </head>
 <body>                      <!-- closed in foot.html -->
 <div class="page-wrap">   <!-- closed in foot.html -->
@@ -111,6 +111,20 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="preface"><a href="#preface" class="header-anchor">Preface</a></h1>
+<p>Course material for a ~4&#43;4 hours introductory course to Julia. Topics: Parallel Programming and further topics on high performance computing</p>
+<h2 id="citation"><a href="#citation" class="header-anchor">Citation</a></h2>
+<p>In case you want to refer to this lecture material, use the following BibTex snippet:</p>
+<pre><code class="language-Bibtex">@misc&#123;perftop2023,
+    doi &#61; &#123;10.5281/zenodo.10514499&#125;,
+    url &#61; &#123;https://kandolfp.github.io/ws23_ulg_vu_ama_performance/&#125;,
+    author &#61; &#123;Ehrensperger, Gregor and Kandolf, Peter&#125;,
+    keywords &#61; &#123;FOS: Mathematics&#125;,
+    language &#61; &#123;en&#125;,
+    title &#61; &#123;ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics&#125;,
+    year &#61; &#123;2024&#125;,
+    copyright &#61; &#123;Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International&#125;
+&#125;</code></pre>
+<p>or use <a href="CITATION.cff">CITATION.cff</a>.</p>
 <h1 id="getting_started_with_julia"><a href="#getting_started_with_julia" class="header-anchor">Getting started with Julia</a></h1>
 <p>Julia is a free and open source scientific programming language with a vast ecosystem of libraries that aim towards scientific computing. Visit <a href="https://julialang.org">julialang.org</a> for the download, documentation, learning materials and much more. Julia manages to allow the best of two worlds, high-level interpreter and low-level compiler language. It offers the high performance of compiled languages like C or Fortran by still bringing in the simplicity of dynamic languages like Python or R. Julia recently entered its teens and for this occasion a blog post was published with the title <a href="https://julialang.org/blog/2022/02/10years/">Why We Use Julia, 10 Years Later</a> as a follow up to the <a href="https://julialang.org/blog/2012/02/why-we-created-julia/">Why We Created Julia</a>. Both entries are a good read and give you an insight into the language and its creators.</p>
 <p>In this workshop we are going to take a look at Julia for multi processor programming, if you are looking for a more basic start we recommend <a href="https://noxthot.github.io/ss22_julia_workshop/">Scientific Coding with Julia</a>.</p>
@@ -143,9 +157,9 @@
 <h4 id="additional_information_for_linux"><a href="#additional_information_for_linux" class="header-anchor">Additional information for Linux:</a></h4>
 <p>Some distributions allow for Julia to be installed via the package manager or software center. Note that very often this is an old version so this method is not recommended.</p>
 <p>A very convenient way to manage your Julia installation is <a href="https://github.com/JuliaLang/juliaup">juliaup</a>. To install this tool, simply call the following command from your terminal:</p>
-<pre><code class="bash hljs">curl -fsSL https://install.julialang.org | sh</code></pre>
+<pre><code class="language-bash">curl -fsSL https://install.julialang.org | sh</code></pre>
 <p>Once installed, simply reopen your terminal and call <code>juliaup add 1.9.4</code> to add the very version used for this course. In case you installed Julia just for this course, you could then set</p>
-<pre><code class="bash hljs">juliaup default 1.9.4</code></pre>
+<pre><code class="language-bash">juliaup default 1.9.4</code></pre>
 <p>to pin your default version to <code>1.9.4</code> whenever you start <code>julia</code>. Alternatively you can launch this specific version by calling <code>julia &#43;1.9.4</code>.</p>
 <h3 id="visual_studio_code"><a href="#visual_studio_code" class="header-anchor">Visual Studio Code</a></h3>
 <p>Installing Visual Studio Code is optional since one can use any editor for programming in Julia but Visual Studio Code &#40;&#43;plugin&#41; is the most common &quot;Julia IDE&quot;. For example <a href="https://github.com/JuliaEditorSupport">JuliaEditorSupport</a> has plugins for some alternative editors.</p>
@@ -178,7 +192,7 @@
 <p>With these short basics and <a href="https://www.julia-vscode.org">https://www.julia-vscode.org</a> you are good to go for the lecture. You can also find a list of <a href="https://www.julia-vscode.org/docs/dev/userguide/keybindings/">keybindings</a> once you are more familiar with the IDE and never want to get your hands off the keyboard.</p>
 <p>In VS Code you can always type <code>CTRL &#43; SHIFT &#43; P</code> to get access to the prompt and execute commands within VS Code.</p>
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 15, 2024.
+    <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 16, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
@@ -187,8 +201,8 @@
     </div> <!-- end of class page-wrap-->
     
     
-      
-
+      <script src="/ws23_ulg_vu_ama_performance/libs/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();hljs.configure({tabReplace: '    '});</script>
 
       <script>
     (function(){
