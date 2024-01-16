@@ -1,6 +1,6 @@
 # ULG Data Science - WS23 971007 VU Advanced Methods and its Applications - Performance topics
 
-Course material for a ~4+4 hours introductory course to Julia. Topics: Parallel Programming and further topics on high performance computing
+Course material for a ~4+4 hours introductory course to Julia. Topics: Parallel Programming and further topics on (High) Performance Computing
 
 # Citing this software
 [Citation information](CITATION.cff)
