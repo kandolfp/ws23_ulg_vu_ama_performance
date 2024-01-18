@@ -111,7 +111,7 @@
 
 <!-- Content appended here (in class franklin-content) -->
 <div class="franklin-content"><h1 id="notes"><a href="#notes" class="header-anchor">Notes</a></h1>
-<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#why_do_hpc_and_cloud_computing_exist_as_separate_entities_instead_of_being_a_unified_concept">Why do HPC and cloud computing exist as separate entities instead of being a unified concept?</a><ol><li><a href="#purpose">Purpose</a></li><li><a href="#security">Security</a></li><li><a href="#storage">Storage</a></li><li><a href="#a_hybrid">A hybrid</a></li></ol></li><li><a href="#run_your_to_code_on_an_hpc_system_and_it_is_faster">Run your to code on an HPC system and it is faster</a></li><li><a href="#just_move_the_application_to_the_cloud">Just move the application to the cloud</a></li></ol></div>
+<div class="franklin-toc"><ol><li><a href="#overview">Overview</a></li><li><a href="#why_do_hpc_and_cloud_computing_exist_as_separate_entities_instead_of_being_a_unified_concept">Why do HPC and cloud computing exist as separate entities instead of being a unified concept?</a><ol><li><a href="#purpose">Purpose</a></li><li><a href="#security">Security</a></li><li><a href="#storage">Storage</a></li><li><a href="#a_hybrid">A hybrid</a></li></ol></li><li><a href="#run_your_code_on_an_hpc_system_and_it_is_faster">Run your code on an HPC system and it is faster</a></li><li><a href="#just_move_the_application_to_the_cloud">Just move the application to the cloud</a></li></ol></div>
 <h2 id="overview"><a href="#overview" class="header-anchor">Overview</a></h2>
 <p>We discussed High Performance Computing Systems and Cloud Systems &#40;way more for HPC&#41;. Now there are some insights and notes that do not perfectly fit in either of the sections but we would like to share anyway. </p>
 <div class="important"><p><strong>A short disclaimer:</strong></p>
@@ -135,7 +135,7 @@
 <p>Also here, they are built for different purposes in mind and perform poorly for the other system.</p>
 <h3 id="a_hybrid"><a href="#a_hybrid" class="header-anchor">A hybrid</a></h3>
 <p>That does not mean it can not work. Something like <a href="https://juliahub.com/">JuliaHub</a> can be considered a cloud for HPC workloads. Also the big cloud providers will offer something called <strong>burst computing</strong> where you move your HPC workload to the cloud when you need more and have it locally otherwise.</p>
-<h2 id="run_your_to_code_on_an_hpc_system_and_it_is_faster"><a href="#run_your_to_code_on_an_hpc_system_and_it_is_faster" class="header-anchor">Run your to code on an HPC system and it is faster</a></h2>
+<h2 id="run_your_code_on_an_hpc_system_and_it_is_faster"><a href="#run_your_code_on_an_hpc_system_and_it_is_faster" class="header-anchor">Run your code on an HPC system and it is faster</a></h2>
 <p>As we have seen in the <a href="../../hpc/">parallel computing</a> there is more to it than one might think. The first couple of speed up factors are easy because these systems just have faster CPUs and more RAM. If we actually want to do have an optimized code this is hard work and needs time and also comes to the price of possibly introducing bugs while worsening readability as well as maintainability and portability. To get access to the very large systems like Lumi you first need to show that your code runs on smaller systems, that the scaling is good and that you will use the CPU time you get <em>well</em> &#40;impact&#41;.</p>
 <h2 id="just_move_the_application_to_the_cloud"><a href="#just_move_the_application_to_the_cloud" class="header-anchor">Just move the application to the cloud</a></h2>
 <p>Again a familiar phrase. We have not discussed this but all of the cloud technologies like kubernetes, serverless apps and so forth are not easy to handle. Data traffic, user authentication, security, capsuling the application into a Docker image are hard to do. You basically have to learn a new operating system and there are often so many abstractions that it is hard to find out what did go wrong and when.</p>
@@ -146,7 +146,7 @@
 </figure>
 
 <div class="page-foot">
-    <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 16, 2024.
+    <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> - <a href="https://ehrensperger.dev/">Gregor Ehrensperger</a>, <a href="https://orcid.org/0000-0003-3601-0852">Peter Kandolf</a>. Last modified: January 18, 2024.
     Website built with <a href="https://github.com/tlienart/Franklin.jl">Franklin.jl</a> and the <a href="https://julialang.org">Julia programming language</a>.
 </div>
 </div><!-- CONTENT ENDS HERE -->
