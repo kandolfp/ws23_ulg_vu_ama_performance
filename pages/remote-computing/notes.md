@@ -80,7 +80,7 @@ That does not mean it can not work.
 Something like [JuliaHub](https://juliahub.com/) can be considered a cloud for HPC workloads.
 Also the big cloud providers will offer something called **burst computing** where you move your HPC workload to the cloud when you need more and have it locally otherwise.
 
-## Run your to code on an HPC system and it is faster
+## Run your code on an HPC system and it is faster
 
 As we have seen in the [parallel computing](../../hpc/) there is more to it than one might think.
 The first couple of speed up factors are easy because these systems just have faster CPUs and more RAM.
